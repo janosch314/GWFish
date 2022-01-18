@@ -1,7 +1,9 @@
 # GWFish
 Simulation of detector networks with Fisher-matrix PE
 
-![alt text](gwfish-1.png)
+<p align="center">
+  <img src="gwfish-1.png" width="350" title="Logo">
+</p>
 
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
