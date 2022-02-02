@@ -1606,11 +1606,6 @@ def projection_moon(parameters, detector, polarizations, timevector, max_time_un
     lmst = LunarMeanSiderealTime(timevector)
     phi = ra - lmst
 
-    # wave vector components
-    kx = -np.sin(theta)*np.cos(phi)
-    ky = -np.sin(theta)*np.sin(phi)
-    kz = -np.cos(theta)
-
     # saving timevector and lmst for plotting
     #np.save('timevector.npy', timevector)
     #np.save('lmst.npy', lmst)
@@ -1653,12 +1648,6 @@ def projection_moon(parameters, detector, polarizations, timevector, max_time_un
     for k in np.arange(len(interferometers)):
         e1 = interferometers[k].e1
         e2 = interferometers[k].e2
-        # interferometer position
-        x_det = interferometers[k].position[0]
-        y_det = interferometers[k].position[1]
-        z_det = interferometers[k].position[2]
-        phase_shift = -1.j *np.squeeze(x_det*kx + y_det*ky + z_det*kz)
-        
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
         proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
                      + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
