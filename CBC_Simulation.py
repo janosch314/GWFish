@@ -1517,6 +1517,11 @@ def projection_longwavelength(parameters, detector, polarizations, timevector):
     gmst = GreenwichMeanSiderealTime(timevector)
     phi = ra - gmst
 
+    # wave vector components
+    kx = -np.sin(theta)*np.cos(phi)
+    ky = -np.sin(theta)*np.sin(phi)
+    kz = -np.cos(theta)
+
     # start_time = time.time()
     # u = np.array([np.cos(theta) * np.cos(phi[:,0]), np.cos(theta) * np.sin(phi[:,0]), -np.sin(theta)*np.ones_like(phi[:,0])])
     ux = np.cos(theta) * np.cos(phi[:, 0])
@@ -1555,6 +1560,13 @@ def projection_longwavelength(parameters, detector, polarizations, timevector):
     for k in np.arange(len(interferometers)):
         e1 = interferometers[k].e1
         e2 = interferometers[k].e2
+
+        # interferometer position
+        x_det = interferometers[k].position[0]
+        y_det = interferometers[k].position[1]
+        z_det = interferometers[k].position[2]
+        phase_shift = -1.j *np.squeeze(x_det*kx + y_det*ky + z_det*kz)
+
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
         proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
                      + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
@@ -1562,6 +1574,7 @@ def projection_longwavelength(parameters, detector, polarizations, timevector):
                      + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
                      + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
                      + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
+        proj[:, k] *= phase_shift
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     return proj
@@ -1592,6 +1605,11 @@ def projection_moon(parameters, detector, polarizations, timevector, max_time_un
     theta = np.pi / 2. - dec
     lmst = LunarMeanSiderealTime(timevector)
     phi = ra - lmst
+
+    # wave vector components
+    kx = -np.sin(theta)*np.cos(phi)
+    ky = -np.sin(theta)*np.sin(phi)
+    kz = -np.cos(theta)
 
     # saving timevector and lmst for plotting
     #np.save('timevector.npy', timevector)
@@ -1635,6 +1653,12 @@ def projection_moon(parameters, detector, polarizations, timevector, max_time_un
     for k in np.arange(len(interferometers)):
         e1 = interferometers[k].e1
         e2 = interferometers[k].e2
+        # interferometer position
+        x_det = interferometers[k].position[0]
+        y_det = interferometers[k].position[1]
+        z_det = interferometers[k].position[2]
+        phase_shift = -1.j *np.squeeze(x_det*kx + y_det*ky + z_det*kz)
+        
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
         proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
                      + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
