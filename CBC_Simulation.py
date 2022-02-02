@@ -1449,7 +1449,7 @@ def projection(parameters, detector, polarizations, timevector, frequencyvector,
     # angles = coords.transform_to('barycentricmeanecliptic')
 
     if detector.coordinates == 'earthbased':
-        proj = projection_longwavelength(parameters, detector, polarizations, timevector)
+        proj = projection_longwavelength(parameters, detector, polarizations, timevector, frequencyvector)
     elif detector.coordinates == 'selenographic':
         proj = projection_moon(parameters, detector, polarizations, timevector, max_time_until_merger)
     else:
@@ -1490,7 +1490,7 @@ def projection(parameters, detector, polarizations, timevector, frequencyvector,
     return proj
 
 
-def projection_longwavelength(parameters, detector, polarizations, timevector):
+def projection_longwavelength(parameters, detector, polarizations, timevector, frequencyvector):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame
@@ -1562,10 +1562,11 @@ def projection_longwavelength(parameters, detector, polarizations, timevector):
         e2 = interferometers[k].e2
 
         # interferometer position
-        x_det = interferometers[k].position[0]
-        y_det = interferometers[k].position[1]
-        z_det = interferometers[k].position[2]
-        phase_shift = -1.j *np.squeeze(x_det*kx + y_det*ky + z_det*kz)
+        x_det = interferometers[k].position[0]*R_earth
+        y_det = interferometers[k].position[1]*R_earth
+        z_det = interferometers[k].position[2]*R_earth
+        phase_shift = np.squeeze(x_det*kx + y_det*ky + z_det*kz)*2*np.pi/c*np.squeeze(frequencyvector)
+        
 
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
         proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
@@ -1574,7 +1575,7 @@ def projection_longwavelength(parameters, detector, polarizations, timevector):
                      + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
                      + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
                      + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
-        proj[:, k] *= phase_shift
+        proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     return proj
