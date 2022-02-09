@@ -45,17 +45,7 @@ def main():
 
     d = args.detectors
     
-    if ('ET' in d) or ('aET' in d) or ('bET' in d) or ('cET' in d) or ('ET0' in d) or ('ET1' in d) or\
-    ('ET2' in d) or ('ET3' in d) or ('ET4' in d) or ('ET5' in d) or ('ET6' in d) or\
-	('S2L_10kmHF_arm90_00deg_ET' in d) or ('N2L_10kmHF_arm90_00deg_ET' in d) or ('N2L_10kmHF_arm90_45deg_ET' in d) or\
-	('S2L_15kmHF_arm90_00deg_ET' in d) or ('N2L_15kmHF_arm90_00deg_ET' in d) or ('N2L_15kmHF_arm90_45deg_ET' in d) or\
-	('S2L_20kmHF_arm90_00deg_ET' in d) or ('N2L_20kmHF_arm90_00deg_ET' in d) or ('N2L_20kmHF_arm90_45deg_ET' in d) or\
-	('S2L_10kmfull_arm90_00deg_ET' in d) or ('N2L_10kmfull_arm90_00deg_ET' in d) or ('N2L_10kmfull_arm90_45deg_ET' in d) or\
-	('S2L_15kmfull_arm90_00deg_ET' in d) or ('N2L_15kmfull_arm90_00deg_ET' in d) or ('N2L_15kmfull_arm90_45deg_ET' in d) or\
-	('S2L_20kmfull_arm90_00deg_ET' in d) or ('N2L_20kmfull_arm90_00deg_ET' in d) or ('N2L_20kmfull_arm90_45deg_ET' in d) or\
-	('S2L_10kmfull_arm90_00deg_ET_room' in d) or ('N2L_10kmfull_arm90_00deg_ET_room' in d) or ('N2L_10kmfull_arm90_45deg_ET_room' in d) or\
-	('S2L_15kmfull_arm90_00deg_ET_room' in d) or ('N2L_15kmfull_arm90_00deg_ET_room' in d) or ('N2L_15kmfull_arm90_45deg_ET_room' in d) or\
-	('S2L_20kmfull_arm90_00deg_ET_room' in d) or ('N2L_20kmfull_arm90_00deg_ET_room' in d) or ('N2L_20kmfull_arm90_45deg_ET_room' in d) :
+    if ('ET' in d):
         fmin = 10
         fmax = 2048
         df = 1./4.
