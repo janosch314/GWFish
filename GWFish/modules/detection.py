@@ -1,5 +1,8 @@
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+import numpy as np
+
+import constants as cst
 
 class Interferometer:
 
@@ -281,8 +284,8 @@ class Interferometer:
             P_rec = 700e-12
             S_acc = 9e-30 * (1 + (4e-4 / ff) ** 2) * (1 + (ff / 8e-3) ** 4)
             self.L = 2.5e9
-            f0 = c / 1064e-9
-            self.eps = self.L / AU / (2 * np.sqrt(3))
+            f0 = cst.c / 1064e-9
+            self.eps = self.L / cst.AU / (2 * np.sqrt(3))
 
             self.psd_data = np.zeros((len(ff), 2))
             self.psd_data[:, 0] = ff
@@ -293,14 +296,14 @@ class Interferometer:
 
             if k < 2:
                 # instrument noise of A,E channels
-                self.psd_data[:, 1] = 16 * np.sin(np.pi * ff * self.L / c) ** 2 * (
-                        3 + 2 * np.cos(2 * np.pi * ff * self.L / c) + np.cos(4 * np.pi * ff * self.L / c)) * S_pm \
-                                      + 8 * np.sin(np.pi * ff * self.L / c) ** 2 * (
-                                              2 + np.cos(2 * np.pi * ff * self.L / c)) * S_opt
+                self.psd_data[:, 1] = 16 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
+                        3 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c) + np.cos(4 * np.pi * ff * self.L / cst.c)) * S_pm \
+                                      + 8 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
+                                              2 + np.cos(2 * np.pi * ff * self.L / cst.c)) * S_opt
             else:
                 # instrument noise of T channel
-                self.psd_data[:, 1] = 2 * (1 + 2 * np.cos(2 * np.pi * ff * self.L / c)) ** 2 * (
-                        4 * np.sin(np.pi * ff * self.L / c) ** 2 * S_pm + S_opt)
+                self.psd_data[:, 1] = 2 * (1 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c)) ** 2 * (
+                        4 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * S_pm + S_opt)
 
             # the sensitivity model is based on a sky-averaged GW response. In the long-wavelength regime, it can be
             # converted into a simple noise PSD by multiplying with 3/10 (arXiv:1803.01944)
@@ -404,16 +407,16 @@ class Network:
 
 def GreenwichMeanSiderealTime(gps):
     # calculate the Greenwhich mean sidereal time
-    return np.mod(9.533088395981618 + (gps - 1126260000.) / 3600. * 24. / sidereal_day, 24) * np.pi / 12.
+    return np.mod(9.533088395981618 + (gps - 1126260000.) / 3600. * 24. / cst.sidereal_day, 24) * np.pi / 12.
 
 
 def LunarMeanSiderealTime(gps):
     # calculate the Lunar mean sidereal time
-    return np.mod((gps - 1126260000.) / (3600. * lunar_sidereal_period), 1) * 2. * np.pi
+    return np.mod((gps - 1126260000.) / (3600. * cst.lunar_sidereal_period), 1) * 2. * np.pi
 
 
 def solarorbit(tt, R, eps, a0, b0):
-    w0 = np.sqrt(G * Msol / R ** 3)  # w0 has a 1% error when using this equation for Earth orbit
+    w0 = np.sqrt(cst.G * cst.Msol / R ** 3)  # w0 has a 1% error when using this equation for Earth orbit
 
     a = w0 * tt + a0
     b = b0 + 2 * np.pi / 3. * np.arange(3)
@@ -460,7 +463,7 @@ def yGW(i, j, polarizations, eij, theta, ra, psi, L, ff):
             + eij[:, i, 0] * eij[:, i, 1] * hxy + eij[:, i, 0] * eij[:, i, 2] * hxz + eij[:, i, 1] * eij[:, i, 2] * hyz
 
     y = 0.5 / (1 + sgn * proj[:, np.newaxis]) * (
-            np.exp(2j * np.pi * ff * L / c * (muk / 3. + 1.)) - np.exp(2j * np.pi * ff * L / c * muj / 3.)) * h_ifo[
+            np.exp(2j * np.pi * ff * L / c * (muk / 3. + 1.)) - np.exp(2j * np.pi * ff * L / cst.c * muj / 3.)) * h_ifo[
                                                                                                               :,
                                                                                                               np.newaxis]
 
@@ -468,8 +471,8 @@ def yGW(i, j, polarizations, eij, theta, ra, psi, L, ff):
 
 
 def alpha(i, yGWij, L, ff):
-    dL = np.exp(2j * np.pi * ff[:, 0] * L / c)
-    dL2 = np.exp(4j * np.pi * ff[:, 0] * L / c)
+    dL = np.exp(2j * np.pi * ff[:, 0] * L / cst.c)
+    dL2 = np.exp(4j * np.pi * ff[:, 0] * L / cst.c)
 
     return yGWij[:, np.mod(i + 1, 3), i] - yGWij[:, np.mod(i - 1, 3), i] \
            + dL * (yGWij[:, i, np.mod(i - 1, 3)] - yGWij[:, i, np.mod(i + 1, 3)]) \
@@ -518,11 +521,11 @@ def projection(parameters, detector, polarizations, timevector, frequencyvector,
 
         theta = np.pi / 2. - dec
 
-        pp = solarorbit(timevector, AU, interferometers[0].eps, 0., 0.)
+        pp = solarorbit(timevector, cst.AU, interferometers[0].eps, 0., 0.)
         eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / interferometers[0].L
 
         # start_time = time.time()
-        doppler_to_strain = c / (interferometers[0].L * 2 * np.pi * ff)
+        doppler_to_strain = cst.c / (interferometers[0].L * 2 * np.pi * ff)
         proj = doppler_to_strain * AET(polarizations, eij, theta, ra, psi, interferometers[0].L, ff)
         # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
@@ -613,10 +616,10 @@ def projection_longwavelength(parameters, detector, polarizations, timevector, f
         e2 = interferometers[k].e2
 
         # interferometer position
-        x_det = interferometers[k].position[0] * R_earth
-        y_det = interferometers[k].position[1] * R_earth
-        z_det = interferometers[k].position[2] * R_earth
-        phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / c * np.squeeze(frequencyvector)
+        x_det = interferometers[k].position[0] * cst.R_earth
+        y_det = interferometers[k].position[1] * cst.R_earth
+        z_det = interferometers[k].position[2] * cst.R_earth
+        phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(frequencyvector)
 
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
         proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
@@ -731,10 +734,10 @@ def lisaGWresponse(detector, frequencyvector):
 
     theta = np.pi / 2. - dec
 
-    pp = solarorbit(timevector, AU, interferometers[0].eps, 0., 0.)
+    pp = solarorbit(timevector, cst.AU, interferometers[0].eps, 0., 0.)
     eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / interferometers[0].L
 
-    doppler_to_strain = c / (interferometers[0].L * 2 * np.pi * ff)
+    doppler_to_strain = cst.c / (interferometers[0].L * 2 * np.pi * ff)
     proj = doppler_to_strain * AET(polarizations, eij, theta, ra, psi, interferometers[0].L, ff)
 
     plt.figure()
@@ -757,10 +760,10 @@ def lisaGWresponse(detector, frequencyvector):
         costheta = 2 * np.random.rand() - 1
         psi = 2 * np.pi * np.random.rand()
 
-        pp = solarorbit(timevector, AU, interferometers[0].eps, 0., 0.)
+        pp = solarorbit(timevector, cst.AU, interferometers[0].eps, 0., 0.)
         eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / interferometers[0].L
 
-        doppler_to_strain = c / (interferometers[0].L * 2 * np.pi * ff)
+        doppler_to_strain = cst.c / (interferometers[0].L * 2 * np.pi * ff)
         proj += (doppler_to_strain * AET(polarizations, eij, np.arccos(costheta), ra, psi, interferometers[0].L,
                                          ff)) ** 2
 

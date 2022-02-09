@@ -1,4 +1,8 @@
 import matplotlib.pyplot as plt
+import numpy as np
+
+import constants as cst
+import auxiliary as aux
 
 def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     ff = frequencyvector
@@ -7,28 +11,28 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     phic = parameters['phase']
     tc = parameters['geocent_time']
     z = parameters['redshift']
-    r = parameters['luminosity_distance'] * Mpc
+    r = parameters['luminosity_distance'] * cst.Mpc
     iota = parameters['iota']
-    M1 = parameters['mass_1'] * (1 + z) * Msol
-    M2 = parameters['mass_2'] * (1 + z) * Msol
+    M1 = parameters['mass_1'] * (1 + z) * cst.Msol
+    M2 = parameters['mass_2'] * (1 + z) * cst.Msol
 
     M = M1 + M2
     mu = M1 * M2 / M
 
-    Mc = G * mu ** 0.6 * M ** 0.4 / c ** 3
+    Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
 
     # compute GW amplitudes (https://arxiv.org/pdf/2012.01350.pdf)
-    hp = c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / (np.pi * ff) ** (7. / 6.) * (
+    hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / (np.pi * ff) ** (7. / 6.) * (
             1. + np.cos(iota) ** 2.)
-    hc = c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / (np.pi * ff) ** (7. / 6.) * 2. * np.cos(iota)
+    hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / (np.pi * ff) ** (7. / 6.) * 2. * np.cos(iota)
 
     C = 0.57721566  # Euler constant
     eta = mu / M
 
-    f_isco = fisco(parameters)
+    f_isco = aux.fisco(parameters)
 
-    v = (np.pi * G * M / c ** 3 * ff) ** (1. / 3.)
-    v_isco = (np.pi * G * M / c ** 3 * f_isco) ** (1. / 3.)
+    v = (np.pi * cst.G * M / cst.c ** 3 * ff) ** (1. / 3.)
+    v_isco = (np.pi * cst.G * M / cst.c ** 3 * f_isco) ** (1. / 3.)
 
     # coefficients of the PN expansion (https://arxiv.org/pdf/0907.0700.pdf)
     pp = np.hstack((1. * ones, 0. * ones, 20. / 9. * (743. / 336. + eta * 11. / 4.) * ones, -16 * np.pi * ones,

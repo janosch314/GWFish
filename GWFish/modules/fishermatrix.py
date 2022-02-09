@@ -1,3 +1,9 @@
+import numpy as np
+import waveforms as wf
+import detection as det
+import auxiliary as aux
+import constants as cst
+
 def invertSVD(matrix):
     dm = np.sqrt(np.diag(matrix))
     normalizer = np.outer(dm, dm)
@@ -26,18 +32,18 @@ def derivative(parameters, p, detector, frequencyvector, max_time_until_merger):
     tc = local_params['geocent_time']
 
     if p == 4:  # derivative wrt luminosity distance
-        wave, t_of_f = TaylorF2(local_params, frequencyvector, maxn=8)
-        r = local_params['luminosity_distance'] * Mpc
-        derivative = -1. / r * projection(local_params, detector, wave, t_of_f, frequencyvector, max_time_until_merger)
+        wave, t_of_f = wf.TaylorF2(local_params, frequencyvector, maxn=8)
+        r = local_params['luminosity_distance'] * cst.Mpc
+        derivative = -1. / r * det.projection(local_params, detector, wave, t_of_f, frequencyvector, max_time_until_merger)
     elif p == 7:    # derivative wrt merger time
-        wave, t_of_f = TaylorF2(local_params, frequencyvector, maxn=8)
+        wave, t_of_f = wf.TaylorF2(local_params, frequencyvector, maxn=8)
 
-        derivative = 2j * np.pi * frequencyvector * projection(local_params, detector, wave, t_of_f, frequencyvector,
+        derivative = 2j * np.pi * frequencyvector * det.projection(local_params, detector, wave, t_of_f, frequencyvector,
                                                                max_time_until_merger)
     elif p == 8:    # derivative wrt phase parameter
-        wave, t_of_f = TaylorF2(local_params, frequencyvector, maxn=8)
+        wave, t_of_f = wf.TaylorF2(local_params, frequencyvector, maxn=8)
 
-        derivative = -1j * projection(local_params, detector, wave, t_of_f, frequencyvector, max_time_until_merger)
+        derivative = -1j * det.projection(local_params, detector, wave, t_of_f, frequencyvector, max_time_until_merger)
     else:
         pv = local_params[fisher_parameters[p]]
         eps = 1e-5  # this follows the simple "cube root of numerical precision" recommendation, which is 1e-16 for double
@@ -50,22 +56,22 @@ def derivative(parameters, p, detector, frequencyvector, max_time_until_merger):
         pv_set2[fisher_parameters[p]] = pv + dp / 2.
 
         if p < 3:  # these parameters do not influence the waveform
-            wave, t_of_f = TaylorF2(local_params, frequencyvector, maxn=8)
+            wave, t_of_f = wf.TaylorF2(local_params, frequencyvector, maxn=8)
 
-            signal1 = projection(pv_set1, detector, wave, t_of_f, frequencyvector, max_time_until_merger)
-            signal2 = projection(pv_set2, detector, wave, t_of_f, frequencyvector, max_time_until_merger)
+            signal1 = det.projection(pv_set1, detector, wave, t_of_f, frequencyvector, max_time_until_merger)
+            signal2 = det.projection(pv_set2, detector, wave, t_of_f, frequencyvector, max_time_until_merger)
 
             derivative = (signal2 - signal1) / dp
         else:
             pv_set1['geocent_time'] = 0.  # to improve precision of numerical differentiation
             pv_set2['geocent_time'] = 0.
-            wave1, t_of_f1 = TaylorF2(pv_set1, frequencyvector, maxn=8)
-            wave2, t_of_f2 = TaylorF2(pv_set2, frequencyvector, maxn=8)
+            wave1, t_of_f1 = wf.TaylorF2(pv_set1, frequencyvector, maxn=8)
+            wave2, t_of_f2 = wf.TaylorF2(pv_set2, frequencyvector, maxn=8)
 
             pv_set1['geocent_time'] = tc
             pv_set2['geocent_time'] = tc
-            signal1 = projection(pv_set1, detector, wave1, t_of_f1+tc, frequencyvector, max_time_until_merger)
-            signal2 = projection(pv_set2, detector, wave2, t_of_f2+tc, frequencyvector, max_time_until_merger)
+            signal1 = det.projection(pv_set1, detector, wave1, t_of_f1+tc, frequencyvector, max_time_until_merger)
+            signal2 = det.projection(pv_set2, detector, wave2, t_of_f2+tc, frequencyvector, max_time_until_merger)
 
             derivative = np.exp(2j * np.pi * frequencyvector * tc) * (signal2 - signal1) / dp
 
@@ -80,10 +86,10 @@ def FisherMatrix(parameters, detector, frequencyvector, max_time_until_merger):
     for p1 in np.arange(num_p):
         deriv1 = derivative(parameters, p1, detector, frequencyvector, max_time_until_merger)
         # sum Fisher matrices from different interferometers of same detector (e.g., in the case of ET)
-        fm[p1, p1] = np.sum(scalar_product(deriv1, deriv1, detector.interferometers, frequencyvector), axis=0)
+        fm[p1, p1] = np.sum(aux.scalar_product(deriv1, deriv1, detector.interferometers, frequencyvector), axis=0)
         for p2 in np.arange(p1 + 1, num_p):
             deriv2 = derivative(parameters, p2, detector, frequencyvector, max_time_until_merger)
-            fm[p1, p2] = np.sum(scalar_product(deriv1, deriv2, detector.interferometers, frequencyvector), axis=0)
+            fm[p1, p2] = np.sum(aux.scalar_product(deriv1, deriv2, detector.interferometers, frequencyvector), axis=0)
             fm[p2, p1] = fm[p1, p2]
 
     return fm
@@ -128,8 +134,8 @@ def analyzeFisherErrors(network, parameters, population, networks_ids):
                         network_fisher_matrix += np.squeeze(network.detectors[d].fisher_matrix[k, :, :])
 
             if network_fisher_matrix[0, 0] > 0:
-                network_fisher_matrix[4, :] *= Mpc  # changing to D_lum error unit to Mpc
-                network_fisher_matrix[:, 4] *= Mpc
+                network_fisher_matrix[4, :] *= cst.Mpc  # changing to D_lum error unit to Mpc
+                network_fisher_matrix[:, 4] *= cst.Mpc
                 network_fisher_inverse = invertSVD(network_fisher_matrix)
                 parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
                 sky_localization[k] = 2. * np.pi * np.abs(np.cos(parameters['dec'].iloc[k])) \

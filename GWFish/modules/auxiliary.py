@@ -1,9 +1,16 @@
 import scipy.optimize as optimize
+import numpy as np
+
+from astropy.cosmology import FlatLambdaCDM
+cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
+
+import detection as det
+import constants as cst
 
 def fisco(parameters):
-    M = (parameters['mass_1'] + parameters['mass_2']) * Msol * (1 + parameters['redshift'])
+    M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + parameters['redshift'])
 
-    return 1 / (np.pi) * c ** 3 / (G * M) / 6 ** 1.5  # frequency of innermost stable circular orbit
+    return 1 / (np.pi) * cst.c ** 3 / (cst.G * M) / 6 ** 1.5  # frequency of innermost stable circular orbit
 
 
 def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
@@ -12,20 +19,20 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
     def dSNR(z, detector, SNR0):
         z = np.max([0.05, z[0]])
 
-        r = cosmo.luminosity_distance(z).value * Mpc
+        r = cosmo.luminosity_distance(z).value * cst.Mpc
 
         # define necessary variables, multiplied with solar mass, parsec, etc.
-        M = (parameters['mass_1'] + parameters['mass_2']) * Msol * (1 + z)
+        M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + z)
         mu = (parameters['mass_1'] * parameters['mass_2'] / (
-                parameters['mass_1'] + parameters['mass_2'])) * Msol * (1 + z)
+                parameters['mass_1'] + parameters['mass_2'])) * cst.Msol * (1 + z)
 
         parameters['redshift'] = z
         f_isco_z = fisco(parameters)
 
-        Mc = G * mu ** 0.6 * M ** 0.4 / c ** 3
+        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
 
         # compute GW amplitudes (https://arxiv.org/pdf/2012.01350.pdf) with optimal orientation
-        hp = c / r * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / (np.pi * ff) ** (7. / 6.)
+        hp = cst.c / r * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / (np.pi * ff) ** (7. / 6.)
         hp[
             ff > 5 * f_isco_z] = 0  # very crude, but reasonable high-f cut-off; matches roughly IMR spectra (in qadrupole order)
         print(5 * f_isco_z)
@@ -54,7 +61,7 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
             proj[:, k] = 0.5 * hp[:, 0] * (e1 @ hpij @ e1 - e2 @ hpij @ e2) \
                          + 0.5 * hc[:, 0] * (e1 @ hcij @ e1 - e2 @ hcij @ e2)
 
-        SNRs = SNR(interferometers, proj, ff)
+        SNRs = det.SNR(interferometers, proj, ff)
         SNRtot = np.sqrt(np.sum(SNRs ** 2))
 
         # print('z = ' + str(z) + ', r = ' + str(cosmo.luminosity_distance(z).value) + 'Mpc, SNR = '+str(SNRtot))
