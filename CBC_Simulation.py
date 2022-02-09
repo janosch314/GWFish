@@ -7,7 +7,6 @@ from numpy.random import default_rng
 
 import time
 import json
-import progressbar
 
 from tqdm import tqdm
 from astropy.cosmology import FlatLambdaCDM
@@ -105,7 +104,6 @@ def main():
 
     #print(parameters.iloc[0])
     print('Processing CBC population')
-    bar = progressbar.ProgressBar(max_value=len(parameters))
 
     for k in tqdm(np.arange(len(parameters))):
         one_parameters = parameters.iloc[k]
@@ -124,10 +122,6 @@ def main():
                     gw.FisherMatrix(one_parameters, network.detectors[d], frequencyvector, max_time_until_merger)
 
         network.SNR[k] = np.sqrt(networkSNR_sq)
-
-        bar.update(k)
-
-    bar.finish()
 
     gw.analyzeDetections(network, parameters, population, networks_ids)
 

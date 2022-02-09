@@ -6,7 +6,7 @@ import pandas as pd
 from numpy.random import default_rng
 
 import time
-import progressbar
+from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 from astropy.cosmology import FlatLambdaCDM
@@ -137,8 +137,7 @@ def main():
     cnt = np.zeros((N,))
 
     print('Processing CBC population')
-    bar = progressbar.ProgressBar(max_value=len(parameters))
-    for k in np.arange(ns):
+    for k in tqdm(np.arange(ns)):
         one_parameters = parameters.iloc[k]
         tc = one_parameters['geocent_time']
 
@@ -171,10 +170,6 @@ def main():
                         cnt[n] += 1
                         signals_ii[ii,:] = 0
                         h_of_f[:,:,n] += signals_ii
-
-        bar.update(k)
-
-    bar.finish()
 
     analyzeForeground(network, h_of_f, frequencyvector, dT)
 
