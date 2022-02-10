@@ -13,7 +13,7 @@ from astropy.cosmology import FlatLambdaCDM
 
 import argparse
 
-import GWFish as gw
+import GWFish.modules as gw
 
 cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
 
@@ -35,7 +35,7 @@ def main():
         help='Short population identifier for file names.'
              'Uses BBH if no argument given.')
     parser.add_argument(
-        '--detectors', type=str, default=['ET0'], nargs='+',
+        '--detectors', type=str, default=['ET'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
         '--networks', default=['[[0]]'], help='Network IDs. Uses [[0]] as default if no argument given.')
@@ -89,12 +89,9 @@ def main():
     parameters = pd.read_hdf(folder+pop_file)
 
 
-    print(parameters)
-    parameters['iota'] = np.pi/2
-
     ns = len(parameters)
 
-    network = gw.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters)
+    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters)
 
     # lisaGWresponse(network.detectors[0], frequencyvector)
     # exit()
@@ -107,26 +104,26 @@ def main():
 
     for k in tqdm(np.arange(len(parameters))):
         one_parameters = parameters.iloc[k]
-        wave, t_of_f = gw.TaylorF2(one_parameters, frequencyvector, maxn=8)
+        wave, t_of_f = gw.waveforms.TaylorF2(one_parameters, frequencyvector, maxn=8)
 
         networkSNR_sq = 0
         for d in np.arange(len(network.detectors)):
-            signal = gw.projection(one_parameters, network.detectors[d], wave, t_of_f, frequencyvector,
+            signal = gw.detection.projection(one_parameters, network.detectors[d], wave, t_of_f, frequencyvector,
                                 max_time_until_merger)
 
-            SNRs = gw.SNR(network.detectors[d].interferometers, signal, frequencyvector, duty_cycle=duty_cycle)
+            SNRs = gw.detection.SNR(network.detectors[d].interferometers, signal, frequencyvector, duty_cycle=duty_cycle)
             networkSNR_sq += np.sum(SNRs ** 2)
             network.detectors[d].SNR[k] = np.sqrt(np.sum(SNRs ** 2))
             if calculate_errors:
                 network.detectors[d].fisher_matrix[k, :, :] = \
-                    gw.FisherMatrix(one_parameters, network.detectors[d], frequencyvector, max_time_until_merger)
+                    gw.fishermatrix.FisherMatrix(one_parameters, network.detectors[d], frequencyvector, max_time_until_merger)
 
         network.SNR[k] = np.sqrt(networkSNR_sq)
 
-    gw.analyzeDetections(network, parameters, population, networks_ids)
+    gw.detection.analyzeDetections(network, parameters, population, networks_ids)
 
     if calculate_errors:
-        gw.analyzeFisherErrors(network, parameters, population, networks_ids)
+        gw.fishermatrix.analyzeFisherErrors(network, parameters, population, networks_ids)
 
 
 if __name__ == '__main__':

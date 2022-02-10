@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import constants as cst
-import auxiliary as aux
+import GWFish.modules.constants as cst
+import GWFish.modules.auxiliary as aux
 
 def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     ff = frequencyvector

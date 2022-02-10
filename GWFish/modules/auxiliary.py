@@ -4,8 +4,8 @@ import numpy as np
 from astropy.cosmology import FlatLambdaCDM
 cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
 
-import detection as det
-import constants as cst
+import GWFish.modules.detection as det
+import GWFish.modules.constants as cst
 
 def fisco(parameters):
     M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + parameters['redshift'])

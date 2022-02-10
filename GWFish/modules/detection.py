@@ -2,7 +2,7 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import numpy as np
 
-import constants as cst
+import GWFish.modules.constants as cst
 
 class Interferometer:
 
@@ -17,8 +17,8 @@ class Interferometer:
 
         k = self.ifo_id
 
-        if self.name[0:3] == 'ET0':
-            print('ET0')
+        if self.name[0:2] == 'ET':
+            print('ET')
             # the lat/lon/azimuth values are just approximations (for Sardinia site)
             self.lat = (43 + 37. / 60 + 53.0921 / 3600) * np.pi / 180.
             self.lon = (10 + 30. / 60 + 16.1878 / 3600) * np.pi / 180.
@@ -36,7 +36,7 @@ class Interferometer:
             self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * e_long + np.sin(
                 self.arm_azimuth + self.opening_angle) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/ET_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/ET_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -58,7 +58,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/Voyager_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -79,7 +79,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/Voyager_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -100,7 +100,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/Voyager_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -121,7 +121,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/CE1_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/CE1_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -142,7 +142,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/CE2_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/CE2_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -163,7 +163,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/CE1_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/CE1_psd.txt')
 
             self.duty_factor = 0.85
             self.plotrange = [8, 3000, 1e-25, 1e-20]
@@ -183,7 +183,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/LIGO_O5_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -204,7 +204,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/LIGO_O5_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -225,7 +225,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/Virgo_O5_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Virgo_O5_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -246,7 +246,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/Kagra_128Mpc_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Kagra_128Mpc_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -267,7 +267,7 @@ class Interferometer:
             self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
             self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/LIGO_O5_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -338,7 +338,7 @@ class Interferometer:
             self.e1 = e_rad
             self.e2 = np.cos(self.hor_direction) * e_long + np.sin(self.hor_direction) * e_lat
 
-            self.psd_data = np.loadtxt('./detector_psd/LGWA_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/LGWA_psd.txt')
 
             self.duty_factor = 0.7
         else:
