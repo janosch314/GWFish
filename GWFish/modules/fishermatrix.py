@@ -1,8 +1,8 @@
 import numpy as np
-import waveforms as wf
-import detection as det
-import auxiliary as aux
-import constants as cst
+import GWFish.modules.waveforms as wf
+import GWFish.modules.detection as det
+import GWFish.modules.auxiliary as aux
+import GWFish.modules.constants as cst
 
 def invertSVD(matrix):
     dm = np.sqrt(np.diag(matrix))
