@@ -390,7 +390,9 @@ class Detector:
 
 class Network:
 
-    def __init__(self, detector_ids=['ET'], number_of_signals=1, detection_SNR=8., parameters=None, plot=False):
+    def __init__(self, detector_ids = None, number_of_signals=1, detection_SNR=8., parameters=None, plot=False):
+        if detector_ids is None:
+            detector_ids = ['ET']
         self.name = detector_ids[0]
         for id in detector_ids[1:]:
             self.name += '_' + id
