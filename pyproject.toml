@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "GWFish"
+version = "0.1.0"
+description = "A Fisher Matrix code for third-generation gravitational wave detectors."
+authors = ["Jan Harms <jan.harms@gssi.it>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8, <3.11"
+numpy = "^1.22.2"
+tables = "^3.7.0"
+pandas = "^1.4.1"
+astropy = "^5.0.1"
+scipy = "^1.8.0"
+matplotlib = "^3.5.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0.1"
+tox = "^3.24.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
