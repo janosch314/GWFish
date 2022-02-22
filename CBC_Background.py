@@ -22,52 +22,50 @@ rng = default_rng()
 def analyzeForeground(network, h_of_f, frequencyvector, dT):
     ff = frequencyvector
 
-    H0 = 2.4e-18    # 72km/s/Mpc
-    Omega = 2e-10*np.power(ff/10,2./3.)   # Regimbau et al: https://arxiv.org/pdf/2002.05365.pdf
-    h_astro = np.sqrt(3*H0**2/(10*np.pi**2)*Omega/ff**3)
+    H0 = 2.4e-18  # 72km/s/Mpc
+    Omega = 2e-10 * np.power(ff / 10, 2. / 3.)  # Regimbau et al: https://arxiv.org/pdf/2002.05365.pdf
+    h_astro = np.sqrt(3 * H0 ** 2 / (10 * np.pi ** 2) * Omega / ff ** 3)
 
     for d in np.arange(len(network.detectors)):
 
         interferometers = network.detectors[d].interferometers
-        psd_astro_all = np.abs(np.squeeze(h_of_f[:,d,:]))**2/dT
-        psd_astro_one = psd_astro_all[:,0]
-        psd_astro_mean = np.mean(psd_astro_all, axis=1)
+        psd_astro_all = np.abs(np.squeeze(h_of_f[:, d, :])) ** 2 / dT
+        N = len(psd_astro_all[0, :])
 
         plotrange = interferometers[0].plotrange
 
-        fig = plt.figure(figsize=(9, 6))
-        plt.loglog(ff, np.sqrt(psd_astro_one))
-        plt.loglog(ff, np.sqrt(psd_astro_mean))
-        plt.loglog(ff, h_astro)
-        plt.loglog(ff, np.sqrt(interferometers[0].Sn(ff)))
-        plt.xlabel('Frequency [Hz]', fontsize=20)
-        plt.ylabel(r"Strain spectra [$1/\sqrt{\rm Hz}$]", fontsize=20)
-        plt.xlim((plotrange[0], plotrange[1]))
-        plt.ylim((plotrange[2]/100, plotrange[3]/100))
-        plt.grid(True)
-        plt.tick_params(labelsize=20)
-        plt.tight_layout()
-        plt.savefig('Astrophysical_' + interferometers[0].name + '.png', dpi=300)
-        plt.close()
-
-        bb = np.logspace(-27, -22, 60)
+        bb = np.logspace(-28, -22, 100)
         hist = np.empty((len(bb) - 1, len(ff)))
         for i in range(len(ff)):
-            hist[:, i] = np.histogram(np.sqrt(psd_astro_all[i,:]), bins=bb)[0]
+            hist[:, i] = np.histogram(np.sqrt(psd_astro_all[i, :]), bins=bb)[0]
         bb = np.delete(bb, -1)
+
+        # calculate percentiles
+        hist_norm = hist / N
+        hist_norm[np.isnan(hist_norm)] = 0
+        histsum = np.cumsum(hist_norm, axis=0) / (np.sum(hist_norm, axis=0)[np.newaxis, :])
+        ii10 = np.argmin(np.abs(histsum - 0.1), axis=0)
+        ii50 = np.argmin(np.abs(histsum - 0.5), axis=0)
+        ii90 = np.argmin(np.abs(histsum - 0.9), axis=0)
 
         hist[hist == 0] = np.nan
 
+        fig = plt.figure(figsize=(9, 6))
         plt.figure(figsize=(9, 6))
         cmap = plt.get_cmap('RdYlBu_r')
         cm = plt.pcolormesh(np.transpose(ff), bb, hist, cmap=cmap)
-        plt.loglog(ff, np.sqrt(psd_astro_mean))
-        plt.loglog(ff, h_astro)
-        plt.loglog(ff, np.sqrt(interferometers[0].Sn(ff)))
+        # plt.loglog(ff, h_astro)
+        plt.loglog(ff, np.sqrt(interferometers[0].Sn(ff)), color='green')
+        plt.loglog(ff, bb[ii10], 'w-')
+        plt.loglog(ff, bb[ii50], 'w-')
+        plt.loglog(ff, bb[ii90], 'w-')
+        plt.loglog(ff, bb[ii10], 'k--')
+        plt.loglog(ff, bb[ii50], 'k--')
+        plt.loglog(ff, bb[ii90], 'k--')
         plt.xlabel('Frequency [Hz]', fontsize=20)
         plt.ylabel(r"Strain spectra [$1/\sqrt{\rm Hz}$]", fontsize=20)
         plt.xlim((plotrange[0], plotrange[1]))
-        plt.ylim((plotrange[2]/100, plotrange[3]/100))
+        plt.ylim((plotrange[2] / 100, plotrange[3] / 100))
         plt.colorbar
         plt.grid(True)
         fig.colorbar(cm)
@@ -114,6 +112,8 @@ def main():
 
     dT = 60
     N = 7200
+    #dT = 24*3600
+    #N = 100
     t0 = 1104105616
 
     frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
