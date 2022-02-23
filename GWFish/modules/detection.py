@@ -2,6 +2,7 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import numpy as np
 
+import GWFish as gw
 import GWFish.modules.constants as cst
 
 class Interferometer:
@@ -36,7 +37,7 @@ class Interferometer:
             self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * e_long + np.sin(
                 self.arm_azimuth + self.opening_angle) * e_lat
 
-            self.psd_data = np.loadtxt('GWFish/detector_psd/ET_psd.txt')
+            self.psd_data = np.loadtxt(gw.__path__[0] + '/detector_psd/ET_psd.txt')
 
             self.duty_factor = 0.85
 
