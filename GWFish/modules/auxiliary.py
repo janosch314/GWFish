@@ -42,14 +42,14 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
         hpij = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 0]])
         hcij = np.array([[0, 1, 0], [1, 0, 0], [0, 0, 0]])
 
-        interferometers = detector.interferometers
+        components = detector.components
 
         # project signal onto the detector
-        proj = np.zeros((len(hp), len(interferometers)), dtype=complex)
+        proj = np.zeros((len(hp), len(components)), dtype=complex)
 
-        for k in np.arange(len(interferometers)):
+        for k in np.arange(len(components)):
             if detector.name == 'ET':
-                n = interferometers[k].ifo_id
+                n = components[k].ifo_id
                 az = n * np.pi * 2. / 3.
                 opening_angle = np.pi / 3.
                 e1 = np.array([np.cos(az), np.sin(az), 0.])
@@ -61,7 +61,7 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
             proj[:, k] = 0.5 * hp[:, 0] * (e1 @ hpij @ e1 - e2 @ hpij @ e2) \
                          + 0.5 * hc[:, 0] * (e1 @ hcij @ e1 - e2 @ hcij @ e2)
 
-        SNRs = det.SNR(interferometers, proj, ff)
+        SNRs = det.SNR(detector, proj)
         SNRtot = np.sqrt(np.sum(SNRs ** 2))
 
         # print('z = ' + str(z) + ', r = ' + str(cosmo.luminosity_distance(z).value) + 'Mpc, SNR = '+str(SNRtot))
@@ -75,7 +75,10 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
               .format(parameters['mass_1'] + parameters['mass_2'], detSNR[1], zmax))
 
 
-def scalar_product(deriv1, deriv2, interferometers, ff):
+def scalar_product(deriv1, deriv2, detector):
+    components = detector.components
+    ff = detector.frequencyvector
+
     if deriv1.ndim == 1:
         deriv1 = deriv1[:, np.newaxis]
         deriv2 = deriv2[:, np.newaxis]
@@ -85,9 +88,9 @@ def scalar_product(deriv1, deriv2, interferometers, ff):
 
     df = ff[1, 0] - ff[0, 0]
 
-    scalar_prods = np.zeros(len(interferometers))
-    for k in np.arange(len(interferometers)):
+    scalar_prods = np.zeros(len(components))
+    for k in np.arange(len(components)):
         scalar_prods[k] = 4 * df * np.sum(
-            np.real(deriv1[:, k] * np.conjugate(deriv2[:, k])) / interferometers[k].Sn(ff[:, 0]), axis=0)
+            np.real(deriv1[:, k] * np.conjugate(deriv2[:, k])) / components[k].Sn(ff[:, 0]), axis=0)
 
     return scalar_prods

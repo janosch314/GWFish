@@ -27,7 +27,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default=['CBC_pop_trial1.hdf5'], nargs=1,
+        '--pop_file', type=str, default=['CBC_pop.hdf5'], nargs=1,
         help='Population to run the analysis on.'
              'Runs on BBH_injections_1e6.hdf5 if no argument given.')
     parser.add_argument(
@@ -40,39 +40,11 @@ def main():
     parser.add_argument(
         '--networks', default=['[[0]]'], help='Network IDs. Uses [[0]] as default if no argument given.')
     args = parser.parse_args()
-    
-
-    d = args.detectors
-    
-    if ('ET' in d):
-        fmin = 10
-        fmax = 2048
-        df = 1./4.
-        #df = 1. / 16. # for binary NSs
-    elif ('LGWA' in d):
-        fmin = 1e-3
-        fmax = 4
-        df = 1. / 4096.
-    elif ('LISA' in d):
-        fmin = 1e-3
-        fmax = 0.3
-        df = 1e-4
-    else:
-        fmin = 8
-        fmax = 1024
-        df = 1. / 4.
-
-  
-
-    frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
-    #print('f_vec before = ',frequencyvector)
-    frequencyvector = frequencyvector[:, np.newaxis]
-    #print('f_vec after = ',frequencyvector)
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
     #print('threshold_SNR = ',threshold_SNR)
     max_time_until_merger = 10 * 3.16e7  # used for LISA, where observation times of a signal can be limited by mission lifetime
-    calculate_errors = True    # whether to calculate Fisher-matrix based PE errors
+    calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
     pop_file = args.pop_file[0]
@@ -81,13 +53,9 @@ def main():
     # population = 'BBH'
 
     detectors_ids = args.detectors
-    # detectors_ids = ['ET', '1kkk',...]
-    print(detectors_ids)
     networks_ids = json.loads(args.networks[0])
-    print(networks_ids)
 
     parameters = pd.read_hdf(folder+pop_file)
-
 
     ns = len(parameters)
 
@@ -104,19 +72,18 @@ def main():
 
     for k in tqdm(np.arange(len(parameters))):
         one_parameters = parameters.iloc[k]
-        wave, t_of_f = gw.waveforms.TaylorF2(one_parameters, frequencyvector, maxn=8)
 
         networkSNR_sq = 0
         for d in np.arange(len(network.detectors)):
-            signal = gw.detection.projection(one_parameters, network.detectors[d], wave, t_of_f, frequencyvector,
-                                max_time_until_merger)
+            wave, t_of_f = gw.waveforms.TaylorF2(one_parameters, network.detectors[d].frequencyvector, maxn=8)
+            signal = gw.detection.projection(one_parameters, network.detectors[d], wave, t_of_f, max_time_until_merger)
 
-            SNRs = gw.detection.SNR(network.detectors[d].interferometers, signal, frequencyvector, duty_cycle=duty_cycle)
+            SNRs = gw.detection.SNR(network.detectors[d], signal, duty_cycle=duty_cycle)
             networkSNR_sq += np.sum(SNRs ** 2)
             network.detectors[d].SNR[k] = np.sqrt(np.sum(SNRs ** 2))
             if calculate_errors:
                 network.detectors[d].fisher_matrix[k, :, :] = \
-                    gw.fishermatrix.FisherMatrix(one_parameters, network.detectors[d], frequencyvector, max_time_until_merger)
+                    gw.fishermatrix.FisherMatrix(one_parameters, network.detectors[d], max_time_until_merger)
 
         network.SNR[k] = np.sqrt(networkSNR_sq)
 

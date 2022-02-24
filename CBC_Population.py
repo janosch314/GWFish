@@ -79,6 +79,9 @@ def rateCosmicAge(nz=1000, plot=False):
     return samples
 
 def main():
+    # example to run with command-line argument:
+    # python CBC_Population.py --ns=10000
+
     folder = './injections/'
 
     parser = argparse.ArgumentParser()
