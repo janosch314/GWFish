@@ -309,22 +309,9 @@ class DetectorComponent:
 
             self.plotrange = [1e-3, 0.3, 1e-22, 1e-19]
         elif self.name[0:4] == 'LGWA':
-            if k == 0:  # Shackleton
-                self.lat = -89.9 * np.pi / 180.
-                self.lon = 0
-                self.hor_direction = np.pi
-            elif k == 1:  # de Garlache
-                self.lat = -88.5 * np.pi / 180.
-                self.lon = -87.1 * np.pi / 180.
-                self.hor_direction = np.pi
-            elif k == 2:  # Shoemaker
-                self.lat = -88.1 * np.pi / 180.
-                self.lon = 44.9 * np.pi / 180.
-                self.hor_direction = np.pi
-            elif k == 3:  # Faustini
-                self.lat = -87.3 * np.pi / 180.
-                self.lon = 77 * np.pi / 180.
-                self.hor_direction = np.pi
+            self.lat = -89.9 * np.pi / 180.
+            self.lon = 0
+            self.hor_direction = np.pi
 
             e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
             e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
@@ -879,7 +866,6 @@ def analyzeDetections(network, parameters, population, networks_ids):
 
     for n in np.arange(N):
         maxz = 0
-        threshold = np.zeros((len(parameters),))
 
         network_ids = networks_ids[n]
         network_name = '_'.join([network.detectors[k].name for k in network_ids])
@@ -894,10 +880,12 @@ def analyzeDetections(network, parameters, population, networks_ids):
         save_data = np.c_[save_data, SNR]
 
         threshold = SNR > detSNR[1]
+
         ndet = len(np.where(threshold)[0])
+
         if ndet > 0:
             if 'id' in parameters.columns:
-                print(parameters['id'][np.where(threshold)] + ' was detected.')
+                print(parameters['id'].iloc[np.where(threshold)] + ' was detected.')
             maxz = np.max(parameters['redshift'].iloc[np.where(threshold)].to_numpy())
         print(
             'Detected signals with SNR>{:.3f}: {:.3f} ({:} out of {:}); z<{:.3f}'.format(detSNR[1], ndet / ns, ndet, ns,
