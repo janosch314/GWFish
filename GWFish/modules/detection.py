@@ -864,6 +864,8 @@ def analyzeDetections(network, parameters, population, networks_ids):
 
     param_pick = param_names + ['redshift']
     save_data = parameters[param_pick]
+    if 'id' in parameters.columns:
+        save_data = np.c_[parameters['id'], save_data]
 
     for n in np.arange(N):
         maxz = 0
@@ -885,8 +887,6 @@ def analyzeDetections(network, parameters, population, networks_ids):
         ndet = len(np.where(threshold)[0])
 
         if ndet > 0:
-            if 'id' in parameters.columns:
-                print(parameters['id'].iloc[np.where(threshold)] + ' was detected.')
             maxz = np.max(parameters['redshift'].iloc[np.where(threshold)].to_numpy())
         print(
             'Detected signals with SNR>{:.3f}: {:.3f} ({:} out of {:}); z<{:.3f}'.format(detSNR[1], ndet / ns, ndet, ns,
@@ -894,4 +894,7 @@ def analyzeDetections(network, parameters, population, networks_ids):
 
         print('SNR: {:.3f} (min) , {:.3f} (max) '.format(np.min(SNR), np.max(SNR)))
 
-    np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f')
+    if 'id' in parameters.columns:
+        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%s '+"%.3f "*(len(save_data[0,:])-1))
+    else:
+        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f')

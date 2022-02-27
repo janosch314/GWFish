@@ -143,5 +143,12 @@ def analyzeFisherErrors(network, parameters, population, networks_ids):
         ii = np.where(networkSNR > detect_SNR[1])[0]
         save_data = np.c_[networkSNR[ii], parameters['redshift'].iloc[ii], parameters[param_names].iloc[ii],
                           sky_localization[ii], parameter_errors[ii, :]]
-        np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt', save_data,
-                   delimiter=' ')
+        if 'id' in parameters.columns:
+            save_data = np.c_[parameters['id'].iloc[ii], save_data]
+
+        if ('id' in parameters.columns) and (len(save_data)>0):
+            np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
+                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1))
+        else:
+            np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
+                       save_data, delimiter=' ')
