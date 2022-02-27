@@ -2,7 +2,6 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import numpy as np
 
-import GWFish as gw
 import GWFish.modules.constants as cst
 
 class DetectorComponent:
@@ -36,7 +35,7 @@ class DetectorComponent:
             self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * e_long + np.sin(
                 self.arm_azimuth + self.opening_angle) * e_lat
 
-            self.psd_data = np.loadtxt(gw.__path__[0] + '/detector_psd/ET_psd.txt')
+            self.psd_data = np.loadtxt('GWFish/detector_psd/ET_psd.txt')
 
             self.duty_factor = 0.85
 
@@ -312,7 +311,8 @@ class DetectorComponent:
         elif self.name[0:4] == 'LGWA':
             self.lat = -89.9 * np.pi / 180.
             self.lon = 0
-            self.hor_direction = np.pi
+            self.hor_direction = np.random.uniform(0, 2.*np.pi)
+            #self.hor_direction = np.pi
 
             e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
             e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
@@ -718,13 +718,13 @@ def projection_moon(parameters, detector, polarizations, timevector, max_time_un
     for k in np.arange(len(components)):
         e1 = components[k].e1
         e2 = components[k].e2
-        # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
-        proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
-                     + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
-                     + 0.5 * (e1[2] ** 2 - e2[2] ** 2) * hzz \
-                     + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
-                     + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
-                     + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
+        # proj[:, k] = np.einsum('i,jik,k->j', e1, hij, e2)
+        proj[:, k] = e1[0] * e2[0] * hxx \
+                     + e1[1] * e2[1] * hyy \
+                     + e1[2] * e2[2] * hzz \
+                     + (e1[0] * e2[1] + e2[0] * e1[1]) * hxy \
+                     + (e1[0] * e2[2] + e2[0] * e1[2]) * hxz \
+                     + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     max_observation_time = detector.mission_lifetime
