@@ -38,7 +38,7 @@ def main():
         '--detectors', type=str, default=['ET'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
-        '--networks', default=['[[0]]'], help='Network IDs. Uses [[0]] as default if no argument given.')
+        '--networks', default='[[0]]', help='Network IDs. Uses [[0]] as default if no argument given.')
     args = parser.parse_args()
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
