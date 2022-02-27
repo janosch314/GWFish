@@ -212,8 +212,8 @@ def main():
         parameters['mass_1'] = 1.4
         parameters['mass_2'] = 1.4
 
-    if population == 'GWTC-2':
-        parameters = pd.read_csv('/Users/anacarolinaoliveira/Documents/GSSI/Code/injections/GWTC-2_test.txt',
+    if population == 'GWTC-3':
+        parameters = pd.read_csv('./injections/GWTC-3.txt',
                                 names=['id', 'geocent_time', 'mass_1', 'mass_2', 'luminosity_distance', 'chi_eff', 'redshift'],
                                 delimiter=',')
         ns = len(parameters)
