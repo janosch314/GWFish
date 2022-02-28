@@ -27,7 +27,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default=['CBC_pop.hdf5'], nargs=1,
+        '--pop_file', type=str, default=['BBH_1e5.hdf5'], nargs=1,
         help='Population to run the analysis on.'
              'Runs on BBH_injections_1e6.hdf5 if no argument given.')
     parser.add_argument(
@@ -35,13 +35,13 @@ def main():
         help='Short population identifier for file names.'
              'Uses BBH if no argument given.')
     parser.add_argument(
-        '--detectors', type=str, default=['ET'], nargs='+',
+        '--detectors', type=str, default=['ET1'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
         '--networks', default='[[0]]', help='Network IDs. Uses [[0]] as default if no argument given.')
     
     parser.add_argument(
-        '--config', type=str, default=['detConfig_1.yaml'], help='Configuration file where the detector specificationa are stored. Uses detConfig.yaml as default if no argument given.')
+        '--config', type=str, default=['detConfig.yaml'], help='Configuration file where the detector specificationa are stored. Uses detConfig.yaml as default if no argument given.')
    
 
     args = parser.parse_args()
@@ -57,14 +57,15 @@ def main():
     # population = 'BBH'
 
     detectors_ids = args.detectors
-    networks_ids = json.loads(args.networks[0])
+    networks_ids = args.networks[0]
+    #json.loads(args.networks[0])
 
     parameters = pd.read_hdf(folder+pop_file)
     ConfigDet=args.config[0]
     
     ns = len(parameters)
 
-    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters)#, Config=ConfigDet)
+    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters, Config=ConfigDet)
 
     # lisaGWresponse(network.detectors[0], frequencyvector)
     # exit()
