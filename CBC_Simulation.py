@@ -40,7 +40,9 @@ def main():
     parser.add_argument(
         '--networks', default='[[0]]', help='Network IDs. Uses [[0]] as default if no argument given.')
     args = parser.parse_args()
-
+    parser.add_argument(
+        '--config', default=['detConfig_1.yaml'], help='Configuration file where the detector specificationa are stored. Uses detConfig.yaml as default if no argument given.')
+    
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
     #print('threshold_SNR = ',threshold_SNR)
     max_time_until_merger = 10 * 3.16e7  # used for LISA, where observation times of a signal can be limited by mission lifetime
@@ -56,10 +58,11 @@ def main():
     networks_ids = json.loads(args.networks[0])
 
     parameters = pd.read_hdf(folder+pop_file)
-
+    ConfigDet=args.config[0]
+    
     ns = len(parameters)
 
-    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters)
+    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters, Config=ConfigDet)
 
     # lisaGWresponse(network.detectors[0], frequencyvector)
     # exit()
