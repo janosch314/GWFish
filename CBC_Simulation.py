@@ -39,10 +39,13 @@ def main():
         '--networks', default='[[0]]', nargs=1,
         help='Network IDs. Uses [[0]] as default if no argument given.')
     parser.add_argument(
-        '--config', type=str, default='detConfig.yaml', help='Configuration file where the detector specifications are stored. Uses detConfig.yaml as default if no argument given.')
+        '--config', type=str, default='GWFish/detectors.yaml',
+        help='Configuration file where the detector specifications are stored. Uses GWFish/detectors.yaml as default if no argument given.')
    
 
     args = parser.parse_args()
+    ConfigDet = args.config
+
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
     calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
@@ -54,7 +57,6 @@ def main():
     networks_ids = json.loads(args.networks)
 
     parameters = pd.read_hdf(folder+pop_file)
-    ConfigDet = args.config
 
     network = gw.detection.Network(detectors_ids, detection_SNR=threshold_SNR, parameters=parameters, config=ConfigDet)
 

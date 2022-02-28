@@ -103,7 +103,7 @@ class DetectorComponent:
 
 class Detector:
 
-    def __init__(self, name='ET', parameters=None, config='detConfig.yaml', plot=False):
+    def __init__(self, name='ET', parameters=None, config='detectors.yaml', plot=False):
         self.components = []
         self.fisher_matrix = np.zeros((len(parameters), 9, 9))
         self.name = name
@@ -150,7 +150,7 @@ class Detector:
 
 class Network:
 
-    def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, config='detConfig.yaml',  plot=False):
+    def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, config='detectors.yaml',  plot=False):
         if detector_ids is None:
             detector_ids = ['ET']
         self.name = detector_ids[0]
