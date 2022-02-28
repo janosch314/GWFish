@@ -27,41 +27,35 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default=['CBC_pop.hdf5'], nargs=1,
-        help='Population to run the analysis on.'
-             'Runs on BBH_injections_1e6.hdf5 if no argument given.')
+        '--pop_file', type=str, default='CBC_pop.hdf5', nargs=1,
+        help='Population to run the analysis on. Runs on CBC_pop.hdf5 if no argument given.')
     parser.add_argument(
-        '--pop_id', type=str, default=['BBH'], nargs=1,
-        help='Short population identifier for file names.'
-             'Uses BBH if no argument given.')
+        '--pop_id', type=str, default='BBH', nargs=1,
+        help='Short population identifier for file names. Uses BBH if no argument given.')
     parser.add_argument(
-        '--detectors', type=str, default=['ET1', 'VOH'], nargs='+',
+        '--detectors', type=str, default=['ET'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
-        '--networks', default=['[[0], [1], [0, 1]]'], help='Network IDs. Uses [[0]] as default if no argument given.')
-    
+        '--networks', default='[[0]]', nargs=1,
+        help='Network IDs. Uses [[0]] as default if no argument given.')
     parser.add_argument(
-        '--config', type=str, default=['detConfig.yaml'], help='Configuration file where the detector specificationa are stored. Uses detConfig.yaml as default if no argument given.')
+        '--config', type=str, default='detConfig.yaml', help='Configuration file where the detector specifications are stored. Uses detConfig.yaml as default if no argument given.')
    
 
     args = parser.parse_args()
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    #print('threshold_SNR = ',threshold_SNR)
     max_time_until_merger = 10 * 3.16e7  # used for LISA, where observation times of a signal can be limited by mission lifetime
     calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
-    pop_file = args.pop_file[0]
-    # pop_file = 'CBC_pop.hdf5'
-    population = args.pop_id[0]
-    # population = 'BBH'
+    pop_file = args.pop_file
+    population = args.pop_id
 
     detectors_ids = args.detectors
-    networks_ids = json.loads(args.networks[0])
-    #json.loads(args.networks[0])
+    networks_ids = json.loads(args.networks)
 
     parameters = pd.read_hdf(folder+pop_file)
-    ConfigDet=args.config[0]
+    ConfigDet = args.config
     
     ns = len(parameters)
 
@@ -73,7 +67,6 @@ def main():
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
-    #print(parameters.iloc[0])
     print('Processing CBC population')
 
     for k in tqdm(np.arange(len(parameters))):
