@@ -1,45 +1,403 @@
+from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import numpy as np
 
 import GWFish.modules.constants as cst
-from GWFish.modules.InterferometerSpecification import Interferometer
+
+class DetectorComponent:
+
+    def __init__(self, name='ET', component='', plot=False):
+        self.plot = plot
+        self.id = component
+        self.name = name + str(component)
+
+        self.setProperties()
+
+    def setProperties(self):
+
+        k = self.id
+
+        if self.name[0:2] == 'ET':
+            # the lat/lon/azimuth values are just approximations (for Sardinia site)
+            self.lat = (43 + 37. / 60 + 53.0921 / 3600) * np.pi / 180.
+            self.lon = (10 + 30. / 60 + 16.1878 / 3600) * np.pi / 180.
+            self.opening_angle = np.pi / 3.
+            self.arm_azimuth = 70.5674 * np.pi / 180. + 2. * k * np.pi / 3.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * e_long + np.sin(
+                self.arm_azimuth + self.opening_angle) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/ET_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [3, 3000, 1e-25, 1e-20]
+        elif self.name == 'VOH':
+            self.lat = 46.5 * np.pi / 180.
+            self.lon = -119.4 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 126. * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [10, 1000, 1e-25, 1e-20]
+        elif self.name == 'VOL':
+            self.lat = 30.56 * np.pi / 180.
+            self.lon = -90.77 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = -197.7 * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [10, 1000, 1e-25, 1e-20]
+        elif self.name == 'VOI':
+            self.lat = 19.61 * np.pi / 180.
+            self.lon = 77.03 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 100. * np.pi / 180.  # this value is guessed from wikipage
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [10, 1000, 1e-25, 1e-20]
+        elif self.name == 'CE1':
+            self.lat = 46.5 * np.pi / 180.
+            self.lon = -119.4 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 126. * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/CE1_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [8, 3000, 1e-25, 1e-20]
+        elif self.name == 'CE2':
+            self.lat = 46.5 * np.pi / 180.
+            self.lon = -119.4 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 126. * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/CE2_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [8, 3000, 1e-25, 1e-20]
+        elif self.name == 'CEA':  # hypothetical CE1 in Australia
+            self.lat = -20.517
+            self.lon = 131.061
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 126. * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/CE1_psd.txt')
+
+            self.duty_factor = 0.85
+            self.plotrange = [8, 3000, 1e-25, 1e-20]
+        elif self.name == 'LLO':
+            self.lat = 30.56 * np.pi / 180.
+            self.lon = -90.77 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = -197.7 * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [10, 1000, 1e-25, 1e-20]
+        elif self.name == 'LHO':
+            self.lat = 46.46 * np.pi / 180.
+            self.lon = -119.4 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 126. * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [10, 1000, 1e-25, 1e-20]
+        elif self.name == 'Vir':
+            self.lat = 43.6 * np.pi / 180.
+            self.lon = 10.5 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 71. * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Virgo_O5_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [10, 1000, 1e-25, 1e-20]
+        elif self.name == 'KAG':
+            self.lat = 36.41 * np.pi / 180.
+            self.lon = 137.3 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 29.6 * np.pi / 180.
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/Kagra_128Mpc_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [10, 1000, 1e-25, 1e-20]
+        elif self.name == 'LIN':
+            self.lat = 19.61 * np.pi / 180.
+            self.lon = 77.03 * np.pi / 180.
+            self.opening_angle = np.pi / 2.
+            self.arm_azimuth = 100. * np.pi / 180.  # this value is guessed from wikipage
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+
+            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
+                                      np.cos(self.lat) * np.sin(self.lon),
+                                      np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
+            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
+
+            self.duty_factor = 0.85
+
+            self.plotrange = [10, 1000, 1e-25, 1e-20]
+        elif self.name[0:4] == 'LISA':
+            self.opening_angle = np.pi / 3.
+            self.lat = 43.6 * np.pi / 180.
+            self.lon = 10.5 * np.pi / 180.
+            self.arm_azimuth = 71. * np.pi / 180.
+
+            ff = np.logspace(-4, 0, 1000)
+
+            # see LISA 2017 mission document
+            P_rec = 700e-12
+            S_acc = 9e-30 * (1 + (4e-4 / ff) ** 2) * (1 + (ff / 8e-3) ** 4)
+            self.L = 2.5e9
+            f0 = cst.c / 1064e-9
+            self.eps = self.L / cst.AU / (2 * np.sqrt(3))
+
+            self.psd_data = np.zeros((len(ff), 2))
+            self.psd_data[:, 0] = ff
+            # noises in units of GW strain
+            # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
+            S_opt = 1e-22 * (1 + (2e-3 / ff) ** 4) / self.L ** 2
+            S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
+
+            if k < 2:
+                # instrument noise of A,E channels
+                self.psd_data[:, 1] = 16 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
+                        3 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c) + np.cos(4 * np.pi * ff * self.L / cst.c)) * S_pm \
+                                      + 8 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
+                                              2 + np.cos(2 * np.pi * ff * self.L / cst.c)) * S_opt
+            else:
+                # instrument noise of T channel
+                self.psd_data[:, 1] = 2 * (1 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c)) ** 2 * (
+                        4 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * S_pm + S_opt)
+
+            # the sensitivity model is based on a sky-averaged GW response. In the long-wavelength regime, it can be
+            # converted into a simple noise PSD by multiplying with 3/10 (arXiv:1803.01944)
+            self.duty_factor = 1.
+
+            self.plotrange = [1e-3, 0.3, 1e-22, 1e-19]
+        elif self.name[0:4] == 'LGWA':
+            self.lat = -89.9 * np.pi / 180.
+            self.lon = 0
+            self.hor_direction = np.random.uniform(0, 2.*np.pi)
+            #self.hor_direction = np.pi
+
+            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
+                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+            e_rad = np.array([np.cos(self.lat) * np.cos(self.lon),
+                              np.cos(self.lat) * np.sin(self.lon),
+                              np.sin(self.lat)])
+
+            self.e1 = e_rad
+            self.e2 = np.cos(self.hor_direction) * e_long + np.sin(self.hor_direction) * e_lat
+
+            self.psd_data = np.loadtxt('GWFish/detector_psd/LGWA_psd.txt')
+
+            self.duty_factor = 0.7
+        else:
+            print('Detector ' + self.name + ' invalid!')
+            exit()
+
+        self.Sn = interp1d(self.psd_data[:, 0], self.psd_data[:, 1], bounds_error=False, fill_value=1.)
+
+        if self.plot:
+            plt.figure()
+            plt.loglog(self.psd_data[:, 0], np.sqrt(self.psd_data[:, 1]))
+            plt.xlabel('Frequency [Hz]')
+            plt.ylabel('Strain noise')
+            plt.grid(True)
+            plt.tight_layout()
+            plt.savefig('Sensitivity_' + self.name + '.png')
+            plt.close()
 
 
 class Detector:
 
-    def __init__(self, name='ET', number_of_signals=1, parameters=None, Config='detConfig.yaml', plot=False):
-    #def __init__(self, name='ET', number_of_signals=1, parameters=None, plot=False):
-        self.interferometers = []
+    def __init__(self, name='ET', number_of_signals=1, parameters=None, plot=False):
+        self.components = []
         self.fisher_matrix = np.zeros((len(parameters), 9, 9))
         self.name = name
-        self.Config = Config
         self.SNR = np.zeros(len(parameters))
 
         if name == 'LISA':
-            self.coordinates = 'barycentric'
+            self.location = 'solarorbit'
             self.mission_lifetime = 4 * 3.16e7
-        elif name == 'LGWA':
-            self.coordinates = 'selenographic'
-            self.mission_lifetime = 10 * 3.16e7
-        else:
-            self.coordinates = 'earthbased'
 
-        if name[0:2] == 'ET' or name[1:3] == 'ET' or name == 'LISA':
-            for k in np.arange(3):
-                self.interferometers.append(
-                    Interferometer(name=name, interferometer=k, Config=Config, plot=plot))
-        elif name[0:4] == 'LGWA':
-            for k in np.arange(4):
-                self.interferometers.append(
-                    Interferometer(name=name, interferometer=k, Config=Config, plot=plot))
+            fmin = 1e-3
+            fmax = 0.3
+            df = 1e-4
+
+        elif name == 'LGWA':
+            self.location = 'moon'
+            self.mission_lifetime = 10 * 3.16e7
+
+            fmin = 1e-3
+            fmax = 4
+            df = 1. / 4096.
+        elif name == 'ET':
+            self.location = 'earth'
+
+            fmin = 2
+            fmax = 1024
+            df = 1. / 16.
         else:
-            self.interferometers.append(
-                Interferometer(name=name, Config=Config, plot=plot))
-           
+            self.location = 'earth'
+
+            fmin = 8
+            fmax = 1024
+            df = 1. / 4.
+
+        self.frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
+        self.frequencyvector = self.frequencyvector[:, np.newaxis]
+
+        if name == 'ET' or name == 'LISA':
+            for k in np.arange(3):
+                self.components.append(DetectorComponent(name=name, component=k, plot=plot))
+        elif name == 'LGWA':
+            for k in np.arange(4):
+                self.components.append(DetectorComponent(name=name, component=k, plot=plot))
+        else:
+            self.icomponents.append(DetectorComponent(name=name, plot=plot))
+
 
 class Network:
 
-    def __init__(self, detector_ids=['ET'], number_of_signals=1, detection_SNR=8., parameters=None, Config='detConfig.yaml', plot=False):
+    def __init__(self, detector_ids = None, number_of_signals=1, detection_SNR=8., parameters=None, plot=False):
+        if detector_ids is None:
+            detector_ids = ['ET']
         self.name = detector_ids[0]
         for id in detector_ids[1:]:
             self.name += '_' + id
@@ -49,9 +407,10 @@ class Network:
 
         self.detectors = []
         for d in np.arange(len(detector_ids)):
-            detectors = Detector(name=detector_ids[d], number_of_signals=number_of_signals, parameters=parameters, Config=Config, plot=plot)
+            detectors = Detector(name=detector_ids[d], number_of_signals=number_of_signals, parameters=parameters,
+                                 plot=plot)
             self.detectors.append(detectors)
-            print ("We have %d detectors here:"%(len(detector_ids)))
+
 
 def GreenwichMeanSiderealTime(gps):
     # calculate the Greenwhich mean sidereal time
@@ -111,9 +470,7 @@ def yGW(i, j, polarizations, eij, theta, ra, psi, L, ff):
             + eij[:, i, 0] * eij[:, i, 1] * hxy + eij[:, i, 0] * eij[:, i, 2] * hxz + eij[:, i, 1] * eij[:, i, 2] * hyz
 
     y = 0.5 / (1 + sgn * proj[:, np.newaxis]) * (
-            np.exp(2j * np.pi * ff * L / c * (muk / 3. + 1.)) - np.exp(2j * np.pi * ff * L / cst.c * muj / 3.)) * h_ifo[
-                                                                                                              :,
-                                                                                                              np.newaxis]
+            np.exp(2j * np.pi * ff * L / c * (muk / 3. + 1.)) - np.exp(2j * np.pi * ff * L / cst.c * muj / 3.)) * h_ifo[:,np.newaxis]
 
     return y
 
@@ -145,54 +502,62 @@ def AET(polarizations, eij, theta, ra, psi, L, ff):
     return np.hstack((A[:, np.newaxis], E[:, np.newaxis], T[:, np.newaxis]))
 
 
-def projection(parameters, detector, polarizations, timevector, frequencyvector, max_time_until_merger):
+def projection(parameters, detector, polarizations, timevector, max_time_until_merger):
     # rudimentary:
     # coords = SkyCoord(ra=ra, dec=dec, frame='icrs', unit='rad')
     # angles = coords.transform_to('barycentricmeanecliptic')
 
-    if detector.coordinates == 'earthbased':
-        proj = projection_longwavelength(parameters, detector, polarizations, timevector, frequencyvector)
-    elif detector.coordinates == 'selenographic':
+    if detector.location == 'earth':
+        proj = projection_earth(parameters, detector, polarizations, timevector)
+    elif detector.location == 'moon':
         proj = projection_moon(parameters, detector, polarizations, timevector, max_time_until_merger)
+    elif detector.location == 'solarorbit':
+        proj = projection_solarborbit(parameters, detector, polarizations, timevector, max_time_until_merger)
     else:
-        nt = len(polarizations[:, 0])
-        ff = frequencyvector
-
-        interferometers = detector.interferometers
-
-        if timevector.ndim == 1:
-            timevector = timevector[:, np.newaxis]
-
-        ra = parameters['ra']
-        dec = parameters['dec']
-        psi = parameters['psi']
-
-        theta = np.pi / 2. - dec
-
-        pp = solarorbit(timevector, cst.AU, interferometers[0].eps, 0., 0.)
-        eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / interferometers[0].L
-
-        # start_time = time.time()
-        doppler_to_strain = cst.c / (interferometers[0].L * 2 * np.pi * ff)
-        proj = doppler_to_strain * AET(polarizations, eij, theta, ra, psi, interferometers[0].L, ff)
-        # print("Calculation of projection: %s seconds" % (time.time() - start_time))
-
-        # define LISA observation window
-        max_observation_time = detector.mission_lifetime
-        tc = parameters['geocent_time']
-        proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
-        proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
-
-        i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
-        i1 = np.argmin(np.abs(timevector - (tc - max_time_until_merger + max_observation_time)))
-
-        if 'id' in parameters:
-            print('{} observed between {:.3f}Hz to {:.3f}Hz'.format(parameters['id'], ff[i0, 0], ff[i1, 0]))
+        print('Unknown detector location')
+        exit(0)
 
     return proj
 
+def projection_solarorbit(parameters, detector, polarizations, timevector):
+    nt = len(polarizations[:, 0])
+    ff = detector.frequencyvector
 
-def projection_longwavelength(parameters, detector, polarizations, timevector, frequencyvector):
+    components = detector.components
+
+    if timevector.ndim == 1:
+        timevector = timevector[:, np.newaxis]
+
+    # note that RA/DEC are not translated into solar-centered coordinates! TO BE FIXED
+    ra = parameters['ra']
+    dec = parameters['dec']
+    psi = parameters['psi']
+
+    theta = np.pi / 2. - dec
+
+    pp = solarorbit(timevector, cst.AU, components[0].eps, 0., 0.)
+    eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / components[0].L
+
+    # start_time = time.time()
+    doppler_to_strain = cst.c / (components[0].L * 2 * np.pi * ff)
+    proj = doppler_to_strain * AET(polarizations, eij, theta, ra, psi, components[0].L, ff)
+    # print("Calculation of projection: %s seconds" % (time.time() - start_time))
+
+    # define LISA observation window
+    max_observation_time = detector.mission_lifetime
+    tc = parameters['geocent_time']
+    proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
+    proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
+
+    i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
+    i1 = np.argmin(np.abs(timevector - (tc - max_time_until_merger + max_observation_time)))
+
+    if 'id' in parameters:
+        print('{} observed between {:.3f}Hz to {:.3f}Hz'.format(parameters['id'], ff[i0, 0], ff[i1, 0]))
+
+    return proj
+
+def projection_earth(parameters, detector, polarizations, timevector):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame
@@ -204,9 +569,10 @@ def projection_longwavelength(parameters, detector, polarizations, timevector, f
     # timevector = parameters['geocent_time'] * np.ones_like(timevector)  # switch off Earth's rotation
 
     nt = len(polarizations[:, 0])
+    ff = detector.frequencyvector
 
-    interferometers = detector.interferometers
-    proj = np.zeros((nt, len(interferometers)), dtype=complex)
+    components = detector.components
+    proj = np.zeros((nt, len(components)), dtype=complex)
 
     if timevector.ndim == 1:
         timevector = timevector[:, np.newaxis]
@@ -259,15 +625,15 @@ def projection_longwavelength(parameters, detector, polarizations, timevector, f
     # print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
 
     # start_time = time.time()
-    for k in np.arange(len(interferometers)):
-        e1 = interferometers[k].e1
-        e2 = interferometers[k].e2
+    for k in np.arange(len(components)):
+        e1 = components[k].e1
+        e2 = components[k].e2
 
         # interferometer position
-        x_det = interferometers[k].position[0] * cst.R_earth
-        y_det = interferometers[k].position[1] * cst.R_earth
-        z_det = interferometers[k].position[2] * cst.R_earth
-        phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(frequencyvector)
+        x_det = components[k].position[0] * cst.R_earth
+        y_det = components[k].position[1] * cst.R_earth
+        z_det = components[k].position[2] * cst.R_earth
+        phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
 
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
         proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
@@ -295,12 +661,13 @@ def projection_moon(parameters, detector, polarizations, timevector, max_time_un
 
     nt = len(polarizations[:, 0])
 
-    interferometers = detector.interferometers
-    proj = np.zeros((nt, len(interferometers)), dtype=complex)
+    components = detector.components
+    proj = np.zeros((nt, len(components)), dtype=complex)
 
     if timevector.ndim == 1:
         timevector = timevector[:, np.newaxis]
 
+    # note that RA/DEC are not translated into lunar-centered coordinates! TO BE FIXED
     ra = parameters['ra']
     dec = parameters['dec']
     psi = parameters['psi']
@@ -348,16 +715,16 @@ def projection_moon(parameters, detector, polarizations, timevector, max_time_un
     # print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
 
     # start_time = time.time()
-    for k in np.arange(len(interferometers)):
-        e1 = interferometers[k].e1
-        e2 = interferometers[k].e2
-        # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
-        proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
-                     + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
-                     + 0.5 * (e1[2] ** 2 - e2[2] ** 2) * hzz \
-                     + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
-                     + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
-                     + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
+    for k in np.arange(len(components)):
+        e1 = components[k].e1
+        e2 = components[k].e2
+        # proj[:, k] = np.einsum('i,jik,k->j', e1, hij, e2)
+        proj[:, k] = e1[0] * e2[0] * hxx \
+                     + e1[1] * e2[1] * hyy \
+                     + e1[2] * e2[2] * hzz \
+                     + (e1[0] * e2[1] + e2[0] * e1[1]) * hxy \
+                     + (e1[0] * e2[2] + e2[0] * e1[2]) * hxz \
+                     + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     max_observation_time = detector.mission_lifetime
@@ -367,14 +734,14 @@ def projection_moon(parameters, detector, polarizations, timevector, max_time_un
     return proj
 
 
-def lisaGWresponse(detector, frequencyvector):
-    ff = frequencyvector
+def lisaGWresponse(detector):
+    ff = detector.frequencyvector
     nf = len(ff)
 
     polarizations = np.ones((nf, 2))
     timevector = np.zeros((nf, 1))
 
-    interferometers = detector.interferometers
+    components = detector.components
 
     ra = 0
     dec = np.pi / 2.
@@ -382,11 +749,11 @@ def lisaGWresponse(detector, frequencyvector):
 
     theta = np.pi / 2. - dec
 
-    pp = solarorbit(timevector, cst.AU, interferometers[0].eps, 0., 0.)
-    eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / interferometers[0].L
+    pp = solarorbit(timevector, cst.AU, components[0].eps, 0., 0.)
+    eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / components[0].L
 
-    doppler_to_strain = cst.c / (interferometers[0].L * 2 * np.pi * ff)
-    proj = doppler_to_strain * AET(polarizations, eij, theta, ra, psi, interferometers[0].L, ff)
+    doppler_to_strain = cst.c / (components[0].L * 2 * np.pi * ff)
+    proj = doppler_to_strain * AET(polarizations, eij, theta, ra, psi, components[0].L, ff)
 
     plt.figure()
     plt.loglog(ff, np.abs(proj[:, 0]))
@@ -408,18 +775,18 @@ def lisaGWresponse(detector, frequencyvector):
         costheta = 2 * np.random.rand() - 1
         psi = 2 * np.pi * np.random.rand()
 
-        pp = solarorbit(timevector, cst.AU, interferometers[0].eps, 0., 0.)
-        eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / interferometers[0].L
+        pp = solarorbit(timevector, cst.AU, components[0].eps, 0., 0.)
+        eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / components[0].L
 
-        doppler_to_strain = cst.c / (interferometers[0].L * 2 * np.pi * ff)
-        proj += (doppler_to_strain * AET(polarizations, eij, np.arccos(costheta), ra, psi, interferometers[0].L,
+        doppler_to_strain = cst.c / (components[0].L * 2 * np.pi * ff)
+        proj += (doppler_to_strain * AET(polarizations, eij, np.arccos(costheta), ra, psi, components[0].L,
                                          ff)) ** 2
 
     proj /= N
 
     psds = np.zeros((nf, 3))
     for k in range(3):
-        psds[:, k] = interferometers[k].Sn(ff[:, 0])
+        psds[:, k] = components[k].Sn(ff[:, 0])
 
     plt.figure()
     plt.loglog(ff, np.sqrt(psds[:, 0] / np.abs(proj[:, 0])))
@@ -438,49 +805,50 @@ def lisaGWresponse(detector, frequencyvector):
     plt.close()
 
 
-def SNR(interferometers, signals, frequencyvector, duty_cycle=False, plot=None):
+def SNR(detector, signals, duty_cycle=False, plot=None):
     if signals.ndim == 1:
         signals = signals[:, np.newaxis]
 
-    ff = frequencyvector
+    ff = detector.frequencyvector
     df = ff[1, 0] - ff[0, 0]
+    components = detector.components
 
-    SNRs = np.zeros(len(interferometers))
-    for k in np.arange(len(interferometers)):
+    SNRs = np.zeros(len(components))
+    for k in np.arange(len(components)):
 
-        SNRs[k] = np.sqrt(4 * df * np.sum(np.abs(signals[:, k]) ** 2 / interferometers[k].Sn(ff[:, 0]), axis=0))
-        #print(interferometers[k].name + ': ' + str(SNRs[k]))
+        SNRs[k] = np.sqrt(4 * df * np.sum(np.abs(signals[:, k]) ** 2 / components[k].Sn(ff[:, 0]), axis=0))
+        #print(components[k].name + ': ' + str(SNRs[k]))
         if plot != None:
-            plotrange = interferometers[k].plotrange
+            plotrange = components[k].plotrange
             plt.figure()
             plt.loglog(ff, 2 * np.sqrt(np.abs(signals[:, k]) ** 2 * df))
-            plt.loglog(ff, np.sqrt(interferometers[k].Sn(ff)))
+            plt.loglog(ff, np.sqrt(components[k].Sn(ff)))
             plt.xlabel('Frequency [Hz]')
             plt.ylabel('Strain spectra')
             plt.xlim((plotrange[0], plotrange[1]))
             plt.ylim((plotrange[2], plotrange[3]))
             plt.grid(True)
             plt.tight_layout()
-            #plt.savefig('SignalNoise_' + str(interferometers[k].name) + '_' + plot + '.png')
-            plt.savefig('SignalNoise_' + str(interferometers[k].name) + '.png')
+            #plt.savefig('SignalNoise_' + str(components[k].name) + '_' + plot + '.png')
+            plt.savefig('SignalNoise_' + str(components[k].name) + '.png')
             plt.close()
 
             plt.figure()
-            plt.semilogx(ff, 2 * np.sqrt(np.abs(signals[:, k]) ** 2 / interferometers[k].Sn(ff[:, 0]) * df))
+            plt.semilogx(ff, 2 * np.sqrt(np.abs(signals[:, k]) ** 2 / components[k].Sn(ff[:, 0]) * df))
             plt.xlabel('Frequency [Hz]')
             plt.ylabel('SNR spectrum')
             plt.xlim((plotrange[0], plotrange[1]))
             plt.grid(True)
             plt.tight_layout()
-            #plt.savefig('SNR_density_' + str(interferometers[k].name) + '_' + plot + '.png')
-            plt.savefig('SNR_density_' + str(interferometers[k].name) + '.png')
+            #plt.savefig('SNR_density_' + str(components[k].name) + '_' + plot + '.png')
+            plt.savefig('SNR_density_' + str(components[k].name) + '.png')
             plt.close()
 
         # set SNRs to zero if interferometer is not operating (according to its duty factor [0,1])
         if duty_cycle:
             operating = np.random.rand()
             #print('operating = ',operating)
-            if interferometers[k].duty_factor < operating:
+            if components[k].duty_factor < operating:
                 SNRs[k] = 0.
 
     return SNRs
@@ -496,10 +864,11 @@ def analyzeDetections(network, parameters, population, networks_ids):
 
     param_pick = param_names + ['redshift']
     save_data = parameters[param_pick]
+    if 'id' in parameters.columns:
+        save_data = np.c_[parameters['id'], save_data]
 
     for n in np.arange(N):
         maxz = 0
-        threshold = np.zeros((len(parameters),))
 
         network_ids = networks_ids[n]
         network_name = '_'.join([network.detectors[k].name for k in network_ids])
@@ -514,12 +883,10 @@ def analyzeDetections(network, parameters, population, networks_ids):
         save_data = np.c_[save_data, SNR]
 
         threshold = SNR > detSNR[1]
-        print('threshold',threshold[0])
+
         ndet = len(np.where(threshold)[0])
-        print('ndet', ndet)
+
         if ndet > 0:
-            if 'id' in parameters.columns:
-                print(parameters['id'][np.where(threshold)] + ' was detected.')
             maxz = np.max(parameters['redshift'].iloc[np.where(threshold)].to_numpy())
         print(
             'Detected signals with SNR>{:.3f}: {:.3f} ({:} out of {:}); z<{:.3f}'.format(detSNR[1], ndet / ns, ndet, ns,
@@ -527,4 +894,7 @@ def analyzeDetections(network, parameters, population, networks_ids):
 
         print('SNR: {:.3f} (min) , {:.3f} (max) '.format(np.min(SNR), np.max(SNR)))
 
-    np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f')
+    if 'id' in parameters.columns:
+        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%s '+"%.3f "*(len(save_data[0,:])-1))
+    else:
+        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f')
