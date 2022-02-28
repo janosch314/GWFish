@@ -7,36 +7,33 @@ import GWFish.modules.constants as cst
 
 class DetectorComponent:
 
-    def __init__(self, name='ET', component='', Config='detConfig.yaml', plot=False):
+    def __init__(self, name, component, config, plot):
         self.plot = plot
         self.id = component
-        self.name = name + str(component)
-        self.Config = Config
+        self.name = name
+        self.config = config
         self.setProperties()
 
     def setProperties(self):
-        Config = self.Config
-        k = self.id
+        config = self.config
 
-        with open(Config) as f:
+        with open(config) as f:
             doc = yaml.load(f, Loader=yaml.FullLoader)
+        detector_def = doc[self.name]
 
-        KeyC = []
-        for key in doc.keys():
-            KeyC.append(key)
-        # print (KeyC)
+        self.duty_factor = eval(str(detector_def['duty_factor']))
+        self.plotrange = np.fromstring(detector_def['plotrange'], dtype=float, sep=',')
 
-        DD = str(self.name)
-        # print (DD, "name of conf file: ", Config)
+        if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'earthL'):
 
-        if self.name[0:2] == 'ET':
-            ETd = self.name[:-1]
+            self.lat = eval(str(detector_def['lat']))
+            self.lon = eval(str(detector_def['lon']))
+            self.arm_azimuth = eval(str(detector_def['azimuth']))
 
-            # print ("doing stuff for ET")
-            self.lat = eval(doc[ETd]["lat"])
-            self.lon = eval(doc[ETd]["lon"])
-            self.opening_angle = eval(doc[ETd]["opening_angle"])
-            self.arm_azimuth = eval(doc[ETd]["arm_azimuth"])
+            self.opening_angle = eval(str(detector_def['opening_angle']))
+
+            if (detector_def['detector_class'] == 'earthDelta'):
+                self.arm_azimuth += 2.*self.id*np.pi/3.
 
             self.e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
             self.e_lat = np.array(
@@ -47,59 +44,50 @@ class DetectorComponent:
             self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * self.e_long + np.sin(
                 self.arm_azimuth + self.opening_angle) * self.e_lat
 
-            self.duty_factor = float(doc[ETd]["duty_factor"])
-            self.plotrange = np.fromstring(doc[ETd]["plotrange"], dtype=float, sep=',')
-            self.psd_data = np.loadtxt(str(doc[ETd]["psd_data"]))
+            self.psd_data = np.loadtxt(detector_def['psd_data'])
 
+        elif detector_def['detector_class'] == 'lunararray':
 
-        elif self.name[0:4] == 'LGWA':
-            Detector = 'LGWA'
-            doc_ = doc[Detector]
-            for key in doc_.keys():
-                doc__ = doc_[key]
-                # for key in doc__.keys():
-                # print (doc__)
-                for i in range(4):
-                    if (doc__["val"] == i):
-                        self.lat = eval(doc__["lat"])
-                        self.lon = eval(doc__["lon"])
-                        self.hor_direction = eval(doc__["hor_direction"])
-                        self.e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-                        self.e_lat = np.array(
-                            [-np.sin(self.lat) * np.cos(self.lon), -np.sin(self.lat) * np.sin(self.lon),
-                             np.cos(self.lat)])
-                        self.e_rad = np.array([np.cos(self.lat) * np.cos(self.lon), np.cos(self.lat) * np.sin(self.lon),
-                                               np.sin(self.lat)])
-                        self.e1 = self.e_rad
-                        self.e2 = np.cos(self.hor_direction) * self.e_long + np.sin(self.hor_direction) * self.e_lat
-                        self.psd_data = np.loadtxt(str(doc__["psd_data"]))
-                        self.duty_factor = float(doc__["duty_factor"])
+            self.lat = eval(str(detector_def['lat']))
+            self.lon = eval(str(detector_def['lon']))
+            self.azimuth = eval(str(detector_def['azimuth']))
 
-                        # This block is for 2L detectors:
-        elif DD in KeyC:
-
-            Detector = str(self.name)
-            # self.k = eval(doc[Detector]["k"])
-            self.lat = eval(doc[Detector]["lat"])
-            self.lon = eval(doc[Detector]["lon"])
-            self.opening_angle = eval(doc[Detector]["opening_angle"])
-            self.arm_azimuth = eval(doc[Detector]["arm_azimuth"])
             self.e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
             self.e_lat = np.array(
-                [-np.sin(self.lat) * np.cos(self.lon), -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-            self.position = np.array(
-                [np.cos(self.lat) * np.cos(self.lon), np.cos(self.lat) * np.sin(self.lon), np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * self.e_long + np.sin(self.arm_azimuth) * self.e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * self.e_long + np.sin(
-                self.arm_azimuth + np.pi / 2.) * self.e_lat
-            self.duty_factor = float(doc[Detector]["duty_factor"])
-            self.plotrange = np.fromstring(doc[Detector]["plotrange"], dtype=float, sep=',')
-            self.psd_data = np.loadtxt(str(doc[Detector]["psd_data"]))
-            print((self.lat), DD)
+                [-np.sin(self.lat) * np.cos(self.lon), -np.sin(self.lat) * np.sin(self.lon),
+                 np.cos(self.lat)])
+            self.e1 = np.array([np.cos(self.lat) * np.cos(self.lon), np.cos(self.lat) * np.sin(self.lon), np.sin(self.lat)])
+            self.e2 = np.cos(self.azimuth) * self.e_long + np.sin(self.azimuth) * self.e_lat
 
-        else:
-            print('Detector ' + self.name + ' invalid!')
-            exit()
+            self.psd_data = np.loadtxt(detector_def['psd_data'])
+        elif detector_def['detector_class'] == 'satellitesolarorbit':
+            # see LISA 2017 mission document
+            ff = np.logspace(-4, 0, 1000)   # later interpolated onto frequencyvector
+            S_acc = 9e-30 * (1 + (4e-4 / ff) ** 2) * (1 + (ff / 8e-3) ** 4)
+
+            self.L = 2.5e9
+            self.eps = self.L / cst.AU / (2 * np.sqrt(3))
+
+            self.psd_data = np.zeros((len(ff), 2))
+            self.psd_data[:, 0] = ff
+            # noises in units of GW strain
+            # P_rec = 700e-12
+            # f0 = cst.c / 1064e-9
+            # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
+            S_opt = 1e-22 * (1 + (2e-3 / ff) ** 4) / self.L ** 2
+            S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
+
+            if self.id < 2:
+                # instrument noise of A,E channels
+                self.psd_data[:, 1] = 16 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
+                        3 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c) + np.cos(
+                    4 * np.pi * ff * self.L / cst.c)) * S_pm \
+                                      + 8 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
+                                              2 + np.cos(2 * np.pi * ff * self.L / cst.c)) * S_opt
+            else:
+                # instrument noise of T channel
+                self.psd_data[:, 1] = 2 * (1 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c)) ** 2 * (
+                        4 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * S_pm + S_opt)
 
         self.Sn = interp1d(self.psd_data[:, 0], self.psd_data[:, 1], bounds_error=False, fill_value=1.)
 
@@ -115,57 +103,54 @@ class DetectorComponent:
 
 class Detector:
 
-    def __init__(self, name='ET', number_of_signals=1, parameters=None, Config='detConfig.yaml', plot=False):
+    def __init__(self, name='ET', parameters=None, config='detConfig.yaml', plot=False):
         self.components = []
         self.fisher_matrix = np.zeros((len(parameters), 9, 9))
         self.name = name
-        self.Config = Config
+        self.config = config
         self.SNR = np.zeros(len(parameters))
 
-        if name == 'LISA':
-            self.location = 'solarorbit'
-            self.mission_lifetime = 4 * 3.16e7
+        with open(config) as f:
+            doc = yaml.load(f, Loader=yaml.FullLoader)
 
-            fmin = 1e-3
-            fmax = 0.3
-            df = 1e-4
+        detectors = []
+        for key in doc.keys():
+            detectors.append(key)
+        if self.name not in detectors:
+            print('Detector ' + self.name + ' invalid!')
+            exit()
 
-        elif name == 'LGWA':
-            self.location = 'moon'
-            self.mission_lifetime = 10 * 3.16e7
+        detector_def = doc[self.name]
 
-            fmin = 1e-3
-            fmax = 4
-            df = 1. / 4096.
-        elif name == 'ET':
-            self.location = 'earth'
-
-            fmin = 2
-            fmax = 1024
-            df = 1. / 16.
-        else:
-            self.location = 'earth'
-
-            fmin = 8
-            fmax = 1024
-            df = 1. / 4.
+        fmin = eval(str(detector_def['fmin']))
+        fmax = eval(str(detector_def['fmax']))
+        df = eval(str(detector_def['df']))
 
         self.frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
         self.frequencyvector = self.frequencyvector[:, np.newaxis]
 
-        if name == 'ET' or name == 'LISA':
+        if detector_def['detector_class'] == 'lunararray':
+            self.location = 'moon'
+            self.mission_lifetime = eval(str(detector_def['mission_lifetime']))
+        elif (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'earthL'):
+            self.location = 'earth'
+        elif detector_def['detector_class'] == 'satellitesolarorbit':
+            self.location = 'solarorbit'
+            self.mission_lifetime = eval(str(detector_def['mission_lifetime']))
+
+        if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'satellitesolarorbit'):
             for k in np.arange(3):
-                self.components.append(DetectorComponent(name=name, component=k, Config=Config, plot=plot))
-        elif name == 'LGWA':
+                self.components.append(DetectorComponent(name=name, component=k, config=config, plot=plot))
+        elif detector_def['detector_class'] == 'lunararray':
             for k in np.arange(4):
-                self.components.append(DetectorComponent(name=name, component=k, Config=Config, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=k, config=config, plot=plot))
         else:
-            self.components.append(DetectorComponent(name=name, Config=Config, plot=plot))
+            self.components.append(DetectorComponent(name=name, component=0, config=config, plot=plot))
 
 
 class Network:
 
-    def __init__(self, detector_ids = None, number_of_signals=1, detection_SNR=8., parameters=None, Config='detConfig.yaml',  plot=False):
+    def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, config='detConfig.yaml',  plot=False):
         if detector_ids is None:
             detector_ids = ['ET']
         self.name = detector_ids[0]
@@ -174,11 +159,11 @@ class Network:
 
         self.detection_SNR = detection_SNR
         self.SNR = np.zeros(len(parameters))
-        self.Config=Config
+        self.config=config
 
         self.detectors = []
         for d in np.arange(len(detector_ids)):
-            detectors = Detector(name=detector_ids[d], number_of_signals=number_of_signals, parameters=parameters, Config=Config, plot=plot)
+            detectors = Detector(name=detector_ids[d], parameters=parameters, config=config, plot=plot)
             self.detectors.append(detectors)
 
 
@@ -240,7 +225,7 @@ def yGW(i, j, polarizations, eij, theta, ra, psi, L, ff):
             + eij[:, i, 0] * eij[:, i, 1] * hxy + eij[:, i, 0] * eij[:, i, 2] * hxz + eij[:, i, 1] * eij[:, i, 2] * hyz
 
     y = 0.5 / (1 + sgn * proj[:, np.newaxis]) * (
-            np.exp(2j * np.pi * ff * L / c * (muk / 3. + 1.)) - np.exp(2j * np.pi * ff * L / cst.c * muj / 3.)) * h_ifo[:,np.newaxis]
+            np.exp(2j * np.pi * ff * L / cst.c * (muk / 3. + 1.)) - np.exp(2j * np.pi * ff * L / cst.c * muj / 3.)) * h_ifo[:,np.newaxis]
 
     return y
 
@@ -272,7 +257,7 @@ def AET(polarizations, eij, theta, ra, psi, L, ff):
     return np.hstack((A[:, np.newaxis], E[:, np.newaxis], T[:, np.newaxis]))
 
 
-def projection(parameters, detector, polarizations, timevector, max_time_until_merger):
+def projection(parameters, detector, polarizations, timevector):
     # rudimentary:
     # coords = SkyCoord(ra=ra, dec=dec, frame='icrs', unit='rad')
     # angles = coords.transform_to('barycentricmeanecliptic')
@@ -280,9 +265,9 @@ def projection(parameters, detector, polarizations, timevector, max_time_until_m
     if detector.location == 'earth':
         proj = projection_earth(parameters, detector, polarizations, timevector)
     elif detector.location == 'moon':
-        proj = projection_moon(parameters, detector, polarizations, timevector, max_time_until_merger)
+        proj = projection_moon(parameters, detector, polarizations, timevector)
     elif detector.location == 'solarorbit':
-        proj = projection_solarborbit(parameters, detector, polarizations, timevector, max_time_until_merger)
+        proj = projection_solarorbit(parameters, detector, polarizations, timevector)
     else:
         print('Unknown detector location')
         exit(0)
@@ -290,7 +275,6 @@ def projection(parameters, detector, polarizations, timevector, max_time_until_m
     return proj
 
 def projection_solarorbit(parameters, detector, polarizations, timevector):
-    nt = len(polarizations[:, 0])
     ff = detector.frequencyvector
 
     components = detector.components
@@ -316,14 +300,15 @@ def projection_solarorbit(parameters, detector, polarizations, timevector):
     # define LISA observation window
     max_observation_time = detector.mission_lifetime
     tc = parameters['geocent_time']
-    proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
-    proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
+    # proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
+    # proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
+    proj[np.where(timevector > tc + max_observation_time), :] = 0.j
 
-    i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
-    i1 = np.argmin(np.abs(timevector - (tc - max_time_until_merger + max_observation_time)))
+    #i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
+    #i1 = np.argmin(np.abs(timevector - (tc - max_time_until_merger + max_observation_time)))
 
-    if 'id' in parameters:
-        print('{} observed between {:.3f}Hz to {:.3f}Hz'.format(parameters['id'], ff[i0, 0], ff[i1, 0]))
+    #if 'id' in parameters:
+    #    print('{} observed between {:.3f}Hz to {:.3f}Hz'.format(parameters['id'], ff[i0, 0], ff[i1, 0]))
 
     return proj
 
@@ -418,7 +403,7 @@ def projection_earth(parameters, detector, polarizations, timevector):
     return proj
 
 
-def projection_moon(parameters, detector, polarizations, timevector, max_time_until_merger):
+def projection_moon(parameters, detector, polarizations, timevector):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame

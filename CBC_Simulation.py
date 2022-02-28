@@ -44,7 +44,6 @@ def main():
 
     args = parser.parse_args()
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    max_time_until_merger = 10 * 3.16e7  # used for LISA, where observation times of a signal can be limited by mission lifetime
     calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
@@ -56,10 +55,8 @@ def main():
 
     parameters = pd.read_hdf(folder+pop_file)
     ConfigDet = args.config
-    
-    ns = len(parameters)
 
-    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters, Config=ConfigDet)
+    network = gw.detection.Network(detectors_ids, detection_SNR=threshold_SNR, parameters=parameters, config=ConfigDet)
 
     # lisaGWresponse(network.detectors[0], frequencyvector)
     # exit()
@@ -75,14 +72,14 @@ def main():
         networkSNR_sq = 0
         for d in np.arange(len(network.detectors)):
             wave, t_of_f = gw.waveforms.TaylorF2(one_parameters, network.detectors[d].frequencyvector, maxn=8)
-            signal = gw.detection.projection(one_parameters, network.detectors[d], wave, t_of_f, max_time_until_merger)
+            signal = gw.detection.projection(one_parameters, network.detectors[d], wave, t_of_f)
 
             SNRs = gw.detection.SNR(network.detectors[d], signal, duty_cycle=duty_cycle)
             networkSNR_sq += np.sum(SNRs ** 2)
             network.detectors[d].SNR[k] = np.sqrt(np.sum(SNRs ** 2))
             if calculate_errors:
                 network.detectors[d].fisher_matrix[k, :, :] = \
-                    gw.fishermatrix.FisherMatrix(one_parameters, network.detectors[d], max_time_until_merger)
+                    gw.fishermatrix.FisherMatrix(one_parameters, network.detectors[d])
 
         network.SNR[k] = np.sqrt(networkSNR_sq)
 

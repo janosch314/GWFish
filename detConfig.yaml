@@ -1,135 +1,128 @@
-ET1:
-            lat:             (43 + 37. / 60 + 53.0921 / 3600) * np.pi / 180.
-            lon:             (10 + 30. / 60 + 16.1878 / 3600) * np.pi / 180.
-            opening_angle:   np.pi / 3.
-            arm_azimuth:     70.5674 * np.pi / 180. + 2. * k * np.pi / 3.
-            psd_data:        'GWFish/detector_psd/ET_psd.txt'
-            duty_factor:     0.85
-            plotrange:       "3, 3000, 1e-25, 1e-20"
-            
-ET2:
-            lat:             46.5 * np.pi / 180.
-            lon:             -119.4 * np.pi / 180.
-            opening_angle:   np.pi / 3.
-            arm_azimuth:     126. * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/ET_psd.txt'
-            duty_factor:     0.85
-            plotrange:       "3, 3000, 1e-25, 1e-20"
-                        
-VOH:
-            lat:             46.5 * np.pi / 180.
-            lon:             -119.4 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     126. * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/Voyager_psd.txt'
-            duty_factor:     0.85
-            plotrange:       "10, 1000, 1e-25, 1e-20"
-VOL:
-            lat:             30.56 * np.pi / 180.
-            lon:             -90.77 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     -197.7 * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/Voyager_psd.txt'
-            duty_factor:     0.85
-            plotrange:       '10, 1000, 1e-25, 1e-20'            
-VOI:
-            lat:             19.61 * np.pi / 180.
-            lon:             77.03 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     100. * np.pi / 180.  # this value is guessed from wikipage
-            psd_data:        'GWFish/detector_psd/Voyager_psd.txt'
-            duty_factor:     0.85
+ET:
+            lat:              (43 + 37. / 60) * np.pi / 180.
+            lon:              (10 + 30. / 60) * np.pi / 180.
+            opening_angle:    np.pi / 3.
+            azimuth:          70.5674 * np.pi / 180.
+            psd_data:         GWFish/detector_psd/ET_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthDelta
+            plotrange:        3, 3000, 1e-25, 1e-20
+            fmin:             2.
+            fmax:             1024.
+            df:               1./16.                 
+VOY:
+            lat:              46.5 * np.pi / 180.
+            lon:              -119.4 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          126. * np.pi / 180.
+            psd_data:         GWFish/detector_psd/Voyager_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            df:               1./4.             
 CE1:
-            lat:             46.5 * np.pi / 180.
-            lon:             -119.4 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     126. * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/CE1_psd.txt'
-            duty_factor:     0.85
-            plotrange:       '8, 3000, 1e-25, 1e-20'
+            lat:              46.5 * np.pi / 180.
+            lon:              -119.4 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          126. * np.pi / 180.
+            psd_data:         GWFish/detector_psd/CE1_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            df:               1./4.     
 CE2:
-            lat:             46.5 * np.pi / 180.
-            lon:             -119.4 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     126. * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/CE2_psd.txt'
-            duty_factor:     0.85
-            plotrange:       '8, 3000, 1e-25, 1e-20'
-CEA:
-            lat:             -20.517
-            lon:             131.061
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     126. * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/CE1_psd.txt'
-            duty_factor:     0.85
-            plotrange:       '8, 3000, 1e-25, 1e-20'
+            lat:              46.5 * np.pi / 180.
+            lon:              -119.4 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          126. * np.pi / 180.
+            psd_data:         GWFish/detector_psd/CE2_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            df:               1./4.    
 LLO:
-            lat:             30.56 * np.pi / 180.
-            lon:             -90.77 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     197.7 * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/LIGO_O5_psd.txt'
-            duty_factor:     0.85
-            plotrange:       10, 1000, 1e-25, 1e-20'
+            lat:              30.56 * np.pi / 180.
+            lon:              -90.77 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          197.7 * np.pi / 180.
+            psd_data:         GWFish/detector_psd/LIGO_O5_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            df:               1./4.     
 LHO:
-            lat:             46.46 * np.pi / 180.
-            lon:             -119.4 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     126. * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/LIGO_O5_psd.txt'
-            duty_factor:     0.85
-            plotrange:       '10, 1000, 1e-25, 1e-20'
-Vir:
-            lat:             43.6 * np.pi / 180.
-            lon:             10.5 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     71. * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/Virgo_O5_psd.txt'
-            duty_factor:     0.85
-            plotrange:       10, 1000, 1e-25, 1e-20
+            lat:              46.46 * np.pi / 180.
+            lon:              -119.4 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          126. * np.pi / 180.
+            psd_data:         GWFish/detector_psd/LIGO_O5_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            df:               1./4.     
+VIR:
+            lat:              43.6 * np.pi / 180.
+            lon:              10.5 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          71. * np.pi / 180.
+            psd_data:         GWFish/detector_psd/Virgo_O5_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            df:               1./4.    
 KAG:
-            lat:             36.41 * np.pi / 180.
-            lon:             137.3 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     29.6 * np.pi / 180.
-            psd_data:        'GWFish/detector_psd/Kagra_128Mpc_psd.txt'
-            duty_factor:     0.85
-            plotrange:       [10, 1000, 1e-25, 1e-20]
+            lat:              36.41 * np.pi / 180.
+            lon:              137.3 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          29.6 * np.pi / 180.
+            psd_data:         GWFish/detector_psd/Kagra_128Mpc_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            df:               1./4.    
 LIN:
-            lat:             19.61 * np.pi / 180.
-            lon:             77.03 * np.pi / 180.
-            opening_angle:   np.pi / 2.
-            arm_azimuth:     100. * np.pi / 180.  # this value is guessed from wikipage
-            psd_data:        'GWFish/detector_psd/LIGO_O5_psd.txt'
-            duty_factor:     0.85
-            plotrange:       '10, 1000, 1e-25, 1e-20'      
-            
+            lat:              19.61 * np.pi / 180.
+            lon:              77.03 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          100. * np.pi / 180.
+            psd_data:         GWFish/detector_psd/LIGO_O5_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            df:               1./4.      
+LISA:  
+            duty_factor:      1
+            detector_class:   satellitesolarorbit
+            mission_lifetime: 4 * 3.16e7
+            plotrange:        1e-3, 0.3, 1e-22, 1e-19
+            fmin:             1e-3
+            fmax:             0.3
+            df:               1e-4     
 LGWA:
-      k0:           #Shackleton
-                    val:           0
-                    lat:           -89.9 * np.pi / 180.
-                    lon:           '0'
-                    hor_direction: np.pi
-                    psd_data:      'GWFish/detector_psd/LGWA_psd.txt'
-                    duty_factor:   0.7  
-      k1:           #de Garlache
-                    val:           1
-                    lat:           -88.5 * np.pi / 180.
-                    lon:           -87.1 * np.pi / 180.
-                    hor_direction: np.pi
-                    psd_data:      'GWFish/detector_psd/LGWA_psd.txt'
-                    duty_factor:   0.7
-      k2:           #Shoemaker
-                    val:           2
-                    lat:           -88.1 * np.pi / 180.
-                    lon:           44.9 * np.pi / 180.
-                    hor_direction: np.pi
-                    psd_data:      'GWFish/detector_psd/LGWA_psd.txt'
-                    duty_factor:   0.7
-      k3:           #Faustini
-                    val:           3
-                    lat:           -87.3 * np.pi / 180.
-                    lon:           77 * np.pi / 180.
-                    hor_direction: np.pi
-                    psd_data:      'GWFish/detector_psd/LGWA_psd.txt'
-                    duty_factor:   0.7
+            lat:              -89.9 * np.pi / 180.
+            lon:              0
+            azimuth:          np.pi
+            psd_data:         GWFish/detector_psd/LGWA_psd.txt
+            duty_factor:      0.7  
+            detector_class:   lunararray
+            mission_lifetime: 10 * 3.16e7
+            plotrange:        1e-3, 4, 1e-23, 1e-19
+            fmin:             1e-3
+            fmax:             4
+            df:               1./4096.
