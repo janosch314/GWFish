@@ -42,6 +42,8 @@ def main():
     
     parser.add_argument(
         '--config', type=str, default=['detConfig_1.yaml'], help='Configuration file where the detector specificationa are stored. Uses detConfig.yaml as default if no argument given.')
+   
+
     args = parser.parse_args()
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
     #print('threshold_SNR = ',threshold_SNR)
@@ -62,7 +64,7 @@ def main():
     
     ns = len(parameters)
 
-    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters, Config=ConfigDet)
+    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters)#, Config=ConfigDet)
 
     # lisaGWresponse(network.detectors[0], frequencyvector)
     # exit()
