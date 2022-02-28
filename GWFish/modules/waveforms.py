@@ -42,7 +42,6 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
                     + (
                             -15737765635. / 3048192. + 2255. / 12. * np.pi ** 2) * eta + 76055. / 1728. * eta ** 2 - 127825. / 1296. * eta ** 3,
                     np.pi * (77096675. / 254016. + 378515. / 1512. * eta - 74045. / 756. * eta ** 2) * ones))
-    # print('pp = ',pp[:,0])
 
     psi = 0.
 
@@ -56,16 +55,12 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     # This FD approach follows Marsat/Baker arXiv:1806.10734v1; equation (22) neglecting the phase term, which does not
     # matter for SNR calculations.
     t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (ff[1] - ff[0]))
-    # print('t_of_f', t_of_f)
     t_of_f = tc + np.vstack((t_of_f, [t_of_f[-1]]))
-    # print('t_of_f', t_of_f)
 
     psi += 2. * np.pi * ff * tc - phic - np.pi / 4.
     phase = np.exp(1.j * psi)
-    # print('phase = ',phase)
-    # print('phase*j = ',1.j * phase)
     polarizations = np.hstack((hp * phase, hc * 1.j * phase))
-    polarizations[np.where(ff > 2 * f_isco), :] = 0.j  # very crude high-f cut-off
+    polarizations[np.where(ff > 4 * f_isco), :] = 0.j  # very crude high-f cut-off
 
     if plot != None:
         plt.figure()
