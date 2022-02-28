@@ -3,353 +3,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import GWFish.modules.constants as cst
+from GWFish.modules.InterferometerSpecification import  DetectorComponent
 
-class DetectorComponent:
-
-    def __init__(self, name='ET', component='', plot=False):
-        self.plot = plot
-        self.id = component
-        self.name = name + str(component)
-
-        self.setProperties()
-
-    def setProperties(self):
-
-        k = self.id
-
-        if self.name[0:2] == 'ET':
-            # the lat/lon/azimuth values are just approximations (for Sardinia site)
-            self.lat = (43 + 37. / 60 + 53.0921 / 3600) * np.pi / 180.
-            self.lon = (10 + 30. / 60 + 16.1878 / 3600) * np.pi / 180.
-            self.opening_angle = np.pi / 3.
-            self.arm_azimuth = 70.5674 * np.pi / 180. + 2. * k * np.pi / 3.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * e_long + np.sin(
-                self.arm_azimuth + self.opening_angle) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/ET_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [3, 3000, 1e-25, 1e-20]
-        elif self.name == 'VOH':
-            self.lat = 46.5 * np.pi / 180.
-            self.lon = -119.4 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 126. * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [10, 1000, 1e-25, 1e-20]
-        elif self.name == 'VOL':
-            self.lat = 30.56 * np.pi / 180.
-            self.lon = -90.77 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = -197.7 * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [10, 1000, 1e-25, 1e-20]
-        elif self.name == 'VOI':
-            self.lat = 19.61 * np.pi / 180.
-            self.lon = 77.03 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 100. * np.pi / 180.  # this value is guessed from wikipage
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/Voyager_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [10, 1000, 1e-25, 1e-20]
-        elif self.name == 'CE1':
-            self.lat = 46.5 * np.pi / 180.
-            self.lon = -119.4 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 126. * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/CE1_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [8, 3000, 1e-25, 1e-20]
-        elif self.name == 'CE2':
-            self.lat = 46.5 * np.pi / 180.
-            self.lon = -119.4 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 126. * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/CE2_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [8, 3000, 1e-25, 1e-20]
-        elif self.name == 'CEA':  # hypothetical CE1 in Australia
-            self.lat = -20.517
-            self.lon = 131.061
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 126. * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/CE1_psd.txt')
-
-            self.duty_factor = 0.85
-            self.plotrange = [8, 3000, 1e-25, 1e-20]
-        elif self.name == 'LLO':
-            self.lat = 30.56 * np.pi / 180.
-            self.lon = -90.77 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = -197.7 * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [10, 1000, 1e-25, 1e-20]
-        elif self.name == 'LHO':
-            self.lat = 46.46 * np.pi / 180.
-            self.lon = -119.4 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 126. * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [10, 1000, 1e-25, 1e-20]
-        elif self.name == 'Vir':
-            self.lat = 43.6 * np.pi / 180.
-            self.lon = 10.5 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 71. * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/Virgo_O5_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [10, 1000, 1e-25, 1e-20]
-        elif self.name == 'KAG':
-            self.lat = 36.41 * np.pi / 180.
-            self.lon = 137.3 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 29.6 * np.pi / 180.
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/Kagra_128Mpc_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [10, 1000, 1e-25, 1e-20]
-        elif self.name == 'LIN':
-            self.lat = 19.61 * np.pi / 180.
-            self.lon = 77.03 * np.pi / 180.
-            self.opening_angle = np.pi / 2.
-            self.arm_azimuth = 100. * np.pi / 180.  # this value is guessed from wikipage
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-
-            self.position = np.array([np.cos(self.lat) * np.cos(self.lon),
-                                      np.cos(self.lat) * np.sin(self.lon),
-                                      np.sin(self.lat)])
-            self.e1 = np.cos(self.arm_azimuth) * e_long + np.sin(self.arm_azimuth) * e_lat
-            self.e2 = np.cos(self.arm_azimuth + np.pi / 2.) * e_long + np.sin(self.arm_azimuth + np.pi / 2.) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/LIGO_O5_psd.txt')
-
-            self.duty_factor = 0.85
-
-            self.plotrange = [10, 1000, 1e-25, 1e-20]
-        elif self.name[0:4] == 'LISA':
-            self.opening_angle = np.pi / 3.
-            self.lat = 43.6 * np.pi / 180.
-            self.lon = 10.5 * np.pi / 180.
-            self.arm_azimuth = 71. * np.pi / 180.
-
-            ff = np.logspace(-4, 0, 1000)
-
-            # see LISA 2017 mission document
-            P_rec = 700e-12
-            S_acc = 9e-30 * (1 + (4e-4 / ff) ** 2) * (1 + (ff / 8e-3) ** 4)
-            self.L = 2.5e9
-            f0 = cst.c / 1064e-9
-            self.eps = self.L / cst.AU / (2 * np.sqrt(3))
-
-            self.psd_data = np.zeros((len(ff), 2))
-            self.psd_data[:, 0] = ff
-            # noises in units of GW strain
-            # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
-            S_opt = 1e-22 * (1 + (2e-3 / ff) ** 4) / self.L ** 2
-            S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
-
-            if k < 2:
-                # instrument noise of A,E channels
-                self.psd_data[:, 1] = 16 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
-                        3 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c) + np.cos(4 * np.pi * ff * self.L / cst.c)) * S_pm \
-                                      + 8 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
-                                              2 + np.cos(2 * np.pi * ff * self.L / cst.c)) * S_opt
-            else:
-                # instrument noise of T channel
-                self.psd_data[:, 1] = 2 * (1 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c)) ** 2 * (
-                        4 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * S_pm + S_opt)
-
-            # the sensitivity model is based on a sky-averaged GW response. In the long-wavelength regime, it can be
-            # converted into a simple noise PSD by multiplying with 3/10 (arXiv:1803.01944)
-            self.duty_factor = 1.
-
-            self.plotrange = [1e-3, 0.3, 1e-22, 1e-19]
-        elif self.name[0:4] == 'LGWA':
-            self.lat = -89.9 * np.pi / 180.
-            self.lon = 0
-            self.hor_direction = np.random.uniform(0, 2.*np.pi)
-            #self.hor_direction = np.pi
-
-            e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
-            e_lat = np.array([-np.sin(self.lat) * np.cos(self.lon),
-                              -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
-            e_rad = np.array([np.cos(self.lat) * np.cos(self.lon),
-                              np.cos(self.lat) * np.sin(self.lon),
-                              np.sin(self.lat)])
-
-            self.e1 = e_rad
-            self.e2 = np.cos(self.hor_direction) * e_long + np.sin(self.hor_direction) * e_lat
-
-            self.psd_data = np.loadtxt('GWFish/detector_psd/LGWA_psd.txt')
-
-            self.duty_factor = 0.7
-        else:
-            print('Detector ' + self.name + ' invalid!')
-            exit()
-
-        self.Sn = interp1d(self.psd_data[:, 0], self.psd_data[:, 1], bounds_error=False, fill_value=1.)
-
-        if self.plot:
-            plt.figure()
-            plt.loglog(self.psd_data[:, 0], np.sqrt(self.psd_data[:, 1]))
-            plt.xlabel('Frequency [Hz]')
-            plt.ylabel('Strain noise')
-            plt.grid(True)
-            plt.tight_layout()
-            plt.savefig('Sensitivity_' + self.name + '.png')
-            plt.close()
 
 
 class Detector:
 
-    def __init__(self, name='ET', number_of_signals=1, parameters=None, plot=False):
+    def __init__(self, name='ET', number_of_signals=1, parameters=None, Config='detConfig.yaml', plot=False):
         self.components = []
         self.fisher_matrix = np.zeros((len(parameters), 9, 9))
         self.name = name
+        self.Config = Config
         self.SNR = np.zeros(len(parameters))
 
         if name == 'LISA':
@@ -367,7 +31,7 @@ class Detector:
             fmin = 1e-3
             fmax = 4
             df = 1. / 4096.
-        elif name == 'ET':
+        elif name[0:2] == 'ET':
             self.location = 'earth'
 
             fmin = 2
@@ -383,19 +47,19 @@ class Detector:
         self.frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
         self.frequencyvector = self.frequencyvector[:, np.newaxis]
 
-        if name == 'ET' or name == 'LISA':
+        if name[0:2] == 'ET' or name == 'LISA':
             for k in np.arange(3):
-                self.components.append(DetectorComponent(name=name, component=k, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=k, Config=Config, plot=plot))
         elif name == 'LGWA':
             for k in np.arange(4):
-                self.components.append(DetectorComponent(name=name, component=k, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=k, Config=Config, plot=plot))
         else:
-            self.icomponents.append(DetectorComponent(name=name, plot=plot))
+            self.components.append(DetectorComponent(name=name, Config=Config, plot=plot))
 
 
 class Network:
 
-    def __init__(self, detector_ids = None, number_of_signals=1, detection_SNR=8., parameters=None, plot=False):
+    def __init__(self, detector_ids = None, number_of_signals=1, detection_SNR=8., parameters=None, Config='detConfig.yaml',  plot=False):
         if detector_ids is None:
             detector_ids = ['ET']
         self.name = detector_ids[0]
@@ -404,11 +68,11 @@ class Network:
 
         self.detection_SNR = detection_SNR
         self.SNR = np.zeros(len(parameters))
+        self.Config=Config
 
         self.detectors = []
         for d in np.arange(len(detector_ids)):
-            detectors = Detector(name=detector_ids[d], number_of_signals=number_of_signals, parameters=parameters,
-                                 plot=plot)
+            detectors = Detector(name=detector_ids[d], number_of_signals=number_of_signals, parameters=parameters, Config=Config, plot=plot)
             self.detectors.append(detectors)
 
 

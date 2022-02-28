@@ -129,6 +129,8 @@ def main():
             parameters = parameters.iloc[0:ns]
 
         ns = len(parameters)
+        
+        print ("%d events included in this simulation"%ns)
 
         parameters['iota'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
         parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.

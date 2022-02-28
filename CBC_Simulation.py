@@ -35,13 +35,13 @@ def main():
         help='Short population identifier for file names.'
              'Uses BBH if no argument given.')
     parser.add_argument(
-        '--detectors', type=str, default=['ET'], nargs='+',
+        '--detectors', type=str, default=['ET1', 'VOH'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
-        '--networks', default='[[0]]', help='Network IDs. Uses [[0]] as default if no argument given.')
+        '--networks', default=['[[0], [1], [0, 1]]'], help='Network IDs. Uses [[0]] as default if no argument given.')
     
     parser.add_argument(
-        '--config', type=str, default=['detConfig_1.yaml'], help='Configuration file where the detector specificationa are stored. Uses detConfig.yaml as default if no argument given.')
+        '--config', type=str, default=['detConfig.yaml'], help='Configuration file where the detector specificationa are stored. Uses detConfig.yaml as default if no argument given.')
    
 
     args = parser.parse_args()
@@ -58,13 +58,14 @@ def main():
 
     detectors_ids = args.detectors
     networks_ids = json.loads(args.networks[0])
+    #json.loads(args.networks[0])
 
     parameters = pd.read_hdf(folder+pop_file)
     ConfigDet=args.config[0]
     
     ns = len(parameters)
 
-    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters)#, Config=ConfigDet)
+    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters, Config=ConfigDet)
 
     # lisaGWresponse(network.detectors[0], frequencyvector)
     # exit()
