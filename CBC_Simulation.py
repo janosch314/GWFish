@@ -27,7 +27,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default=['BBH_1e5.hdf5'], nargs=1,
+        '--pop_file', type=str, default=['CBC_pop.hdf5'], nargs=1,
         help='Population to run the analysis on.'
              'Runs on BBH_injections_1e6.hdf5 if no argument given.')
     parser.add_argument(
@@ -35,10 +35,10 @@ def main():
         help='Short population identifier for file names.'
              'Uses BBH if no argument given.')
     parser.add_argument(
-        '--detectors', type=str, default=['ET1'], nargs='+',
+        '--detectors', type=str, default=['ET1', 'VOH'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
-        '--networks', default='[[0]]', help='Network IDs. Uses [[0]] as default if no argument given.')
+        '--networks', default=['[[0], [1], [0, 1]]'], help='Network IDs. Uses [[0]] as default if no argument given.')
     
     parser.add_argument(
         '--config', type=str, default=['detConfig.yaml'], help='Configuration file where the detector specificationa are stored. Uses detConfig.yaml as default if no argument given.')
@@ -57,7 +57,7 @@ def main():
     # population = 'BBH'
 
     detectors_ids = args.detectors
-    networks_ids = args.networks[0]
+    networks_ids = json.loads(args.networks[0])
     #json.loads(args.networks[0])
 
     parameters = pd.read_hdf(folder+pop_file)

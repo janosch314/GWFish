@@ -54,7 +54,7 @@ class Detector:
             for k in np.arange(4):
                 self.components.append(DetectorComponent(name=name, component=k, Config=Config, plot=plot))
         else:
-            self.icomponents.append(DetectorComponent(name=name, Config=Config, plot=plot))
+            self.components.append(DetectorComponent(name=name, Config=Config, plot=plot))
 
 
 class Network:
