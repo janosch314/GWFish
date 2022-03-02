@@ -47,6 +47,7 @@ def main():
     ConfigDet = args.config
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
+    single_det_threshold_SNR = 1.0 # individual SNR for detection
     calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
@@ -67,6 +68,7 @@ def main():
     # exit()
 
     print('Processing CBC population')
+    
 
     for k in tqdm(np.arange(len(parameters))):
         one_parameters = parameters.iloc[k]
@@ -77,8 +79,11 @@ def main():
             signal = gw.detection.projection(one_parameters, network.detectors[d], wave, t_of_f)
 
             SNRs = gw.detection.SNR(network.detectors[d], signal, duty_cycle=duty_cycle)
-            networkSNR_sq += np.sum(SNRs ** 2)
-            network.detectors[d].SNR[k] = np.sqrt(np.sum(SNRs ** 2))
+            if(np.all(SNRs >= single_det_threshold_SNR)):
+                networkSNR_sq += np.sum(SNRs ** 2)
+                network.detectors[d].SNR[k] = np.sqrt(np.sum(SNRs ** 2))
+            else:
+                network.detectors[d].SNR[k] = 0
             if calculate_errors:
                 network.detectors[d].fisher_matrix[k, :, :] = \
                     gw.fishermatrix.FisherMatrix(one_parameters, network.detectors[d])
