@@ -51,7 +51,7 @@ def main():
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
     #fisher_parameters = ['ra', 'dec', 'psi', 'iota', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
-    fisher_parameters = ['ra','dec','luminosity_distance']
+    fisher_parameters = ['luminosity_distance','ra','dec']
 
     pop_file = args.pop_file
     population = args.pop_id

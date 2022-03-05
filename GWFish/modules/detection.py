@@ -613,17 +613,21 @@ def SNR(detector, signals, duty_cycle=False, plot=None):
 
 
 def analyzeDetections(network, parameters, population, networks_ids):
-    param_names = ['ra', 'dec', 'psi', 'iota', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
 
     detSNR = network.detection_SNR
 
     ns = len(network.SNR)
     N = len(networks_ids)
 
-    param_pick = param_names + ['redshift']
-    save_data = parameters[param_pick]
+    save_data = parameters
+
+    delim = "\t"
+    header = delim.join(parameters.keys())
+
     if 'id' in parameters.columns:
         save_data = np.c_[parameters['id'], save_data]
+        header = "signal\t"+header
+
 
     for n in np.arange(N):
         maxz = 0
@@ -639,6 +643,7 @@ def analyzeDetections(network, parameters, population, networks_ids):
         SNR = np.sqrt(SNR)
 
         save_data = np.c_[save_data, SNR]
+        header += "\t" + network_name + "_SNR"
 
         threshold = SNR > detSNR[1]
 
@@ -653,6 +658,7 @@ def analyzeDetections(network, parameters, population, networks_ids):
         print('SNR: {:.3f} (min) , {:.3f} (max) '.format(np.min(SNR), np.max(SNR)))
 
     if 'id' in parameters.columns:
-        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%s '+"%.3f "*(len(save_data[0,:])-1))
+        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%s '+"%.3f "*(len(save_data[0,:])-1),
+                   header=header)
     else:
-        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f')
+        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f', header=header)
