@@ -119,7 +119,7 @@ def main():
         ii = np.where(parameters['redshift'] < z_max)[0]
         
         # Additional lines 
-        #ii = np.array(rng.choice(ii,size=(ns,) ))
+        # ii = np.array(rng.choice(ii,size=(ns,) ))
         # Gives error!!!
         # End additional lines
         print('There are ' + str(len(ii)) + ' BBH mergers up to z=' + str(z_max) + '.')

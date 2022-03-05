@@ -3,6 +3,20 @@ import numpy as np
 
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
+#import GWFish.modules.lalsim_interface as lalsim
+
+def hphc_amplitudes(waveform, parameters, frequencyvector):
+    if waveform=='gwfish_TaylorF2':
+        hphc = TaylorF2(parameters, frequencyvector)
+    elif waveform[0:7]=='lalbbh_':
+        #hphc = lalsim.BBH(waveform[7:], frequencyvector, **parameters)
+        hphc = []
+    elif waveform[0:7]=='lalbns_':
+        #hphc = lalsim.BNS(waveform[7:], frequencyvector, **parameters)
+        hphc = []
+    else:
+        print(str(waveform) + ' is not a valid waveform Choose v')
+    return hphc
 
 def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     ff = frequencyvector

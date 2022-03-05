@@ -103,9 +103,10 @@ class DetectorComponent:
 
 class Detector:
 
-    def __init__(self, name='ET', parameters=None, config='detectors.yaml', plot=False):
+    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config='detectors.yaml', plot=False):
         self.components = []
-        self.fisher_matrix = np.zeros((len(parameters), 9, 9))
+        nd = len(fisher_parameters)
+        self.fisher_matrix = np.zeros((len(parameters), nd, nd))
         self.name = name
         self.config = config
         self.SNR = np.zeros(len(parameters))
@@ -150,7 +151,8 @@ class Detector:
 
 class Network:
 
-    def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, config='detectors.yaml',  plot=False):
+    def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, fisher_parameters=None,
+                 config='detectors.yaml',  plot=False):
         if detector_ids is None:
             detector_ids = ['ET']
         self.name = detector_ids[0]
@@ -163,7 +165,8 @@ class Network:
 
         self.detectors = []
         for d in np.arange(len(detector_ids)):
-            detectors = Detector(name=detector_ids[d], parameters=parameters, config=config, plot=plot)
+            detectors = Detector(name=detector_ids[d], parameters=parameters, fisher_parameters=fisher_parameters,
+                                 config=config, plot=plot)
             self.detectors.append(detectors)
 
 
