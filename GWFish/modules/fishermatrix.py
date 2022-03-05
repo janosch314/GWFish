@@ -84,7 +84,7 @@ def FisherMatrix(waveform, parameter_values, fisher_parameters, detector):
         # sum Fisher matrices from different components of same detector (e.g., in the case of ET)
         fm[p1, p1] = np.sum(aux.scalar_product(deriv1, deriv1, detector), axis=0)
         for p2 in np.arange(p1+1, nd):
-            deriv2_p = fisher_parameters[p1]
+            deriv2_p = fisher_parameters[p2]
             deriv2 = derivative(waveform, parameter_values, deriv2_p, detector)
             fm[p1, p2] = np.sum(aux.scalar_product(deriv1, deriv2, detector), axis=0)
             fm[p2, p1] = fm[p1, p2]
