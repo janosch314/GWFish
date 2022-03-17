@@ -77,7 +77,7 @@ def main():
 
         networkSNR_sq = 0
         for d in np.arange(len(network.detectors)):
-            wave, t_of_f = gw.waveforms.hphc_amplitudes('gwfish_PhenomD', parameter_values, network.detectors[d].frequencyvector)
+            wave, t_of_f = gw.waveforms.hphc_amplitudes('lalbbh_IMRPhenomD', parameter_values, network.detectors[d].frequencyvector)
             signal = gw.detection.projection(parameter_values, network.detectors[d], wave, t_of_f)
 
             SNRs = gw.detection.SNR(network.detectors[d], signal, duty_cycle=duty_cycle)
@@ -86,7 +86,7 @@ def main():
 
             if calculate_errors:
                 network.detectors[d].fisher_matrix[k, :, :] = \
-                    gw.fishermatrix.FisherMatrix('gwfish_PhenomD', parameter_values, fisher_parameters, network.detectors[d])
+                    gw.fishermatrix.FisherMatrix('lalbbh_IMRPhenomD', parameter_values, fisher_parameters, network.detectors[d])
 
         network.SNR[k] = np.sqrt(networkSNR_sq)
 
