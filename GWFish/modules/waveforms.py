@@ -4,6 +4,9 @@ import sympy as sp
 from scipy.interpolate import interp1d
 import scipy.optimize as optimize
 
+import lalsimulation as lalsim 
+import lal
+
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
 #import GWFish.modules.lalsim_interface as lalsim
@@ -14,14 +17,97 @@ def hphc_amplitudes(waveform, parameters, frequencyvector):
     elif waveform=='gwfish_PhenomD':
         hphc = PhenomD(parameters, frequencyvector)
     elif waveform[0:7]=='lalbbh_':
+        hphc = lalbbh(waveform[7:], frequencyvector, parameters)
         #hphc = lalsim.BBH(waveform[7:], frequencyvector, **parameters)
-        hphc = []
+        #hphc = []
     elif waveform[0:7]=='lalbns_':
         #hphc = lalsim.BNS(waveform[7:], frequencyvector, **parameters)
         hphc = []
     else:
         print(str(waveform) + ' is not a valid waveform Choose v')
     return hphc
+
+
+def lalbbh(waveform, frequencyvector, parameters, plot=None):
+    params_lal = lal.CreateDict()
+    approx_lal = lalsim.GetApproximantFromString(waveform)
+
+    f_min = frequencyvector[0][0]
+    df = (frequencyvector[1] - frequencyvector[0])[0]
+    f_max = frequencyvector[-1][0]
+
+    # h_plus and h_cross are objects
+    h_plus, h_cross = lalsim.SimInspiralChooseFDWaveform(
+        parameters['mass_1'] * lal.MSUN_SI * (1 + parameters['redshift']), # in [kg]
+        parameters['mass_2'] * lal.MSUN_SI * (1 + parameters['redshift']), # in [kg]
+        0, # S1x
+        0, # S1y
+        0, # S1z
+        0, # S2x
+        0, # S2y
+        0, # S2z
+        parameters['luminosity_distance']*lal.PC_SI*1e6, # in [m]
+        parameters['iota'], 
+        parameters['phase'],
+        0, # longitude of ascending nodes
+        0, # eccentricity
+        0, # mean anomaly of periastron
+        df, #df
+        f_min, #f_min
+        f_max, #f_max
+        f_min, #reference frequency
+        params_lal,
+        approx_lal
+    )
+
+    #ff_lal = np.arange(h_plus.data.length) * df
+    i0 = int(round((f_min - h_plus.f0)/df)) # LAL starts from zero frequency!
+    hp = h_plus.data.data[i0:i0 + len(frequencyvector)] # it's already multuplied by the phase
+    hc = h_cross.data.data[i0:i0 + len(frequencyvector)]
+
+    amp_tot = np.abs(hp + 1j * hc) # for plot
+    psi = np.unwrap(np.angle(hp + 1j * hc))
+
+    tc = parameters['geocent_time']
+    t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0]))
+    t_of_f = np.append(t_of_f, [t_of_f[-1]])
+    t_of_f += tc
+
+    hp = hp[:, np.newaxis]
+    hc = hc[:, np.newaxis]    
+    polarizations = np.hstack((hp, hc))
+
+    if plot != None:
+    
+        plt.figure()
+        plt.semilogx(frequencyvector, t_of_f - tc)
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel('t(f)')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('t_of_f_lalbbh.png')
+        plt.close()
+
+        plt.figure()
+        plt.loglog(frequencyvector, amp_tot)
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel('h [s]')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('amp_tot_lalbbh.png')
+        plt.close()
+
+        plt.figure()
+        plt.plot(frequencyvector, psi)
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel('phase [rad]')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('phase_tot_lalbbh.png')
+        plt.close()
+
+    return polarizations, t_of_f
+
 
 def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     ff = frequencyvector
@@ -88,8 +174,27 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
         plt.ylabel('t(f)')
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig('t_of_f.png')
+        plt.savefig('t_of_f_TF2.png')
         plt.close()
+
+        plt.figure()
+        plt.loglog(frequencyvector, np.sqrt(hp**2. + hc**2.))
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel('h [s]')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('amp_tot_TF2.png')
+        plt.close()
+
+        plt.figure()
+        plt.plot(frequencyvector, psi)
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel('phase [rad]')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('phase_tot_TF2.png')
+        plt.close()
+
 
     return polarizations, t_of_f
 
