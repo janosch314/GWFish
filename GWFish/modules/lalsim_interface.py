@@ -232,8 +232,7 @@ def bilby_to_lalsimulation_spins(
                 mass_2, reference_frequency, phase)
     return iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z
 
-def lal_binary_black_hole(
-        frequency_array, mass_1, mass_2, luminosity_distance, a_1, tilt_1,
+def BBH(frequency_array, mass_1, mass_2, luminosity_distance, a_1, tilt_1,
         phi_12, a_2, tilt_2, phi_jl, theta_jn, phase, **kwargs):
     """ A Binary Black Hole waveform model using lalsimulation
 
@@ -314,8 +313,7 @@ def lal_binary_black_hole(
         phi_jl=phi_jl, **waveform_kwargs)
 
 
-def lal_binary_neutron_star(
-        frequency_array, mass_1, mass_2, luminosity_distance, a_1, tilt_1,
+def BNS(frequency_array, mass_1, mass_2, luminosity_distance, a_1, tilt_1,
         phi_12, a_2, tilt_2, phi_jl, theta_jn, phase, lambda_1, lambda_2,
         **kwargs):
     """ A Binary Neutron Star waveform model using lalsimulation

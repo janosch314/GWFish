@@ -49,7 +49,7 @@ def derivative(waveform, parameter_values, p, detector):
         pv_set1[p] = pv - dp / 2.
         pv_set2[p] = pv + dp / 2.
 
-        if p in ['ra','dec','psi']:  # these parameters do not influence the waveform
+        if p in ['ra', 'dec', 'psi']:  # these parameters do not influence the waveform
             wave, t_of_f = wf.hphc_amplitudes(waveform, local_params, detector.frequencyvector)
 
             signal1 = det.projection(pv_set1, detector, wave, t_of_f)

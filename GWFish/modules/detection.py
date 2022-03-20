@@ -326,11 +326,11 @@ def projection_earth(parameters, detector, polarizations, timevector):
 
     # timevector = parameters['geocent_time'] * np.ones_like(timevector)  # switch off Earth's rotation
 
-    nt = len(polarizations[:, 0])
+    nf = len(polarizations[:, 0])
     ff = detector.frequencyvector
 
     components = detector.components
-    proj = np.zeros((nt, len(components)), dtype=complex)
+    proj = np.zeros((nf, len(components)), dtype=complex)
 
     if timevector.ndim == 1:
         timevector = timevector[:, np.newaxis]

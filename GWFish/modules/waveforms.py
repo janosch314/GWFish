@@ -3,20 +3,30 @@ import numpy as np
 
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
-#import GWFish.modules.lalsim_interface as lalsim
+import GWFish.modules.lalsim_interface as lalsim
 
 def hphc_amplitudes(waveform, parameters, frequencyvector):
+    parameters = parameters.copy()
     if waveform=='gwfish_TaylorF2':
-        hphc = TaylorF2(parameters, frequencyvector)
+        hphc, t_of_f = TaylorF2(parameters, frequencyvector)
     elif waveform[0:7]=='lalbbh_':
-        #hphc = lalsim.BBH(waveform[7:], frequencyvector, **parameters)
-        hphc = []
+        tc = parameters['geocent_time']
+        parameters['geocent_time'] = 0
+        hphc = lalsim.BBH(waveform[7:], frequencyvector, **parameters)
+        phi = np.angle(hphc[:, 0])
+        t_of_f = np.diff(phi, axis=0) / (2.*np.pi*(frequencyvector[1]-frequencyvector[0]))
+        t_of_f = tc + np.vstack((t_of_f, [t_of_f[-1]]))
     elif waveform[0:7]=='lalbns_':
-        #hphc = lalsim.BNS(waveform[7:], frequencyvector, **parameters)
-        hphc = []
+        tc = parameters['geocent_time']
+        parameters['geocent_time'] = 0
+        print(parameters)
+        hphc = lalsim.BNS(waveform[7:], frequencyvector, **parameters)
+        phi = np.angle(hphc[:, 0])
+        t_of_f = np.diff(phi, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0]))
+        t_of_f = tc + np.vstack((t_of_f, [t_of_f[-1]]))
     else:
         print(str(waveform) + ' is not a valid waveform Choose v')
-    return hphc
+    return hphc, t_of_f
 
 def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     ff = frequencyvector
