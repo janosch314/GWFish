@@ -47,7 +47,7 @@ def main():
     ConfigDet = args.config
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
+    calculate_errors = False   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
     #fisher_parameters = ['ra', 'dec', 'psi', 'iota', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
@@ -70,6 +70,9 @@ def main():
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
+    #waveform_model = 'lalbbh_IMRPhenomD'
+    waveform_model = 'gwfish_TaylorF2'
+
 
     print('Processing CBC population')
     for k in tqdm(np.arange(len(parameters))):
@@ -77,7 +80,7 @@ def main():
 
         networkSNR_sq = 0
         for d in np.arange(len(network.detectors)):
-            wave, t_of_f = gw.waveforms.hphc_amplitudes('lalbbh_IMRPhenomD', parameter_values, network.detectors[d].frequencyvector)
+            wave, t_of_f = gw.waveforms.hphc_amplitudes(waveform_model, parameter_values, network.detectors[d].frequencyvector)
             signal = gw.detection.projection(parameter_values, network.detectors[d], wave, t_of_f)
 
             SNRs = gw.detection.SNR(network.detectors[d], signal, duty_cycle=duty_cycle)
@@ -86,7 +89,7 @@ def main():
 
             if calculate_errors:
                 network.detectors[d].fisher_matrix[k, :, :] = \
-                    gw.fishermatrix.FisherMatrix('lalbbh_IMRPhenomD', parameter_values, fisher_parameters, network.detectors[d])
+                    gw.fishermatrix.FisherMatrix(waveform_model, parameter_values, fisher_parameters, network.detectors[d])
 
         network.SNR[k] = np.sqrt(networkSNR_sq)
 

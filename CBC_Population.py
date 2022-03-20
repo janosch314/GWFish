@@ -92,7 +92,7 @@ def main():
     parser.add_argument(
         '--population', type=str, default=['BBH'], nargs=1,
         help='Population to run the analysis on. Options: '
-             'BBH, BNS, GWTC-2, PBH, or IMBH. Runs on BBH '
+             'BBH, BNS, GWTC-3, PBH, or IMBH. Runs on BBH '
              'if no argument given.')
     parser.add_argument(
         '--z_max', default=['10'], type=float, nargs=1,

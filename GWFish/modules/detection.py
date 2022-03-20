@@ -624,11 +624,6 @@ def analyzeDetections(network, parameters, population, networks_ids):
     delim = "\t"
     header = delim.join(parameters.keys())
 
-    if 'id' in parameters.columns:
-        save_data = np.c_[parameters['id'], save_data]
-        header = "signal\t"+header
-
-
     for n in np.arange(N):
         maxz = 0
 
