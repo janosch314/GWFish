@@ -132,7 +132,7 @@ def main():
         
         print ("%d events included in this simulation"%ns)
 
-        parameters['iota'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
+        parameters['theta_jn'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
         parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
         parameters['ra'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
         parameters['psi'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
@@ -155,7 +155,7 @@ def main():
         parameters['mass_1'] = 150. * np.ones_like(z)
         parameters['mass_2'] = 150. * np.ones_like(z)
 
-        parameters['iota'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
+        parameters['theta_jn'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
         parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
         parameters['ra'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
         parameters['psi'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
@@ -175,7 +175,7 @@ def main():
         parameters['redshift'] = z
         parameters['luminosity_distance'] = cosmo.luminosity_distance(z).value
 
-        parameters['iota'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
+        parameters['theta_jn'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
         parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
         parameters['ra'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
         parameters['psi'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
@@ -202,7 +202,7 @@ def main():
 
         ns = len(parameters)
 
-        parameters['iota'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
+        parameters['theta_jn'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
         parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
         parameters['ra'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
         parameters['psi'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
@@ -220,7 +220,7 @@ def main():
                                 delimiter=',')
         ns = len(parameters)
 
-        parameters['iota'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
+        parameters['theta_jn'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
         parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
         parameters['ra'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
         parameters['psi'] = np.random.uniform(0, 2. * np.pi, size=(ns,))

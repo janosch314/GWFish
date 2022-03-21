@@ -71,7 +71,8 @@ def main():
     # exit()
 
     #waveform_model = 'lalbbh_IMRPhenomD'
-    waveform_model = 'gwfish_TaylorF2'
+    #waveform_model = 'gwfish_TaylorF2'
+    waveform_model = 'lalbbh_TaylorF2'
 
 
     print('Processing CBC population')

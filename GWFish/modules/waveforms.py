@@ -12,21 +12,74 @@ import GWFish.modules.auxiliary as aux
 #import GWFish.modules.lalsim_interface as lalsim
 
 def hphc_amplitudes(waveform, parameters, frequencyvector):
+    parameters = parameters.copy()
     if waveform=='gwfish_TaylorF2':
         hphc = TaylorF2(parameters, frequencyvector)
     elif waveform=='gwfish_PhenomD':
         hphc = PhenomD(parameters, frequencyvector)
     elif waveform[0:7]=='lalbbh_':
-        hphc = lalbbh(waveform[7:], frequencyvector, parameters)
+        hphc = lalbbh(waveform[7:], frequencyvector, **parameters)
     elif waveform[0:7]=='lalbns_':
-        hphc = lalbns(waveform[7:], frequencyvector, parameters)
+        hphc = lalbns(waveform[7:], frequencyvector, **parameters)
     else:
         print(str(waveform) + ' is not a valid waveform.')
         print('Valid options are gwfish_TaylorF2, gwfish_PhenomD, lalbbh_XXX or lalbns_XXX.')
     return hphc
 
+def convert_args_list_to_float(*args_list):
+    """ Converts inputs to floats, returns a list in the same order as the input"""
+    # copied from https://git.ligo.org/lscsoft/bilby/, March 21, 2022
+    try:
+        args_list = [float(arg) for arg in args_list]
+    except ValueError:
+        raise ValueError("Unable to convert inputs to floats")
+    return args_list
 
-def lalbbh(waveform, frequencyvector, parameters, plot=None):
+def lalsim_SimInspiralTransformPrecessingNewInitialConditions(
+        theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1, mass_2,
+        reference_frequency, phase):
+    # copied from https://git.ligo.org/lscsoft/bilby/, March 21, 2022
+    from lalsimulation import SimInspiralTransformPrecessingNewInitialConditions
+
+    args_list = convert_args_list_to_float(
+        theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1, mass_2,
+        reference_frequency, phase)
+
+    return SimInspiralTransformPrecessingNewInitialConditions(*args_list)
+
+@np.vectorize
+def transform_precessing_spins(theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1,
+                               a_2, mass_1, mass_2, reference_frequency, phase):
+    # copied from https://git.ligo.org/lscsoft/bilby/, March 21, 2022
+    iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = (
+        lalsim_SimInspiralTransformPrecessingNewInitialConditions(
+            theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1, mass_2,
+            reference_frequency, phase))
+
+    return iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z
+
+def bilby_to_lalsimulation_spins(
+        # copied from https://git.ligo.org/lscsoft/bilby/, March 21, 2022
+        theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1, mass_2,
+        reference_frequency, phase):
+    if (a_1 == 0 or tilt_1 in [0, np.pi]) and (a_2 == 0 or tilt_2 in [0, np.pi]):
+        spin_1x = 0
+        spin_1y = 0
+        spin_1z = a_1 * np.cos(tilt_1)
+        spin_2x = 0
+        spin_2y = 0
+        spin_2z = a_2 * np.cos(tilt_2)
+        iota = theta_jn
+    else:
+        iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = \
+            transform_precessing_spins(
+                theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1,
+                mass_2, reference_frequency, phase)
+    return iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z
+
+def lalbbh(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
+           a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, eccentricity=0, **kwargs):
+
     params_lal = lal.CreateDict()
     approx_lal = lalsim.GetApproximantFromString(waveform)
 
@@ -34,26 +87,26 @@ def lalbbh(waveform, frequencyvector, parameters, plot=None):
     df = (frequencyvector[1] - frequencyvector[0])[0]
     f_max = frequencyvector[-1][0]
 
+    iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
+        theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
+        phi_12=phi_12, a_1=a_1, a_2=a_2, mass_1=mass_1, mass_2=mass_2,
+        reference_frequency=50., phase=phase)
+
     # h_plus and h_cross are objects
     h_plus, h_cross = lalsim.SimInspiralChooseFDWaveform(
-        parameters['mass_1'] * lal.MSUN_SI * (1 + parameters['redshift']), # in [kg]
-        parameters['mass_2'] * lal.MSUN_SI * (1 + parameters['redshift']), # in [kg]
-        0, # S1x
-        0, # S1y
-        0, # S1z
-        0, # S2x
-        0, # S2y
-        0, # S2z
-        parameters['luminosity_distance']*lal.PC_SI*1e6, # in [m]
-        parameters['iota'], 
-        parameters['phase'],
+        mass_1 * lal.MSUN_SI * (1 + redshift), # in [kg]
+        mass_2 * lal.MSUN_SI * (1 + redshift), # in [kg]
+        spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z,
+        luminosity_distance*lal.PC_SI*1e6, # in [m]
+        iota,
+        phase,
         0, # longitude of ascending nodes
-        0, # eccentricity
+        eccentricity, # eccentricity
         0, # mean anomaly of periastron
         df, #df
         f_min, #f_min
         f_max, #f_max
-        f_min, #reference frequency
+        50., #reference frequency
         params_lal,
         approx_lal
     )
@@ -63,84 +116,54 @@ def lalbbh(waveform, frequencyvector, parameters, plot=None):
     hp = h_plus.data.data[i0:i0 + len(frequencyvector)] # it's already multuplied by the phase
     hc = h_cross.data.data[i0:i0 + len(frequencyvector)]
 
-    amp_tot = np.abs(hp + 1j * hc) # for plot
     psi = np.unwrap(np.angle(hp + 1j * hc))
 
-    tc = parameters['geocent_time']
     t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0]))
     t_of_f = np.append(t_of_f, [t_of_f[-1]])
-    t_of_f += tc
+    t_of_f += geocent_time
 
     hp = hp[:, np.newaxis]
     hc = hc[:, np.newaxis]    
     polarizations = np.hstack((hp, hc))
 
-    if plot != None:
-    
-        plt.figure()
-        plt.semilogx(frequencyvector, t_of_f - tc)
-        plt.xlabel('Frequency [Hz]')
-        plt.ylabel('t(f)')
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig('t_of_f_lalbbh.png')
-        plt.close()
-
-        plt.figure()
-        plt.loglog(frequencyvector, amp_tot)
-        plt.xlabel('Frequency [Hz]')
-        plt.ylabel('h [s]')
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig('amp_tot_lalbbh.png')
-        plt.close()
-
-        plt.figure()
-        plt.plot(frequencyvector, psi)
-        plt.xlabel('Frequency [Hz]')
-        plt.ylabel('phase [rad]')
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig('phase_tot_lalbbh.png')
-        plt.close()
-
     return polarizations, t_of_f
 
-def lalbns(waveform, frequencyvector, parameters, plot=None):
+def lalbns(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
+           a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, eccentricity=0, lambda_1=0, lambda_2=0, **kwargs):
     params_lal = lal.CreateDict()
     approx_lal = lalsim.GetApproximantFromString(waveform)
 
-    if 'lambda_1' in parameters.keys():
+    if lambda_1 != 0:
         from lalsimulation import SimInspiralWaveformParamsInsertTidalLambda1
-        SimInspiralWaveformParamsInsertTidalLambda1(params_lal, float(parameters['lambda_1']))
-    if 'lambda_2' in parameters.keys():
+        SimInspiralWaveformParamsInsertTidalLambda1(params_lal, float(lambda_1))
+    if lambda_2 != 0:
         from lalsimulation import SimInspiralWaveformParamsInsertTidalLambda2
-        SimInspiralWaveformParamsInsertTidalLambda2(params_lal, float(parameters['lambda_2']))
+        SimInspiralWaveformParamsInsertTidalLambda2(params_lal, float(lambda_2))
 
     f_min = frequencyvector[0][0]
     df = (frequencyvector[1] - frequencyvector[0])[0]
     f_max = frequencyvector[-1][0]
 
+    iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
+        theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
+        phi_12=phi_12, a_1=a_1, a_2=a_2, mass_1=mass_1, mass_2=mass_2,
+        reference_frequency=50., phase=phase)
+
     # h_plus and h_cross are objects
     h_plus, h_cross = lalsim.SimInspiralChooseFDWaveform(
-        parameters['mass_1'] * lal.MSUN_SI * (1 + parameters['redshift']),  # in [kg]
-        parameters['mass_2'] * lal.MSUN_SI * (1 + parameters['redshift']),  # in [kg]
-        0,  # S1x
-        0,  # S1y
-        0,  # S1z
-        0,  # S2x
-        0,  # S2y
-        0,  # S2z
-        parameters['luminosity_distance'] * lal.PC_SI * 1e6,  # in [m]
-        parameters['iota'],
-        parameters['phase'],
+        mass_1 * lal.MSUN_SI * (1 + redshift),  # in [kg]
+        mass_2 * lal.MSUN_SI * (1 + redshift),  # in [kg]
+        spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z,
+        luminosity_distance * lal.PC_SI * 1e6,  # in [m]
+        iota,
+        phase,
         0,  # longitude of ascending nodes
-        0,  # eccentricity
+        eccentricity,  # eccentricity
         0,  # mean anomaly of periastron
         df,  # df
         f_min,  # f_min
         f_max,  # f_max
-        f_min,  # reference frequency
+        50.,  # reference frequency
         params_lal,
         approx_lal
     )
@@ -150,45 +173,15 @@ def lalbns(waveform, frequencyvector, parameters, plot=None):
     hp = h_plus.data.data[i0:i0 + len(frequencyvector)]  # it's already multiplied by the phase
     hc = h_cross.data.data[i0:i0 + len(frequencyvector)]
 
-    amp_tot = np.abs(hp + 1j * hc)  # for plot
     psi = np.unwrap(np.angle(hp + 1j * hc))
 
-    tc = parameters['geocent_time']
     t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0]))
     t_of_f = np.append(t_of_f, [t_of_f[-1]])
-    t_of_f += tc
+    t_of_f += geocent_time
 
     hp = hp[:, np.newaxis]
     hc = hc[:, np.newaxis]
     polarizations = np.hstack((hp, hc))
-
-    if plot != None:
-        plt.figure()
-        plt.semilogx(frequencyvector, t_of_f - tc)
-        plt.xlabel('Frequency [Hz]')
-        plt.ylabel('t(f)')
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig('t_of_f_lalbns.png')
-        plt.close()
-
-        plt.figure()
-        plt.loglog(frequencyvector, amp_tot)
-        plt.xlabel('Frequency [Hz]')
-        plt.ylabel('h [s]')
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig('amp_tot_lalbns.png')
-        plt.close()
-
-        plt.figure()
-        plt.plot(frequencyvector, psi)
-        plt.xlabel('Frequency [Hz]')
-        plt.ylabel('phase [rad]')
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig('phase_tot_lalbns.png')
-        plt.close()
 
     return polarizations, t_of_f
 
