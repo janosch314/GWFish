@@ -47,11 +47,11 @@ def main():
     ConfigDet = args.config
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    calculate_errors = False   # whether to calculate Fisher-matrix based PE errors
+    calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
-    #fisher_parameters = ['ra', 'dec', 'psi', 'iota', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
-    fisher_parameters = ['luminosity_distance','ra','dec']
+    fisher_parameters = ['ra', 'dec', 'psi', 'iota', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
+    #fisher_parameters = ['luminosity_distance','ra','dec']
 
     pop_file = args.pop_file
     population = args.pop_id
@@ -70,13 +70,17 @@ def main():
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
-    #waveform_model = 'lalbbh_IMRPhenomD'
-    waveform_model = 'gwfish_TaylorF2'
+    waveform_model = 'lalbbh_IMRPhenomD'
+    #waveform_model = 'gwfish_TaylorF2'
 
 
     print('Processing CBC population')
     for k in tqdm(np.arange(len(parameters))):
         parameter_values = parameters.iloc[k]
+
+        # if using bbhlal_IMRPhenomD waveform make sure to set tilt_1=0 and tilt_2=0 (non precessing waveform)
+        parameter_values['tilt_1'] = 0.0
+        parameter_values['tilt_2'] = 0.0
 
         networkSNR_sq = 0
         for d in np.arange(len(network.detectors)):

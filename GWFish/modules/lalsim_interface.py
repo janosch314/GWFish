@@ -207,10 +207,7 @@ def lalsim_SimInspiralTransformPrecessingNewInitialConditions(
 def transform_precessing_spins(theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1,
                                a_2, mass_1, mass_2, reference_frequency, phase):
 
-    iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = (
-        lalsim_SimInspiralTransformPrecessingNewInitialConditions(
-            theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1, mass_2,
-            reference_frequency, phase))
+    
 
     return iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z
 
