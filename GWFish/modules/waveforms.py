@@ -5,6 +5,7 @@ from scipy.interpolate import interp1d
 import scipy.optimize as optimize
 
 import lalsimulation as lalsim 
+from lalsimulation import SimInspiralTransformPrecessingNewInitialConditions
 import lal
 
 import GWFish.modules.constants as cst
@@ -34,16 +35,34 @@ def lalbbh(waveform, frequencyvector, parameters, plot=None):
     df = (frequencyvector[1] - frequencyvector[0])[0]
     f_max = frequencyvector[-1][0]
 
+    theta_jn = parameters['iota']
+
+    phi_jl = parameters['phi_jl']
+    phi_12 = parameters['phi_12']
+    tilt_1 = parameters['tilt_1']
+    tilt_2 = parameters['tilt_2']
+    a_1 = parameters['a_1']
+    a_2 = parameters['a_2']
+    mass_1 = parameters['mass_1']
+    mass_2 = parameters['mass_2']
+    reference_frequency = f_min
+    phase = parameters['phase']
+
+    iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = (
+        SimInspiralTransformPrecessingNewInitialConditions(
+        theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1, mass_2,
+        reference_frequency, phase))
+
     # h_plus and h_cross are objects
     h_plus, h_cross = lalsim.SimInspiralChooseFDWaveform(
-        parameters['mass_1'] * lal.MSUN_SI * (1 + parameters['redshift']), # in [kg]
-        parameters['mass_2'] * lal.MSUN_SI * (1 + parameters['redshift']), # in [kg]
-        0, # S1x
-        0, # S1y
-        0, # S1z
-        0, # S2x
-        0, # S2y
-        0, # S2z
+        mass_1 * lal.MSUN_SI * (1 + parameters['redshift']), # in [kg]
+        mass_2 * lal.MSUN_SI * (1 + parameters['redshift']), # in [kg]
+        spin_1x, # S1x
+        spin_1y, # S1y
+        spin_1z, # S1z
+        spin_2x, # S2x
+        spin_2y, # S2y
+        spin_2z, # S2z
         parameters['luminosity_distance']*lal.PC_SI*1e6, # in [m]
         parameters['iota'], 
         parameters['phase'],
@@ -53,7 +72,7 @@ def lalbbh(waveform, frequencyvector, parameters, plot=None):
         df, #df
         f_min, #f_min
         f_max, #f_max
-        f_min, #reference frequency
+        reference_frequency, #reference frequency
         params_lal,
         approx_lal
     )
