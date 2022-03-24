@@ -56,7 +56,7 @@ def analyzeForeground(network, h_of_f, dT):
         fig = plt.figure(figsize=(9, 6))
         plt.figure(figsize=(9, 6))
         cmap = plt.get_cmap('RdYlBu_r')
-        cm = plt.contourf(np.transpose(ff), bb, hist, cmap=cmap)
+        cm = plt.pcolor(np.transpose(ff), bb, hist, cmap=cmap)
         # plt.loglog(ff, h_astro)
         plt.loglog(ff, np.sqrt(components[0].Sn(ff)), color='green')
         plt.loglog(ff, bb[ii10], 'w-')
