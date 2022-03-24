@@ -22,20 +22,20 @@ cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
 
 rng = default_rng()
 
-def analyzeForeground(network, h_of_f, frequencyvector, dT):
-    ff = frequencyvector
-
-    H0 = 2.4e-18  # 72km/s/Mpc
-    Omega = 2e-10 * np.power(ff / 10, 2. / 3.)  # Regimbau et al: https://arxiv.org/pdf/2002.05365.pdf
-    h_astro = np.sqrt(3 * H0 ** 2 / (10 * np.pi ** 2) * Omega / ff ** 3)
+def analyzeForeground(network, h_of_f, dT):
 
     for d in np.arange(len(network.detectors)):
+        ff = network.detectors[d].frequencyvector[:,0]
 
-        interferometers = network.detectors[d].interferometers
+        H0 = 2.4e-18  # 72km/s/Mpc
+        Omega = 2e-10 * np.power(ff / 10, 2. / 3.)  # Regimbau et al: https://arxiv.org/pdf/2002.05365.pdf
+        h_astro = np.sqrt(3 * H0 ** 2 / (10 * np.pi ** 2) * Omega / ff ** 3)
+
+        components = network.detectors[d].components
         psd_astro_all = np.abs(np.squeeze(h_of_f[:, d, :])) ** 2 / dT
         N = len(psd_astro_all[0, :])
 
-        plotrange = interferometers[0].plotrange
+        plotrange = components[0].plotrange
 
         bb = np.logspace(-28, -22, 100)
         hist = np.empty((len(bb) - 1, len(ff)))
@@ -58,7 +58,7 @@ def analyzeForeground(network, h_of_f, frequencyvector, dT):
         cmap = plt.get_cmap('RdYlBu_r')
         cm = plt.contourf(np.transpose(ff), bb, hist, cmap=cmap)
         # plt.loglog(ff, h_astro)
-        plt.loglog(ff, np.sqrt(interferometers[0].Sn(ff)), color='green')
+        plt.loglog(ff, np.sqrt(components[0].Sn(ff)), color='green')
         plt.loglog(ff, bb[ii10], 'w-')
         plt.loglog(ff, bb[ii50], 'w-')
         plt.loglog(ff, bb[ii90], 'w-')
@@ -74,7 +74,7 @@ def analyzeForeground(network, h_of_f, frequencyvector, dT):
         fig.colorbar(cm)
         plt.tick_params(labelsize=20)
         plt.tight_layout()
-        plt.savefig('Astrophysical_histo_' + interferometers[0].name + '.png', dpi=300)
+        plt.savefig('Astrophysical_histo_' + components[0].name + '.png', dpi=300)
         plt.close()
 
 def main():
@@ -127,55 +127,42 @@ def main():
     h_of_f = np.zeros((len(frequencyvector), len(network.detectors), N), dtype=complex)
     cnt = np.zeros((N,))
 
-    background_file = args.outdir+'/GWFish_CBC_Background_' + '_'.join([str(ii) for ii in [ns, dT, N, t0]]) + '.pickle'
+    print('Processing CBC population')
+    for k in tqdm(np.arange(ns)):
+        parameter_values = parameters.iloc[k]
+        tc = parameter_values['geocent_time']
 
-    if not os.path.exists(background_file):
-        print('Processing CBC population')
-        for k in tqdm(np.arange(ns)):
-            parameter_values = parameters.iloc[k]
-            tc = parameter_values['geocent_time']
+        # make a precut on the signals; note that this depends on how long signals stay in band (here not more than 3 days)
+        if ((tc>t0) & (tc-3*86400<t0+N*dT)):
+            signals = np.zeros((len(frequencyvector), len(network.detectors)), dtype=complex)  # contains only 1 of 3 streams in case of ET
+            for d in np.arange(len(network.detectors)):
+                wave, t_of_f = gw.waveforms.hphc_amplitudes(waveform_model, parameter_values,
+                                                            network.detectors[d].frequencyvector)
 
-            # make a precut on the signals; note that this depends on how long signals stay in band (here not more than 3 days)
-            if ((tc>t0) & (tc-3*86400<t0+N*dT)):
-                wave, t_of_f = gw.waveforms.hphc_amplitudes(waveform_model, parameter_values, network.detectors[0].frequencyvector)
+                det_signals = gw.detection.projection(parameter_values, network.detectors[d], wave, t_of_f)
+                signals[:,d] = det_signals[:,0]
 
-                signals = np.zeros((len(frequencyvector), len(network.detectors)), dtype=complex)  # contains only 1 of 3 streams in case of ET
-                for d in np.arange(len(network.detectors)):
-                    det_signals = gw.detection.projection(parameter_values, network.detectors[0], wave, t_of_f)
-                    signals[:,d] = det_signals[:,0]
+                SNRs = gw.detection.SNR(network.detectors[d], det_signals, duty_cycle=duty_cycle)
+                network.detectors[d].SNR = np.sqrt(np.sum(SNRs ** 2))
 
-                    SNRs = gw.detection.SNR(network.detectors[0], det_signals, duty_cycle=duty_cycle)
-                    network.detectors[d].SNR = np.sqrt(np.sum(SNRs ** 2))
+            SNRsq = 0
+            for detector in network.detectors:
+                SNRsq += detector.SNR ** 2
 
-                SNRsq = 0
-                for detector in network.detectors:
-                    SNRsq += detector.SNR ** 2
+            if (np.sqrt(SNRsq) < threshold_SNR):
+                for n in np.arange(N):
+                    t1 = t0+n*dT
+                    t2 = t1+dT
+                    ii = np.argwhere((t_of_f[:,0] < t1) | (t_of_f[:,0] > t2))
+                    signals_ii = np.copy(signals)
 
-                if (np.sqrt(SNRsq) < threshold_SNR):
-                    for n in np.arange(N):
-                        t1 = t0+n*dT
-                        t2 = t1+dT
-                        ii = np.argwhere((t_of_f[:,0] < t1) | (t_of_f[:,0] > t2))
-                        signals_ii = np.copy(signals)
+                    if (len(ii) < len(t_of_f)):
+                        #print("Signal {0} contributes to segment {1}.".format(k,n))
+                        cnt[n] += 1
+                        signals_ii[ii,:] = 0
+                        h_of_f[:,:,n] += signals_ii
 
-                        if (len(ii) < len(t_of_f)):
-                            #print("Signal {0} contributes to segment {1}.".format(k,n))
-                            cnt[n] += 1
-                            signals_ii[ii,:] = 0
-                            h_of_f[:,:,n] += signals_ii
-
-        result = {'h_of_f': h_of_f, 'frequencyvector': frequencyvector, 'dT': dT}
-
-        with open(background_file, 'wb') as f:
-          pickle.dump(result, f, pickle.HIGHEST_PROTOCOL)
-        print('Saved the result to a file: ', background_file)
-
-    else:
-        with open(background_file, 'rb') as f:
-            result = pickle.load(f)
-        print('Loaded the result from file: ', background_file)
-
-    analyzeForeground(network, result['h_of_f'], result['frequencyvector'], result['dT'])
+    analyzeForeground(network, h_of_f, dT)
 
     print('Out of {0} signals, {1} are in average undetected binaries falling in a {2}s time window.'.format(ns, np.mean(cnt), dT))
 
