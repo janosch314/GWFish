@@ -91,6 +91,7 @@ def lalbbh(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redsh
     df = (frequencyvector[1] - frequencyvector[0])[0]
     f_max = frequencyvector[-1][0]
 
+
     iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
         theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
         phi_12=phi_12, a_1=a_1, a_2=a_2, mass_1=mass_1, mass_2=mass_2,
@@ -125,6 +126,7 @@ def lalbbh(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redsh
     t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0]))
     t_of_f = np.append(t_of_f, [t_of_f[-1]])
     t_of_f += geocent_time
+    t_of_f = t_of_f[:, np.newaxis]
 
     hp = hp[:, np.newaxis]
     hc = hc[:, np.newaxis]

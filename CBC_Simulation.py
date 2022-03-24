@@ -53,7 +53,6 @@ def main():
     fisher_parameters = ['luminosity_distance','ra','dec']
 
     pop_file = args.pop_file
-    print(pop_file)
     population = args.pop_id
 
     detectors_ids = args.detectors

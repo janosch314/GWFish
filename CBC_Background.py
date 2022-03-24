@@ -113,13 +113,14 @@ def main():
     detectors_ids = args.detectors
 
     parameters = pd.read_hdf(pop_file)
+
     ns = len(parameters)
 
     network = gw.detection.Network(detectors_ids, detection_SNR=threshold_SNR, parameters=parameters,
                                    fisher_parameters=None, config=ConfigDet)
 
-    # waveform_model = 'lalbbh_IMRPhenomD'
-    waveform_model = 'gwfish_TaylorF2'
+    waveform_model = 'lalbbh_IMRPhenomD'
+    #waveform_model = 'gwfish_TaylorF2'
     # waveform_model = 'lalbbh_TaylorF2'
 
     frequencyvector = network.detectors[0].frequencyvector
