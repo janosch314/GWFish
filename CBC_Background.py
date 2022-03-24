@@ -15,7 +15,7 @@ import pickle
 import os
 import argparse
 
-import GWFish as gw
+import GWFish.modules as gw
 
 cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
 
@@ -93,47 +93,20 @@ def main():
         help='Output directory.')
 
     args = parser.parse_args()
+    ConfigDet = args.config
 
-    d = args.detectors
-    if ('ET' in d) or ('aET' in d) or ('bET' in d) or ('cET' in d) or ('L00ET' in d) or ('L45ET' in d):
-        fmin = 2
-        fmax = 1024
-        # df = 1./4.
-        df = 1. / 16.
-    elif ('LGWA' in d):
-        fmin = 1e-3
-        fmax = 4
-        df = 1. / 4096.
-    elif ('LISA' in d):
-        fmin = 1e-3
-        fmax = 0.3
-        df = 1e-4
-    else:
-        fmin = 8
-        fmax = 1024
-        df = 1. / 4.
-
-    dT = 60
-    N = 7200
-    #dT = 24*3600
-    #N = 100
-    t0 = 1104105616
-
-    frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
-    frequencyvector = frequencyvector[:, np.newaxis]
-
-    threshold_SNR = 5000. # min. network SNR for detection
-    max_time_until_merger = 10 * 3.16e7  # used for LISA, where observation times of a signal can be limited by mission lifetime
+    threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
-    pop_file = args.pop_file[0]
+    pop_file = args.pop_file
 
     detectors_ids = args.detectors
+    networks_ids = json.loads(args.networks)
 
-    parameters = pd.read_hdf(pop_file)
-    ns = len(parameters)
+    parameters = pd.read_hdf(folder + pop_file)
 
-    network = gw.detection.Network(detectors_ids, number_of_signals=ns, detection_SNR=threshold_SNR, parameters=parameters)
+    network = gw.detection.Network(detectors_ids, detection_SNR=threshold_SNR, parameters=parameters,
+                                   fisher_parameters=fisher_parameters, config=ConfigDet)
 
     h_of_f = np.zeros((len(frequencyvector), len(network.detectors), N), dtype=complex)
     cnt = np.zeros((N,))

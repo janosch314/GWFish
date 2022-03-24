@@ -4,12 +4,14 @@ import sympy as sp
 from scipy.interpolate import interp1d
 import scipy.optimize as optimize
 
-import lalsimulation as lalsim 
-import lal
+try:
+    import lalsimulation as lalsim
+    import lal
+except ModuleNotFoundError as err:
+    print('LAL package is not installed. Only GWFish waveforms available.')
 
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
-#import GWFish.modules.lalsim_interface as lalsim
 
 def hphc_amplitudes(waveform, parameters, frequencyvector):
     parameters = parameters.copy()
