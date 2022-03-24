@@ -136,7 +136,6 @@ def main():
         parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
         parameters['ra'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
         parameters['psi'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
-        #parameters['psi'] = np.pi/6* np.ones((ns,))
         parameters['phase'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
         parameters['geocent_time'] = np.random.uniform(1104105616, 1135641616, size=(ns,))  # full year 2015
 

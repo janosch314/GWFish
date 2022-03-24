@@ -23,12 +23,11 @@ def main():
     # example to run with command-line arguments:
     # python CBC_Simulation.py --pop_file=CBC_pop.hdf5 --detectors ET CE2 --networks [[0,1],[0],[1]]
 
-    folder = './injections/'
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default='CBC_pop.hdf5', nargs=1,
-        help='Population to run the analysis on. Runs on CBC_pop.hdf5 if no argument given.')
+        '--pop_file', type=str, default='./injections/BBH_1e5.hdf5', nargs=1,
+        help='Population to run the analysis on.'
+             'Runs on BBH_1e5.hdf5 if no argument given.')
     parser.add_argument(
         '--pop_id', type=str, default='BBH', nargs=1,
         help='Short population identifier for file names. Uses BBH if no argument given.')
@@ -54,12 +53,13 @@ def main():
     fisher_parameters = ['luminosity_distance','ra','dec']
 
     pop_file = args.pop_file
+    print(pop_file)
     population = args.pop_id
 
     detectors_ids = args.detectors
     networks_ids = json.loads(args.networks)
 
-    parameters = pd.read_hdf(folder+pop_file)
+    parameters = pd.read_hdf(pop_file)
 
     network = gw.detection.Network(detectors_ids, detection_SNR=threshold_SNR, parameters=parameters,
                                    fisher_parameters=fisher_parameters, config=ConfigDet)

@@ -6,6 +6,7 @@ import pandas as pd
 from numpy.random import default_rng
 
 import time
+import json
 from tqdm import tqdm
 
 import matplotlib.pyplot as plt
@@ -82,7 +83,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default=['./injections/BBH_1e5.hdf5'], nargs=1,
+        '--pop_file', type=str, default='./injections/BBH_1e5.hdf5', nargs=1,
         help='Population to run the analysis on.'
              'Runs on BBH_1e5.hdf5 if no argument given.')
     parser.add_argument(
@@ -91,45 +92,59 @@ def main():
     parser.add_argument(
         '--outdir', type=str, default='./', 
         help='Output directory.')
+    parser.add_argument(
+        '--config', type=str, default='GWFish/detectors.yaml',
+        help='Configuration file where the detector specifications are stored. Uses GWFish/detectors.yaml as default if no argument given.')
 
     args = parser.parse_args()
     ConfigDet = args.config
 
-    threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
+    dT = 60
+    N = 7200
+    # dT = 24*3600
+    # N = 100
+    t0 = 1104105616
+
+    threshold_SNR = 5000  # min. network SNR for detection
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
     pop_file = args.pop_file
 
     detectors_ids = args.detectors
-    networks_ids = json.loads(args.networks)
 
-    parameters = pd.read_hdf(folder + pop_file)
+    parameters = pd.read_hdf(pop_file)
+    ns = len(parameters)
 
     network = gw.detection.Network(detectors_ids, detection_SNR=threshold_SNR, parameters=parameters,
-                                   fisher_parameters=fisher_parameters, config=ConfigDet)
+                                   fisher_parameters=None, config=ConfigDet)
+
+    # waveform_model = 'lalbbh_IMRPhenomD'
+    waveform_model = 'gwfish_TaylorF2'
+    # waveform_model = 'lalbbh_TaylorF2'
+
+    frequencyvector = network.detectors[0].frequencyvector
 
     h_of_f = np.zeros((len(frequencyvector), len(network.detectors), N), dtype=complex)
     cnt = np.zeros((N,))
 
-    background_file = args.outdir+'/GWFish_CBC_Background_' + '_'.join([str(ii) for ii in [ns, dT, N, t0, fmin, fmax, df]]) + '.pickle'
+    background_file = args.outdir+'/GWFish_CBC_Background_' + '_'.join([str(ii) for ii in [ns, dT, N, t0]]) + '.pickle'
 
     if not os.path.exists(background_file):
         print('Processing CBC population')
         for k in tqdm(np.arange(ns)):
-            one_parameters = parameters.iloc[k]
-            tc = one_parameters['geocent_time']
+            parameter_values = parameters.iloc[k]
+            tc = parameter_values['geocent_time']
 
             # make a precut on the signals; note that this depends on how long signals stay in band (here not more than 3 days)
             if ((tc>t0) & (tc-3*86400<t0+N*dT)):
-                wave, t_of_f = gw.waveforms.TaylorF2(one_parameters, frequencyvector, maxn=8)
+                wave, t_of_f = gw.waveforms.hphc_amplitudes(waveform_model, parameter_values, network.detectors[0].frequencyvector)
 
                 signals = np.zeros((len(frequencyvector), len(network.detectors)), dtype=complex)  # contains only 1 of 3 streams in case of ET
                 for d in np.arange(len(network.detectors)):
-                    det_signals = gw.detection.projection(one_parameters, network.detectors[d], wave, t_of_f, frequencyvector,
-                                        max_time_until_merger)
+                    det_signals = gw.detection.projection(parameter_values, network.detectors[0], wave, t_of_f)
                     signals[:,d] = det_signals[:,0]
 
-                    SNRs = gw.detection.SNR(network.detectors[d].interferometers, det_signals, frequencyvector, duty_cycle=duty_cycle)
+                    SNRs = gw.detection.SNR(network.detectors[0], det_signals, duty_cycle=duty_cycle)
                     network.detectors[d].SNR = np.sqrt(np.sum(SNRs ** 2))
 
                 SNRsq = 0

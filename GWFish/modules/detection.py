@@ -105,7 +105,11 @@ class Detector:
 
     def __init__(self, name='ET', parameters=None, fisher_parameters=None, config='detectors.yaml', plot=False):
         self.components = []
-        nd = len(fisher_parameters)
+        if fisher_parameters is not None:
+            nd = len(fisher_parameters)
+        else:
+            nd = 1
+
         self.fisher_matrix = np.zeros((len(parameters), nd, nd))
         self.name = name
         self.config = config

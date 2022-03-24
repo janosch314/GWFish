@@ -8,6 +8,7 @@ try:
     import lalsimulation as lalsim
     import lal
 except ModuleNotFoundError as err:
+    uselal = err
     print('LAL package is not installed. Only GWFish waveforms available.')
 
 import GWFish.modules.constants as cst
@@ -15,6 +16,7 @@ import GWFish.modules.auxiliary as aux
 
 def hphc_amplitudes(waveform, parameters, frequencyvector):
     parameters = parameters.copy()
+
     if waveform=='gwfish_TaylorF2':
         hphc = TaylorF2(parameters, frequencyvector)
     elif waveform=='gwfish_PhenomD':
@@ -82,51 +84,55 @@ def bilby_to_lalsimulation_spins(
 def lalbbh(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
            a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, eccentricity=0, **kwargs):
 
-    params_lal = lal.CreateDict()
-    approx_lal = lalsim.GetApproximantFromString(waveform)
+    polarizations = np.zeros((len(frequencyvector),2))
+    t_of_f = np.zeros_like(frequencyvector)
 
-    f_min = frequencyvector[0][0]
-    df = (frequencyvector[1] - frequencyvector[0])[0]
-    f_max = frequencyvector[-1][0]
+    if not isinstance(uselal, ImportError):
+        params_lal = lal.CreateDict()
+        approx_lal = lalsim.GetApproximantFromString(waveform)
 
-    iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
-        theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
-        phi_12=phi_12, a_1=a_1, a_2=a_2, mass_1=mass_1, mass_2=mass_2,
-        reference_frequency=50., phase=phase)
+        f_min = frequencyvector[0][0]
+        df = (frequencyvector[1] - frequencyvector[0])[0]
+        f_max = frequencyvector[-1][0]
 
-    # h_plus and h_cross are objects
-    h_plus, h_cross = lalsim.SimInspiralChooseFDWaveform(
-        mass_1 * lal.MSUN_SI * (1 + redshift), # in [kg]
-        mass_2 * lal.MSUN_SI * (1 + redshift), # in [kg]
-        spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z,
-        luminosity_distance*lal.PC_SI*1e6, # in [m]
-        iota,
-        phase,
-        0, # longitude of ascending nodes
-        eccentricity, # eccentricity
-        0, # mean anomaly of periastron
-        df, #df
-        f_min, #f_min
-        f_max, #f_max
-        50., #reference frequency
-        params_lal,
-        approx_lal
-    )
+        iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
+            theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
+            phi_12=phi_12, a_1=a_1, a_2=a_2, mass_1=mass_1, mass_2=mass_2,
+            reference_frequency=50., phase=phase)
 
-    #ff_lal = np.arange(h_plus.data.length) * df
-    i0 = int(round((f_min - h_plus.f0)/df)) # LAL starts from zero frequency!
-    hp = h_plus.data.data[i0:i0 + len(frequencyvector)] # it's already multuplied by the phase
-    hc = h_cross.data.data[i0:i0 + len(frequencyvector)]
+        # h_plus and h_cross are objects
+        h_plus, h_cross = lalsim.SimInspiralChooseFDWaveform(
+            mass_1 * lal.MSUN_SI * (1 + redshift), # in [kg]
+            mass_2 * lal.MSUN_SI * (1 + redshift), # in [kg]
+            spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z,
+            luminosity_distance*lal.PC_SI*1e6, # in [m]
+            iota,
+            phase,
+            0, # longitude of ascending nodes
+            eccentricity, # eccentricity
+            0, # mean anomaly of periastron
+            df, #df
+            f_min, #f_min
+            f_max, #f_max
+            50., #reference frequency
+            params_lal,
+            approx_lal
+        )
 
-    psi = np.unwrap(np.angle(hp + 1j * hc))
+        #ff_lal = np.arange(h_plus.data.length) * df
+        i0 = int(round((f_min - h_plus.f0)/df)) # LAL starts from zero frequency!
+        hp = h_plus.data.data[i0:i0 + len(frequencyvector)] # it's already multuplied by the phase
+        hc = h_cross.data.data[i0:i0 + len(frequencyvector)]
 
-    t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0]))
-    t_of_f = np.append(t_of_f, [t_of_f[-1]])
-    t_of_f += geocent_time
+        psi = np.unwrap(np.angle(hp + 1j * hc))
 
-    hp = hp[:, np.newaxis]
-    hc = hc[:, np.newaxis]    
-    polarizations = np.hstack((hp, hc))
+        t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0]))
+        t_of_f = np.append(t_of_f, [t_of_f[-1]])
+        t_of_f += geocent_time
+
+        hp = hp[:, np.newaxis]
+        hc = hc[:, np.newaxis]
+        polarizations = np.hstack((hp, hc))
 
     return polarizations, t_of_f
 
