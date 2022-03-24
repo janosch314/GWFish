@@ -6,7 +6,7 @@ ET:
             psd_data:         GWFish/detector_psd/ET_psd.txt
             duty_factor:      0.85
             detector_class:   earthDelta
-            plotrange:        3, 3000, 1e-25, 1e-20
+            plotrange:        3, 1000, 1e-25, 1e-20
             fmin:             2.
             fmax:             1024.
             df:               1./4.                 
