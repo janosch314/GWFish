@@ -25,7 +25,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default='./injections/BBH_1e5.hdf5', nargs=1,
+        '--pop_file', type=str, default='./injections/CBC_pop.hdf5', nargs=1,
         help='Population to run the analysis on.'
              'Runs on BBH_1e5.hdf5 if no argument given.')
     parser.add_argument(
@@ -46,11 +46,11 @@ def main():
     ConfigDet = args.config
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    calculate_errors = False   # whether to calculate Fisher-matrix based PE errors
+    calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
-    #fisher_parameters = ['ra', 'dec', 'psi', 'iota', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
-    fisher_parameters = ['luminosity_distance','ra','dec']
+    fisher_parameters = ['ra', 'dec', 'psi', 'theta_jn', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
+    #fisher_parameters = ['luminosity_distance','ra','dec']
 
     pop_file = args.pop_file
     population = args.pop_id
@@ -69,9 +69,10 @@ def main():
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
-    #waveform_model = 'lalbbh_IMRPhenomD'
-    #waveform_model = 'gwfish_TaylorF2'
-    waveform_model = 'lalbbh_TaylorF2'
+    #waveform_model = 'lalbbh_IMRPhenomXPHM'
+    waveform_model = 'gwfish_TaylorF2'
+    #waveform_model = 'gwfish_PhenomD'
+    #waveform_model = 'lalbbh_TaylorF2'
 
 
     print('Processing CBC population')
