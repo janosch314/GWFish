@@ -95,7 +95,7 @@ def main():
              'BBH, BNS, GWTC-3, PBH, or IMBH. Runs on BBH '
              'if no argument given.')
     parser.add_argument(
-        '--z_max', default=['10'], type=float, nargs=1,
+        '--z_max', default=['0.1'], type=float, nargs=1,
         help='Maximum simulated redshift.'
              'Uses z_max=10 if no argument given.')
     parser.add_argument(
@@ -139,8 +139,8 @@ def main():
         parameters['phase'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
         parameters['geocent_time'] = np.random.uniform(1104105616, 1135641616, size=(ns,))  # full year 2015
 
-        #parameters['mass_1'] = 20. * np.ones((ns,))
-        #parameters['mass_2'] = 20. * np.ones((ns,))
+        #parameters['mass_1'] = 10. * np.ones((ns,))
+        #parameters['mass_2'] = 5. * np.ones((ns,))
         #z = np.random.uniform(0., 30., size=(ns,))
         #parameters['redshift'] = 0.1* np.ones((ns,))
 

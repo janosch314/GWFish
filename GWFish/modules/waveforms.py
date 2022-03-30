@@ -199,7 +199,7 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     tc = parameters['geocent_time']
     z = parameters['redshift']
     r = parameters['luminosity_distance'] * cst.Mpc
-    iota = parameters['iota']
+    iota = parameters['theta_jn']
     M1 = parameters['mass_1'] * (1 + z) * cst.Msol
     M2 = parameters['mass_2'] * (1 + z) * cst.Msol
 
@@ -349,7 +349,7 @@ def PhenomD(parameters, frequencyvector, plot=None):
     tc = parameters['geocent_time']
     z = parameters['redshift']
     r = parameters['luminosity_distance'] * cst.Mpc
-    iota = parameters['iota']
+    iota = parameters['theta_jn']
     M1 = parameters['mass_1'] * (1 + z) * cst.Msol
     M2 = parameters['mass_2'] * (1 + z) * cst.Msol
     if (M1 < M2):
