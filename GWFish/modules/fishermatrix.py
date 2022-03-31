@@ -131,14 +131,14 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
                     if network.detectors[d].SNR[k] > detect_SNR[0]:
                         network_fisher_matrix += np.squeeze(network.detectors[d].fisher_matrix[k, :, :])
 
-            if npar > 0:
-                network_fisher_inverse = invertSVD(network_fisher_matrix)
-                parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
+                if npar > 0:
+                    network_fisher_inverse = invertSVD(network_fisher_matrix)
+                    parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
 
-                if i_ra + i_dec > 0:
-                    sky_localization[k] = np.pi * np.abs(np.cos(parameter_values['dec'].iloc[k])) \
-                                          * np.sqrt(network_fisher_inverse[i_ra, i_ra]*network_fisher_inverse[i_dec, i_dec]
-                                                    -network_fisher_inverse[i_ra, i_dec]**2)
+                    if i_ra + i_dec > 0:
+                        sky_localization[k] = np.pi * np.abs(np.cos(parameter_values['dec'].iloc[k])) \
+                                              * np.sqrt(network_fisher_inverse[i_ra, i_ra]*network_fisher_inverse[i_dec, i_dec]
+                                                        -network_fisher_inverse[i_ra, i_dec]**2)
         delim = "\t"
         header = 'network_SNR\t'+delim.join(parameter_values.keys())+"\t"+delim.join(["err_" + x for x in fisher_parameters])
 
