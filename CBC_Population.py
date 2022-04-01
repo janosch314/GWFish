@@ -189,9 +189,9 @@ def main():
                                      names=['mass_1', 'mass_2', 'redshift', 'luminosity_distance'],
                                      delimiter=' ')
         ii = np.where(parameters['redshift'] < z_max)[0]
-        print('ii_before: ', ii)
-        ii = np.array(rng.choice(ii,size=(ns,) ))
-        print('ii_after: ', ii)
+        #print('ii_before: ', ii)
+        ii = np.array(rng.choice(ii,size=(ns,), replace=False))
+        #print('ii_after: ', ii)
         print('There are ' + str(len(ii)) + ' BNS mergers up to z=' + str(z_max) + '.')
         parameters = parameters.iloc[ii, :]
         print('parameters_before: ', parameters)
