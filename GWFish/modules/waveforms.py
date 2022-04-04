@@ -22,7 +22,7 @@ def hphc_amplitudes(waveform, parameters, frequencyvector):
     elif waveform=='gwfish_IMRPhenomD':
         hphc = IMRPhenomD(parameters, frequencyvector)
     elif waveform[0:7]=='lalsim_':
-        hphc = lalsim(waveform[7:], frequencyvector, **parameters)
+        hphc = lal_caller(waveform[7:], frequencyvector, **parameters)
     else:
         print(str(waveform) + ' is not a valid waveform.')
         print('Valid options are gwfish_TaylorF2, gwfish_IMRPhenomD, lalsim_XXX.')
@@ -79,7 +79,7 @@ def bilby_to_lalsimulation_spins(
                 mass_2, reference_frequency, phase)
     return iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z
 
-def lalsim(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
+def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
            a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, eccentricity=0, lambda_1=0, lambda_2=0, **kwargs):
     params_lal = lal.CreateDict()
     approx_lal = lalsim.GetApproximantFromString(waveform)
