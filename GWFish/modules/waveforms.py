@@ -19,15 +19,15 @@ def hphc_amplitudes(waveform, parameters, frequencyvector):
 
     if waveform=='gwfish_TaylorF2':
         hphc = TaylorF2(parameters, frequencyvector)
-    elif waveform=='gwfish_PhenomD':
-        hphc = PhenomD(parameters, frequencyvector)
+    elif waveform=='gwfish_IMRPhenomD':
+        hphc = IMRPhenomD(parameters, frequencyvector)
     elif waveform[0:7]=='lalbbh_':
         hphc = lalbbh(waveform[7:], frequencyvector, **parameters)
     elif waveform[0:7]=='lalbns_':
         hphc = lalbns(waveform[7:], frequencyvector, **parameters)
     else:
         print(str(waveform) + ' is not a valid waveform.')
-        print('Valid options are gwfish_TaylorF2, gwfish_PhenomD, lalbbh_XXX or lalbns_XXX.')
+        print('Valid options are gwfish_TaylorF2, gwfish_IMRPhenomD, lalbbh_XXX or lalbns_XXX.')
     return hphc
 
 def convert_args_list_to_float(*args_list):
@@ -132,7 +132,7 @@ def lalbbh(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redsh
     hc = hc[:, np.newaxis]
     polarizations = np.hstack((hp, hc))
 
-    return polarizations, t_of_f
+    return np.conjugate(polarizations), t_of_f
 
 def lalbns(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
            a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, eccentricity=0, lambda_1=0, lambda_2=0, **kwargs):
@@ -189,7 +189,7 @@ def lalbns(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redsh
     hc = hc[:, np.newaxis]
     polarizations = np.hstack((hp, hc))
 
-    return polarizations, t_of_f
+    return np.conjugate(polarizations), t_of_f
 
 def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     ff = frequencyvector
@@ -344,7 +344,7 @@ def phenomD_amp_MR(f, parameters, f_damp, f_RD, gamma1, gamma2, gamma3):
     
     return amp_MR_f, amp_MR_prime_f
 
-def PhenomD(parameters, frequencyvector, plot=None):
+def IMRPhenomD(parameters, frequencyvector, plot=None):
     phic = parameters['phase']
     tc = parameters['geocent_time']
     z = parameters['redshift']
@@ -357,8 +357,14 @@ def PhenomD(parameters, frequencyvector, plot=None):
         M1 = M2
         M2 = aux_mass
 
-    chi_1 = parameters['a_1']
-    chi_2 = parameters['a_2']
+    if 'a_1' in parameters:
+        chi_1 = parameters['a_1']
+    else:
+        chi_1 = 0.0
+    if 'a_2' in parameters:
+        chi_2 = parameters['a_2']
+    else:
+        chi_2 = 0.0
     M = M1 + M2
     mu = M1 * M2 / M
     Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
