@@ -17,16 +17,19 @@ import GWFish.modules.auxiliary as aux
 def hphc_amplitudes(waveform, parameters, frequencyvector):
     parameters = parameters.copy()
 
-    if waveform=='gwfish_TaylorF2':
+    if waveform == 'gwfish_TaylorF2':
         hphc = TaylorF2(parameters, frequencyvector)
-    elif waveform=='gwfish_IMRPhenomD':
+    elif waveform == 'gwfish_IMRPhenomD':
         hphc = IMRPhenomD(parameters, frequencyvector)
-    elif waveform[0:7]=='lalsim_':
+    elif waveform[0:7] == 'lalsim_':
         hphc = lal_caller(waveform[7:], frequencyvector, **parameters)
     else:
         print(str(waveform) + ' is not a valid waveform.')
         print('Valid options are gwfish_TaylorF2, gwfish_IMRPhenomD, lalsim_XXX.')
-    return hphc
+
+    t_of_f = t_of_f_PN(parameters, frequencyvector)
+
+    return hphc, t_of_f
 
 def convert_args_list_to_float(*args_list):
     """ Converts inputs to floats, returns a list in the same order as the input"""
@@ -79,6 +82,24 @@ def bilby_to_lalsimulation_spins(
                 mass_2, reference_frequency, phase)
     return iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z
 
+def t_of_f_PN(parameters, frequencyvector):
+    # t(f) is required to calculate slowly varying antenna pattern as function of instantaneous frequency.
+    # This FD approach follows Marsat/Baker arXiv:1806.10734v1; equation (22) neglecting the phase term, which does not
+    # matter for SNR calculations.
+
+    z = parameters['redshift']
+    M1 = parameters['mass_1'] * (1 + z) * cst.Msol
+    M2 = parameters['mass_2'] * (1 + z) * cst.Msol
+
+    M = M1 + M2
+    mu = M1 * M2 / M
+
+    Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
+
+    t_of_f = -5./(256.*np.pi**(8/3))/Mc**(5/3)/frequencyvector**(8/3)
+
+    return t_of_f+parameters['geocent_time']
+
 def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
            a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, eccentricity=0, lambda_1=0, lambda_2=0, **kwargs):
     params_lal = lal.CreateDict()
@@ -121,20 +142,14 @@ def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, r
 
     # ff_lal = np.arange(h_plus.data.length) * df
     i0 = int(round((f_min - h_plus.f0) / df))  # LAL starts from zero frequency!
-    hp = h_plus.data.data[i0:i0 + len(frequencyvector)]  # it's already multiplied by the phase
-    hc = h_cross.data.data[i0:i0 + len(frequencyvector)]
-
-    psi = np.unwrap(np.angle(hp + 1j * hc))
-
-    t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0]))
-    t_of_f = np.append(t_of_f, [t_of_f[-1]])
-    t_of_f += geocent_time
+    hp = np.conjugate(h_plus.data.data[i0:i0 + len(frequencyvector)])  # it's already multiplied by the phase
+    hc = np.conjugate(h_cross.data.data[i0:i0 + len(frequencyvector)])
 
     hp = hp[:, np.newaxis]
     hc = hc[:, np.newaxis]
     polarizations = np.hstack((hp, hc))
 
-    return np.conjugate(polarizations), t_of_f
+    return polarizations
 
 def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     ff = frequencyvector
@@ -182,28 +197,13 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
         psi += PNc[:, np.newaxis] * v ** k
 
     psi *= 3. / (128. * eta * v ** 5)
-
-    # t(f) is required to calculate slowly varying antenna pattern as function of instantaneous frequency.
-    # This FD approach follows Marsat/Baker arXiv:1806.10734v1; equation (22) neglecting the phase term, which does not
-    # matter for SNR calculations.
-    t_of_f = np.diff(psi, axis=0) / (2. * np.pi * (ff[1] - ff[0]))
-    t_of_f = tc + np.vstack((t_of_f, [t_of_f[-1]]))
-
     psi += 2. * np.pi * ff * tc - phic - np.pi / 4.
+
     phase = np.exp(1.j * psi)
     polarizations = np.hstack((hp * phase, hc * 1.j * phase))
     polarizations[np.where(ff > 4 * f_isco), :] = 0.j  # very crude high-f cut-off
 
     if plot != None:
-        plt.figure()
-        plt.semilogx(ff, t_of_f - tc)
-        plt.xlabel('Frequency [Hz]')
-        plt.ylabel('t(f)')
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig('t_of_f_TF2.png')
-        plt.close()
-
         plt.figure()
         plt.loglog(frequencyvector, np.sqrt(hp**2. + hc**2.))
         plt.xlabel('Frequency [Hz]')
@@ -222,7 +222,7 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
         plt.savefig('phase_tot_TF2.png')
         plt.close()
 
-    return polarizations, t_of_f
+    return polarizations
 
 def step_function(f1, f2):
     vec = []
@@ -588,28 +588,7 @@ def IMRPhenomD(parameters, frequencyvector, plot=None):
     hc = amp_tot*np.cos(iota)
     polarizations = np.hstack((hp * phase, hc * 1.j * phase))
 
-
-    # t(f) is required to calculate slowly varying antenna pattern as function of instantaneous frequency.
-    # This FD approach follows Marsat/Baker arXiv:1806.10734v1; equation (22) neglecting the phase term, which does not
-    # matter for SNR calculations.
-    # Use TF2 phase only as all the phase cumulates there!
-    psi_tot_t = psi_TF2 -  (2. * np.pi * frequencyvector * tc - phic - np.pi / 4.)
-    t_of_f = np.diff(psi_tot_t, axis=0) / (2. * np.pi * (frequencyvector[1] - frequencyvector[0])) 
-    t_of_f = tc + np.vstack((t_of_f, [t_of_f[-1]]))
-
-
-
-    if plot != None:
-        plt.figure()
-        plt.semilogx(ff, t_of_f - tc, linewidth = 2, color = 'blue', label = 'PhenomD')
-        plt.legend(fontsize = 8)
-        plt.xlabel('Frequency [Hz]')
-        plt.ylabel('t(f)')
-        plt.grid(which = 'both', color = 'lightgray', alpha = 0.5, linestyle = 'dashed', linewidth = 0.5)
-        plt.tight_layout()
-        plt.savefig('t_of_f_phenomD.png')
-        plt.close()
-
+    if plot is not None:
         plt.figure()
         y_height = 10**(0.5*(np.log10(amp_tot[0,0]) + np.log10(amp_tot[-1,0])))
         plt.loglog(frequencyvector, amp_tot, linewidth = 2, color = 'blue', label = 'PhenomD')
@@ -619,8 +598,8 @@ def IMRPhenomD(parameters, frequencyvector, plot=None):
         plt.text(1.05*f1_amp*cst.c**3/(M*cst.G), y_height, 'f1_match', rotation=90, fontsize=10, color = 'orange')
         plt.text(1.05*f3_amp*cst.c**3/(M*cst.G), y_height, 'f3_match', rotation=90, fontsize=10, color = 'orange')
         plt.text(1.05*f2_amp*cst.c**3/(M*cst.G), y_height, 'f2_match', rotation=90, fontsize=10, color = 'orange')
-        plt.legend(fontsize = 8)
-        plt.grid(which = 'both', color = 'lightgray', alpha = 0.5, linestyle = 'dashed', linewidth = 0.5)
+        plt.legend(fontsize=8)
+        plt.grid(which='both', color='lightgray', alpha=0.5, linestyle='dashed', linewidth=0.5)
         plt.xlabel('$f$')
         plt.ylabel('$h$ [s]')
         plt.savefig('amp_phenomD.png')
@@ -661,4 +640,4 @@ def IMRPhenomD(parameters, frequencyvector, plot=None):
         plt.close()
 
 
-    return polarizations, t_of_f
+    return polarizations

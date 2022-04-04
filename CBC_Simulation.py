@@ -70,9 +70,9 @@ def main():
     # exit()
 
     #waveform_model = 'lalsim_IMRPhenomXPHM'
-    waveform_model = 'gwfish_TaylorF2'
+    #waveform_model = 'gwfish_TaylorF2'
     #waveform_model = 'gwfish_IMRPhenomD'
-    #waveform_model = 'lalsim_TaylorF2'
+    waveform_model = 'lalsim_TaylorF2'
     #waveform_model = 'lalsim_IMRPhenomD'
 
 

@@ -188,16 +188,14 @@ def main():
         parameters = pd.read_csv('injections/BNS_8e5.txt',
                                      names=['mass_1', 'mass_2', 'redshift', 'luminosity_distance'],
                                      delimiter=' ')
+
         ii = np.where(parameters['redshift'] < z_max)[0]
-        #print('ii_before: ', ii)
-        ii = np.array(rng.choice(ii,size=(ns,), replace=False))
-        #print('ii_after: ', ii)
         print('There are ' + str(len(ii)) + ' BNS mergers up to z=' + str(z_max) + '.')
+        ii = np.array(rng.choice(ii, size=(ns,), replace=False))
+
         parameters = parameters.iloc[ii, :]
-        print('parameters_before: ', parameters)
         if ns < len(parameters):
             parameters = parameters.iloc[0:ns]
-        print('parameters_after: ', parameters)
 
         ns = len(parameters)
 

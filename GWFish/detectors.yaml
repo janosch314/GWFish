@@ -9,7 +9,7 @@ ET:
             plotrange:        3, 1000, 1e-25, 1e-20
             fmin:             2.
             fmax:             1024.
-            df:               1./256.
+            df:               1./16.
 VOY:
             lat:              46.5 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
