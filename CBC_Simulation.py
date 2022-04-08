@@ -46,7 +46,7 @@ def main():
     ConfigDet = args.config
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    calculate_errors = False   # whether to calculate Fisher-matrix based PE errors
+    calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
     fisher_parameters = ['ra', 'dec', 'psi', 'theta_jn', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
@@ -72,8 +72,8 @@ def main():
     #waveform_model = 'lalsim_IMRPhenomXPHM'
     #waveform_model = 'gwfish_TaylorF2'
     #waveform_model = 'gwfish_IMRPhenomD'
-    waveform_model = 'lalsim_TaylorF2'
-    #waveform_model = 'lalsim_IMRPhenomD'
+    #waveform_model = 'lalsim_TaylorF2'
+    waveform_model = 'lalsim_IMRPhenomD'
 
 
     print('Processing CBC population')
