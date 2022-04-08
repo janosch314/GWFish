@@ -42,30 +42,32 @@ def samples(filename, ns, nx=1000, plot=False):
 
     return samples
 
-def rateCosmicAge(nz=1000, plot=False):
-    z = np.linspace(0, 100, nz)
+def redshiftPBH(ns=30000, plot=False):
+    z = np.linspace(0, 100, 1000)
     dz = z[1] - z[0]
     t = cosmo.age(z).value
     t0 = cosmo.age(0).value
     R0 = 1.86e-9  # Mpc^-3 yr^-1
     R = R0 * (t / t0) ** (-34. / 37.)  # merger rate density of PBH binaries
     Rz = R / (1 + z) * 4 * np.pi * cosmo.differential_comoving_volume(z).value  # merger rate of PBH binaries
-    ns = int(np.round(np.sum(Rz * dz)))  # how many PBH mergers
+    N = int(np.round(np.sum(Rz * dz)))  # how many PBH mergers
+    if ns > N:
+        ns = N
 
     CDF = np.cumsum(Rz)
     CDF = CDF / CDF[-1]
 
     a = np.random.uniform(0, 1, size=(ns,))
-    samples = np.zeros_like(a)
+    z_samples = np.zeros_like(a)
     for k in range(ns):
-        samples[k] = z[np.argmax(CDF >= a[k]) - 1]
+        z_samples[k] = z[np.argmax(CDF >= a[k]) - 1]
 
     if plot:
         plt.figure(figsize=(9, 6))
         zz = np.linspace(0, 100, 20)
-        hist, zz = np.histogram(samples, zz)
+        hist, zz = np.histogram(z_samples, zz)
         plt.bar(0.5 * (zz[0:-1] + zz[1:]), np.cumsum(hist), align='center', width=0.9 * (zz[1] - zz[0]),
-                label='histogram of samples', color='orange')
+                label='histogram of redshifts', color='orange')
         plt.semilogx(z, np.cumsum(Rz * dz), label='Model rate', linewidth=3)
         plt.grid(True)
         plt.xlabel('Redshift', fontsize=20)
@@ -76,7 +78,7 @@ def rateCosmicAge(nz=1000, plot=False):
         plt.show()
         plt.close()
 
-    return samples
+    return z_samples
 
 def main():
     # example to run with command-line argument:
@@ -117,12 +119,9 @@ def main():
         #plt.show()
 
         ii = np.where(parameters['redshift'] < z_max)[0]
-        
-        # Additional lines 
-        # ii = np.array(rng.choice(ii,size=(ns,) ))
-        # Gives error!!!
-        # End additional lines
+
         print('There are ' + str(len(ii)) + ' BBH mergers up to z=' + str(z_max) + '.')
+        ii = np.array(rng.choice(ii, size=(ns,), replace=False))
         parameters = parameters.iloc[ii, :]
 
         if ns < len(parameters):
@@ -130,7 +129,7 @@ def main():
 
         ns = len(parameters)
         
-        print ("%d events included in this simulation"%ns)
+        print("%d events included in this simulation"%ns)
 
         parameters['theta_jn'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
         parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
@@ -147,45 +146,42 @@ def main():
         z = parameters['redshift'].to_numpy()
         parameters['luminosity_distance'] = cosmo.luminosity_distance(z).value
 
+        #parameters = pd.DataFrame([{'redshift': 0.098, 'luminosity_distance': 453, 'mass_1': 10., 'mass_2': 5., 'theta_jn': 1.645,
+        #              'dec': -0.363, 'ra': 0.375, 'psi': 1.738, 'phase': 3.472, 'geocent_time': 1120381489.604}])  # signal 1 from paper
+
     if population == 'IMBH':
         z = np.random.uniform(0., 10., size=(ns,))  # not reasonable of course
-        parameters['redshift'] = z
-        parameters['luminosity_distance'] = cosmo.luminosity_distance(z).value
-        parameters['mass_1'] = 150. * np.ones_like(z)
-        parameters['mass_2'] = 150. * np.ones_like(z)
-
-        parameters['theta_jn'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
-        parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
-        parameters['ra'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
-        parameters['psi'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
-        parameters['phase'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
-        parameters['geocent_time'] = np.random.uniform(1104105616, 1135641616, size=(ns,))  # full year 2015
+        parameters = pd.DataFrame.from_dict({'redshift': z, 'luminosity_distance': cosmo.luminosity_distance(z).value,
+                                    'mass_1': 150. * np.ones_like(z), 'mass_2': 150. * np.ones_like(z),
+                                    'theta_jn': np.arccos(np.random.uniform(-1., 1., size=(ns,))),
+                                    'dec': np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.,
+                                    'ra': np.random.uniform(0, 2. * np.pi, size=(ns,)),
+                                    'psi': np.random.uniform(0, 2. * np.pi, size=(ns,)),
+                                    'phase': np.random.uniform(0, 2. * np.pi, size=(ns,)),
+                                    'geocent_time': np.random.uniform(1104105616, 1135641616, size=(ns,))}) # full year 2015
 
     if population == 'PBH':
         # primordial BBH according to https://arxiv.org/pdf/2102.03809.pdf
         # parameters['redshift'] = np.random.uniform(10., 30., size=(ns,))
-        M1 = samples('/Users/anacarolinaoliveira/Documents/GSSI/Code/injections/PBH_p_M1.txt', ns)
-        q = samples('/Users/anacarolinaoliveira/Documents/GSSI/Code/injections/PBH_p_q.txt', ns)
+        M1 = samples(folder+'PBH_p_M1.txt', ns)
+        q = samples(folder+'PBH_p_q.txt', ns)
         M2 = M1 * q
-        parameters['mass_1'] = M1
-        parameters['mass_2'] = M2
+        z = redshiftPBH(ns=ns)
 
-        z = rateCosmicAge(nz=ns)
-        parameters['redshift'] = z
-        parameters['luminosity_distance'] = cosmo.luminosity_distance(z).value
-
-        parameters['theta_jn'] = np.arccos(np.random.uniform(-1., 1., size=(ns,)))
-        parameters['dec'] = np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.
-        parameters['ra'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
-        parameters['psi'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
-        parameters['phase'] = np.random.uniform(0, 2. * np.pi, size=(ns,))
-        parameters['geocent_time'] = np.random.uniform(1104105616, 1135641616, size=(ns,))  # full year 2015
+        parameters = pd.DataFrame.from_dict({'mass_1': M1, 'mass_2': M2, 'redshift': z,
+                                        'luminosity_distance': cosmo.luminosity_distance(z).value,
+                                        'theta_jn': np.arccos(np.random.uniform(-1., 1., size=(ns,))),
+                                        'dec': np.arccos(np.random.uniform(-1., 1., size=(ns,))) - np.pi / 2.,
+                                        'ra': np.random.uniform(0, 2. * np.pi, size=(ns,)),
+                                        'psi': np.random.uniform(0, 2. * np.pi, size=(ns,)),
+                                        'phase': np.random.uniform(0, 2. * np.pi, size=(ns,)),
+                                        'geocent_time': np.random.uniform(1104105616, 1135641616, size=(ns,))})  # full year 2015
 
     if population == 'BNS':
         #parameters = pd.read_csv('/Users/anacarolinaoliveira/Documents/GSSI/Code/injections/BBH_1e5.txt',
         #                             names=['mass_1', 'mass_2', 'redshift', 'luminosity_distance'],
         #                             delimiter=' ')
-        parameters = pd.read_csv('injections/BNS_8e5.txt',
+        parameters = pd.read_csv(folder+'BNS_8e5.txt',
                                      names=['mass_1', 'mass_2', 'redshift', 'luminosity_distance'],
                                      delimiter=' ')
 
