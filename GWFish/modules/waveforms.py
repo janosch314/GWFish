@@ -143,9 +143,9 @@ def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, r
     # ff_lal = np.arange(h_plus.data.length) * df
     i0 = int(round((f_min - h_plus.f0) / df))  # LAL starts from zero frequency!
     # Add initial 2pi*f*tc - phic - pi/4 to phase
-    phi_in = np.exp(1.j*(2*frequencyvector[:,0]*np.pi*geocent_time - phase - np.pi/4.))    
-    hp = np.conjugate(phi_in * h_plus.data.data[i0:i0 + len(frequencyvector)])  # it's already multiplied by the phase
-    hc = np.conjugate(phi_in * h_cross.data.data[i0:i0 + len(frequencyvector)])
+    phi_in = np.exp(1.j*(2*frequencyvector[:,0]*np.pi*geocent_time - phase - np.pi/4.))
+    hp = phi_in * np.conjugate(h_plus.data.data[i0:i0 + len(frequencyvector)])  # it's already multiplied by the phase
+    hc = phi_in * np.conjugate(h_cross.data.data[i0:i0 + len(frequencyvector)])
 
     hp = hp[:, np.newaxis]
     hc = hc[:, np.newaxis]
