@@ -14,13 +14,13 @@ except ModuleNotFoundError as err:
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
 
-def hphc_amplitudes(waveform, parameters, frequencyvector):
+def hphc_amplitudes(waveform, parameters, frequencyvector, plot=None):
     parameters = parameters.copy()
 
     if waveform == 'gwfish_TaylorF2':
-        hphc = TaylorF2(parameters, frequencyvector)
+        hphc = TaylorF2(parameters, frequencyvector, plot=plot)
     elif waveform == 'gwfish_IMRPhenomD':
-        hphc = IMRPhenomD(parameters, frequencyvector)
+        hphc = IMRPhenomD(parameters, frequencyvector, plot=plot)
     elif waveform[0:7] == 'lalsim_':
         hphc = lal_caller(waveform[7:], frequencyvector, **parameters)
     else:
@@ -205,21 +205,24 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     polarizations = np.hstack((hp * phase, hc * 1.j * phase))
     polarizations[np.where(ff > 4 * f_isco), :] = 0.j  # very crude high-f cut-off
 
-    if plot != None:
+    if plot is not None:
         plt.figure()
-        plt.loglog(frequencyvector, np.sqrt(hp**2. + hc**2.))
+        plt.loglog(frequencyvector, np.abs(polarizations[:, 0]), label=r'$h_+$')
+        plt.loglog(frequencyvector, np.abs(polarizations[:, 1]), label=r'$h_\times$')
         plt.xlabel('Frequency [Hz]')
-        plt.ylabel('h [s]')
-        plt.grid(True)
+        plt.ylabel(r'Fourier amplitude [$Hz^{-1}$]')
+        plt.grid(which='both', color='lightgray', alpha=0.5, linestyle='dashed', linewidth=0.5)
+        plt.axis(plot)
+        plt.legend()
         plt.tight_layout()
         plt.savefig('amp_tot_TF2.png')
         plt.close()
 
         plt.figure()
-        plt.plot(frequencyvector, psi)
+        plt.semilogx(frequencyvector, psi)
         plt.xlabel('Frequency [Hz]')
-        plt.ylabel('phase [rad]')
-        plt.grid(True)
+        plt.ylabel('Phase [rad]')
+        plt.grid(which='both', color='lightgray', alpha=0.5, linestyle='dashed', linewidth=0.5)
         plt.tight_layout()
         plt.savefig('phase_tot_TF2.png')
         plt.close()
@@ -592,8 +595,9 @@ def IMRPhenomD(parameters, frequencyvector, plot=None):
 
     if plot is not None:
         plt.figure()
-        y_height = 10**(0.5*(np.log10(amp_tot[0,0]) + np.log10(amp_tot[-1,0])))
-        plt.loglog(frequencyvector, amp_tot, linewidth = 2, color = 'blue', label = 'PhenomD')
+        y_height = plot[3]/10
+        plt.loglog(frequencyvector, np.abs(polarizations[:, 0]), linewidth=2, color='blue', label=r'$h_+$')
+        plt.loglog(frequencyvector, np.abs(polarizations[:, 1]), linewidth=2, color='blue', label=r'$h_\times$')
         plt.axvline(x=f1_amp*cst.c**3/(M*cst.G), color = 'orange', linestyle = '--', linewidth = 2)
         plt.axvline(x=f2_amp*cst.c**3/(M*cst.G), color = 'orange', linestyle = '--', linewidth = 2)
         plt.axvline(x=f3_amp*cst.c**3/(M*cst.G), color = 'orange', linestyle = '--', linewidth = 2)
@@ -601,14 +605,15 @@ def IMRPhenomD(parameters, frequencyvector, plot=None):
         plt.text(1.05*f3_amp*cst.c**3/(M*cst.G), y_height, 'f3_match', rotation=90, fontsize=10, color = 'orange')
         plt.text(1.05*f2_amp*cst.c**3/(M*cst.G), y_height, 'f2_match', rotation=90, fontsize=10, color = 'orange')
         plt.legend(fontsize=8)
+        plt.axis(plot)
         plt.grid(which='both', color='lightgray', alpha=0.5, linestyle='dashed', linewidth=0.5)
-        plt.xlabel('$f$')
-        plt.ylabel('$h$ [s]')
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel(r'Fourier amplitude [$Hz^{-1}$]')
         plt.savefig('amp_phenomD.png')
         plt.close()
 
         plt.figure()
-        plt.semilogx(frequencyvector, psi_prime_tot, linewidth = 2, color = 'blue', label = 'PhenomD')
+        plt.semilogx(frequencyvector, psi_prime_tot, linewidth = 2, color = 'blue', label='PhenomD')
         y_loc = (1 + 1e-9)*psi_prime_tot[0,0]
         plt.axvline(x=0.018*cst.c**3/(cst.G*M), color = 'orange', linestyle = '--', linewidth = 2)
         plt.axvline(x=ff_RD*cst.c**3/(cst.G*M), color = 'orange', linestyle = '--', linewidth = 2)
@@ -616,7 +621,7 @@ def IMRPhenomD(parameters, frequencyvector, plot=None):
         plt.text(1.05*ff_RD*cst.c**3/(cst.G*M), y_loc, '$f_{RD}$', rotation=90, fontsize=12, color='orange')
         plt.legend(fontsize = 8)
         plt.grid(which = 'both', color = 'lightgray', alpha = 0.5, linestyle = 'dashed', linewidth = 0.5)
-        plt.xlabel('$f$')
+        plt.xlabel('Frequency [Hz]')
         plt.ylabel('$\phi$_prime')
         plt.savefig('psi_prime_phenomD.png')
         plt.close()
@@ -636,7 +641,7 @@ def IMRPhenomD(parameters, frequencyvector, plot=None):
         ax.indicate_inset_zoom(axins, edgecolor="black")
         plt.legend(fontsize = 8)
         plt.grid(which = 'both', color = 'lightgray', alpha = 0.5, linestyle = 'dashed', linewidth = 0.5)
-        plt.xlabel('$f$')
+        plt.xlabel('Frequency [Hz]')
         plt.ylabel('$\phi$')
         plt.savefig('psi_phenomD_zoomed.png')
         plt.close()

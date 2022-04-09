@@ -22,7 +22,6 @@ class DetectorComponent:
         detector_def = doc[self.name]
 
         self.duty_factor = eval(str(detector_def['duty_factor']))
-        self.plotrange = np.fromstring(detector_def['plotrange'], dtype=float, sep=',')
 
         if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'earthL'):
 
@@ -126,6 +125,8 @@ class Detector:
             exit()
 
         detector_def = doc[self.name]
+
+        self.plotrange = np.fromstring(detector_def['plotrange'], dtype=float, sep=',')
 
         fmin = eval(str(detector_def['fmin']))
         fmax = eval(str(detector_def['fmax']))

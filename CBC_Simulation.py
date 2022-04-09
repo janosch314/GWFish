@@ -46,7 +46,7 @@ def main():
     ConfigDet = args.config
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
+    calculate_errors = False   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
     fisher_parameters = ['ra', 'dec', 'psi', 'theta_jn', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
@@ -69,11 +69,11 @@ def main():
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
-    #waveform_model = 'lalsim_IMRPhenomXPHM'
     #waveform_model = 'gwfish_TaylorF2'
-    #waveform_model = 'gwfish_IMRPhenomD'
+    waveform_model = 'gwfish_IMRPhenomD'
     #waveform_model = 'lalsim_TaylorF2'
-    waveform_model = 'lalsim_IMRPhenomD'
+    #waveform_model = 'lalsim_IMRPhenomD'
+    # waveform_model = 'lalsim_IMRPhenomXPHM'
 
 
     print('Processing CBC population')
@@ -82,7 +82,9 @@ def main():
 
         networkSNR_sq = 0
         for d in np.arange(len(network.detectors)):
-            wave, t_of_f = gw.waveforms.hphc_amplitudes(waveform_model, parameter_values, network.detectors[d].frequencyvector)
+            wave, t_of_f = gw.waveforms.hphc_amplitudes(waveform_model, parameter_values,
+                                                        network.detectors[d].frequencyvector)
+                                                        #plot=network.detectors[d].plotrange)
             signal = gw.detection.projection(parameter_values, network.detectors[d], wave, t_of_f)
 
             SNRs = gw.detection.SNR(network.detectors[d], signal, duty_cycle=duty_cycle)
