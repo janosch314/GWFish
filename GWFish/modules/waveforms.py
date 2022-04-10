@@ -7,6 +7,7 @@ import scipy.optimize as optimize
 try:
     import lalsimulation as lalsim
     import lal
+    from lal import CreateREAL8Vector
 except ModuleNotFoundError as err:
     uselal = err
     print('LAL package is not installed. Only GWFish waveforms available.')
@@ -101,7 +102,7 @@ def t_of_f_PN(parameters, frequencyvector):
     return t_of_f+parameters['geocent_time']
 
 def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
-           a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, eccentricity=0, lambda_1=0, lambda_2=0, **kwargs):
+           a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, lambda_1=0, lambda_2=0, **kwargs):
     params_lal = lal.CreateDict()
     approx_lal = lalsim.GetApproximantFromString(waveform)
 
@@ -112,40 +113,33 @@ def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, r
         from lalsimulation import SimInspiralWaveformParamsInsertTidalLambda2
         SimInspiralWaveformParamsInsertTidalLambda2(params_lal, float(lambda_2))
 
-    f_min = frequencyvector[0][0]
-    df = (frequencyvector[1] - frequencyvector[0])[0]
-    f_max = frequencyvector[-1][0]
+    frequencyvector = frequencyvector.copy().flatten()
 
     iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
         theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
         phi_12=phi_12, a_1=a_1, a_2=a_2, mass_1=mass_1, mass_2=mass_2,
         reference_frequency=50., phase=phase)
 
-    # h_plus and h_cross are objects
-    h_plus, h_cross = lalsim.SimInspiralChooseFDWaveform(
+    frequency_array = CreateREAL8Vector(len(frequencyvector))
+    frequency_array.data = frequencyvector
+
+    h_plus, h_cross = lalsim.SimInspiralChooseFDWaveformSequence(
+        phase,
         mass_1 * lal.MSUN_SI * (1 + redshift),  # in [kg]
         mass_2 * lal.MSUN_SI * (1 + redshift),  # in [kg]
         spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z,
+        50.,  # reference frequency
         luminosity_distance * lal.PC_SI * 1e6,  # in [m]
         iota,
-        phase,
-        0,  # longitude of ascending nodes
-        eccentricity,  # eccentricity
-        0,  # mean anomaly of periastron
-        df,  # df
-        f_min,  # f_min
-        f_max,  # f_max
-        50.,  # reference frequency
         params_lal,
-        approx_lal
+        approx_lal,
+        frequency_array
     )
 
-    # ff_lal = np.arange(h_plus.data.length) * df
-    i0 = int(round((f_min - h_plus.f0) / df))  # LAL starts from zero frequency!
     # Add initial 2pi*f*tc - phic - pi/4 to phase
-    phi_in = np.exp(1.j*(2*frequencyvector[:,0]*np.pi*geocent_time - phase - np.pi/4.))
-    hp = phi_in * np.conjugate(h_plus.data.data[i0:i0 + len(frequencyvector)])  # it's already multiplied by the phase
-    hc = phi_in * np.conjugate(h_cross.data.data[i0:i0 + len(frequencyvector)])
+    phi_in = np.exp(1.j*(2*frequencyvector*np.pi*geocent_time - phase - np.pi/4.))
+    hp = phi_in * np.conjugate(h_plus.data.data)  # it's already multiplied by the phase
+    hc = phi_in * np.conjugate(h_cross.data.data)
 
     hp = hp[:, np.newaxis]
     hc = hc[:, np.newaxis]
