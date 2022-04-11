@@ -137,7 +137,7 @@ def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, r
     )
 
     # Add initial 2pi*f*tc - phic - pi/4 to phase
-    phi_in = np.exp(1.j*(2*frequencyvector*np.pi*geocent_time - phase - np.pi/4.))
+    phi_in = np.exp(1.j*(2*frequencyvector*np.pi*geocent_time))
     hp = phi_in * np.conjugate(h_plus.data.data)  # it's already multiplied by the phase
     hc = phi_in * np.conjugate(h_cross.data.data)
 
