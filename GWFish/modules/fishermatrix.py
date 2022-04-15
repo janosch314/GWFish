@@ -98,12 +98,17 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
     """
 
     # Check if sky-location parameters are part of Fisher analysis. If yes, sky-location error will be calculated.
-    i_ra = 0
-    i_dec = 0
-    if 'ra' in fisher_parameters:
+    signals_havesky = False
+    if ('ra' in fisher_parameters) and ('dec' in fisher_parameters):
+        signals_havesky = True
         i_ra = fisher_parameters.index('ra')
-    if 'dec' in fisher_parameters:
         i_dec = fisher_parameters.index('dec')
+    signals_haveids = False
+    if 'id' in parameter_values.columns:
+        signals_haveids = True
+        signal_ids = parameter_values['id']
+        parameter_values.drop('id', inplace=True, axis=1)
+
 
     npar = len(fisher_parameters)
     ns = len(network.detectors[0].fisher_matrix[:, 0, 0])  # number of signals
@@ -135,7 +140,7 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
                     network_fisher_inverse = invertSVD(network_fisher_matrix)
                     parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
 
-                    if i_ra + i_dec > 0:
+                    if signals_havesky:
                         sky_localization[k] = np.pi * np.abs(np.cos(parameter_values['dec'].iloc[k])) \
                                               * np.sqrt(network_fisher_inverse[i_ra, i_ra]*network_fisher_inverse[i_dec, i_dec]
                                                         -network_fisher_inverse[i_ra, i_dec]**2)
@@ -144,15 +149,15 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
 
         ii = np.where(networkSNR > detect_SNR[1])[0]
         save_data = np.c_[networkSNR[ii], parameter_values.iloc[ii], parameter_errors[ii, :]]
-        if i_ra+i_dec > 0:
+        if signals_havesky:
             header += "\terr_sky_location"
             save_data = np.c_[save_data, sky_localization[ii]]
-        if 'id' in parameter_values.columns:
+        if signals_haveids:
             header = "signal\t"+header
-            save_data = np.c_[parameter_values['id'].iloc[ii], save_data]
+            save_data = np.c_[signal_ids.iloc[ii], save_data]
 
 
-        if ('id' in parameter_values.columns) and (len(save_data)>0):
+        if signals_haveids and (len(save_data)>0):
             np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
                        save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header)
         else:

@@ -197,7 +197,7 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
 
     phase = np.exp(1.j * psi)
     polarizations = np.hstack((hp * phase, hc * 1.j * phase))
-    polarizations[np.where(ff > 4 * f_isco), :] = 0.j  # very crude high-f cut-off
+    polarizations[np.where(ff[:,0] > 4 * f_isco), :] = 0.j  # very crude high-f cut-off
 
     if plot is not None:
         plt.figure()
