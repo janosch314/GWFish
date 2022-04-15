@@ -2,7 +2,6 @@ import numpy as np
 import GWFish.modules.waveforms as wf
 import GWFish.modules.detection as det
 import GWFish.modules.auxiliary as aux
-import GWFish.modules.constants as cst
 
 def invertSVD(matrix):
     dm = np.sqrt(np.diag(matrix))
@@ -159,7 +158,7 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
 
         if signals_haveids and (len(save_data)>0):
             np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
-                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header)
+                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header, comments='')
         else:
             np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
-                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header)
+                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header, comments='')
