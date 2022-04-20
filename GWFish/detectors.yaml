@@ -107,6 +107,8 @@ LIN:
             fmax:             1024
             df:               1./4.      
 LISA:  
+            arm_length:       2.5e9
+            psd_data:         GWFish/detector_psd/LISA_psd.txt
             duty_factor:      1
             detector_class:   satellitesolarorbit
             mission_lifetime: 4 * 3.16e7

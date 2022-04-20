@@ -64,17 +64,22 @@ class DetectorComponent:
             ff = np.logspace(-4, 0, 1000)   # later interpolated onto frequencyvector
             S_acc = 9e-30 * (1 + (4e-4 / ff) ** 2) * (1 + (ff / 8e-3) ** 4)
 
-            self.L = 2.5e9
+            self.L = eval(str(detector_def['arm_length']))
             self.eps = self.L / cst.AU / (2 * np.sqrt(3))
 
-            self.psd_data = np.zeros((len(ff), 2))
-            self.psd_data[:, 0] = ff
+            # self.psd_data = np.zeros((len(ff), 2))
             # noises in units of GW strain
             # P_rec = 700e-12
             # f0 = cst.c / 1064e-9
             # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
-            S_opt = 1e-22 * (1 + (2e-3 / ff) ** 4) / self.L ** 2
-            S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
+            # S_opt = (2 / self.L) ** 2 * 2.5e-23 * (1 + (2e-3 / ff) ** 4)
+            # S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
+            raw_data = np.loadtxt(detector_def['psd_data'])
+            ff = raw_data[:,0]
+            S_pm = (2/self.L)**2 * raw_data[:,1]
+            S_opt = (2/self.L)**2 * raw_data[:,2]
+
+            self.psd_data[:, 0] = ff
 
             if self.id < 2:
                 # instrument noise of A,E channels
