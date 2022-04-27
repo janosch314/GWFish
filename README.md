@@ -3,12 +3,6 @@
 </p>
 Simulation of detector networks with Fisher-matrix PE
 
-Open issues:
-1) Correct coordinate transformation from RA/DEC into solar-centered coordinates for LISA-type detectors
-2) Correct coordinate transformation from RA/DEC into lunar lat/lon coordinates
-
-
-
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
 This work is licensed under a [Creative Commons Attribution 4.0 International
