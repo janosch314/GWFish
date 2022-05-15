@@ -32,7 +32,7 @@ def analyzeForeground(network, h_of_f, dT):
         h_astro = np.sqrt(3 * H0 ** 2 / (10 * np.pi ** 2) * Omega / ff ** 3)
 
         components = network.detectors[d].components
-        psd_astro_all = np.abs(np.squeeze(h_of_f[:, d, :])) ** 2 / dT
+        psd_astro_all = 2 * np.abs(np.squeeze(h_of_f[:, d, :])) ** 2 / dT
         N = len(psd_astro_all[0, :])
 
         plotrange = components[0].plotrange
