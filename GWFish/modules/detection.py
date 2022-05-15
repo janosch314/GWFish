@@ -90,7 +90,7 @@ class DetectorComponent:
                                               2 + np.cos(2 * np.pi * ff * self.L / cst.c)) * S_opt
             else:
                 # instrument noise of T channel
-                self.psd_data[:, 1] = 2 * (1 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c)) ** 2 * (
+                self.psd_data[:, 1] = (2 + 4 * np.cos(2 * np.pi * ff * self.L / cst.c)**2) * (
                         4 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * S_pm + S_opt)
 
         self.Sn = interp1d(self.psd_data[:, 0], self.psd_data[:, 1], bounds_error=False, fill_value=1.)
