@@ -631,7 +631,7 @@ def analyzeDetections(network, parameters, population, networks_ids):
 
     save_data = parameters
 
-    delim = "\t"
+    delim = " "
     header = delim.join(parameters.keys())
 
     for n in np.arange(N):
@@ -648,7 +648,7 @@ def analyzeDetections(network, parameters, population, networks_ids):
         SNR = np.sqrt(SNR)
 
         save_data = np.c_[save_data, SNR]
-        header += "\t" + network_name + "_SNR"
+        header += " " + network_name + "_SNR"
 
         threshold = SNR > detSNR[1]
 

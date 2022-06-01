@@ -143,16 +143,16 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
                         sky_localization[k] = np.pi * np.abs(np.cos(parameter_values['dec'].iloc[k])) \
                                               * np.sqrt(network_fisher_inverse[i_ra, i_ra]*network_fisher_inverse[i_dec, i_dec]
                                                         -network_fisher_inverse[i_ra, i_dec]**2)
-        delim = "\t"
-        header = 'network_SNR\t'+delim.join(parameter_values.keys())+"\t"+delim.join(["err_" + x for x in fisher_parameters])
+        delim = " "
+        header = 'network_SNR '+delim.join(parameter_values.keys())+" "+delim.join(["err_" + x for x in fisher_parameters])
 
         ii = np.where(networkSNR > detect_SNR[1])[0]
         save_data = np.c_[networkSNR[ii], parameter_values.iloc[ii], parameter_errors[ii, :]]
         if signals_havesky:
-            header += "\terr_sky_location"
+            header += " err_sky_location"
             save_data = np.c_[save_data, sky_localization[ii]]
         if signals_haveids:
-            header = "signal\t"+header
+            header = "signal "+header
             save_data = np.c_[signal_ids.iloc[ii], save_data]
 
 
