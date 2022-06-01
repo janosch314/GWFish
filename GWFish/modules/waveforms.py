@@ -77,10 +77,18 @@ def bilby_to_lalsimulation_spins(
         spin_2z = a_2 * np.cos(tilt_2)
         iota = theta_jn
     else:
-        iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = \
-            transform_precessing_spins(
-                theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1,
-                mass_2, reference_frequency, phase)
+        from numbers import Number
+        args = (
+            theta_jn, phi_jl, tilt_1, tilt_2, phi_12, a_1, a_2, mass_1,
+            mass_2, reference_frequency, phase
+        )
+        float_inputs = all([isinstance(arg, Number) for arg in args])
+        if float_inputs:
+            func = lalsim_SimInspiralTransformPrecessingNewInitialConditions
+        else:
+            func = transform_precessing_spins
+        iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = func(*args)
+
     return iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z
 
 def t_of_f_PN(parameters, frequencyvector):
