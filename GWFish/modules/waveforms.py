@@ -175,12 +175,11 @@ def TaylorF2(parameters, frequencyvector, maxn=8, plot=None):
     f_isco = aux.fisco(parameters)
 
     v = (np.pi * cst.G * M / cst.c ** 3 * ff) ** (1. / 3.)
-    v_isco = (np.pi * cst.G * M / cst.c ** 3 * f_isco) ** (1. / 3.)
 
     # coefficients of the PN expansion (https://arxiv.org/pdf/0907.0700.pdf)
     pp = np.hstack((1. * ones, 0. * ones, 20. / 9. * (743. / 336. + eta * 11. / 4.) * ones, -16 * np.pi * ones,
                     10. * (3058673. / 1016064. + 5429. / 1008. * eta + 617. / 144. * eta ** 2) * ones,
-                    np.pi * (38645. / 756. - 65. / 9. * eta) * (1 + 3. * np.log(v / v_isco)),
+                    np.pi * (38645. / 756. - 65. / 9. * eta) * (1 + 3. * np.log(v)),
                     11583231236531. / 4694215680. - 640. / 3. * np.pi ** 2 - 6848. / 21. * (C + np.log(4 * v))
                     + (
                             -15737765635. / 3048192. + 2255. / 12. * np.pi ** 2) * eta + 76055. / 1728. * eta ** 2 - 127825. / 1296. * eta ** 3,

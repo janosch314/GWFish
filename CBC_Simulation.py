@@ -35,7 +35,7 @@ def main():
         '--detectors', type=str, default=['ET'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
-        '--networks', default='[[0]]', nargs=1,
+        '--networks', default=['[[0]]'], nargs=1,
         help='Network IDs. Uses [[0]] as default if no argument given.')
     parser.add_argument(
         '--config', type=str, default='GWFish/detectors.yaml',
@@ -56,7 +56,7 @@ def main():
     population = args.pop_id
 
     detectors_ids = args.detectors
-    networks_ids = json.loads(args.networks)
+    networks_ids = json.loads(args.networks[0])
 
     parameters = pd.read_hdf(pop_file)
 
