@@ -12,6 +12,8 @@ pandas = "^1.4.1"
 astropy = "^5.0.1"
 scipy = "^1.8.0"
 matplotlib = "^3.5.1"
+tqdm = "^4.64.0"
+sympy = "^1.10.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
