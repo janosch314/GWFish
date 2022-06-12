@@ -5,8 +5,8 @@ description = "A Fisher Matrix code for third-generation gravitational wave dete
 authors = ["Jan Harms <jan.harms@gssi.it>"]
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.11"
-numpy = "^1.22.2"
+python = ">=3.8, <3.10"
+numpy = "^1.21"
 tables = "^3.7.0"
 pandas = "^1.4.1"
 astropy = "^5.0.1"
@@ -14,10 +14,13 @@ scipy = "^1.8.0"
 matplotlib = "^3.5.1"
 tqdm = "^4.64.0"
 sympy = "^1.10.1"
+lalsuite = "^7.5"
+mlgw-bns = "^0.10.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
 tox = "^3.24.5"
+ipython = "^8.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
