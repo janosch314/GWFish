@@ -12,6 +12,13 @@ except ModuleNotFoundError as err:
     uselal = err
     print('LAL package is not installed. Only GWFish waveforms available.')
 
+try:
+    from mlgw_bns import Model, ParametersWithExtrinsic
+    mlgw_model = Model.default()
+except ModuleNotFoundError:
+    print('mlgw_bns not found')
+    pass
+
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
 
@@ -22,6 +29,8 @@ def hphc_amplitudes(waveform, parameters, frequencyvector, plot=None):
         hphc = TaylorF2(parameters, frequencyvector, plot=plot)
     elif waveform == 'gwfish_IMRPhenomD':
         hphc = IMRPhenomD(parameters, frequencyvector, plot=plot)
+    elif waveform == 'mlgw_bns':
+        hphc = MLGW_BNS(parameters, frequencyvector, plot=plot)
     elif waveform[0:7] == 'lalsim_':
         hphc = lal_caller(waveform[7:], frequencyvector, **parameters)
     else:
@@ -31,6 +40,31 @@ def hphc_amplitudes(waveform, parameters, frequencyvector, plot=None):
     t_of_f = t_of_f_PN(parameters, frequencyvector)
 
     return hphc, t_of_f
+
+def MLGW_BNS(parameters, frequencyvector, plot=None):
+    
+    m1, m2 = parameters['mass_1'], parameters['mass_2']
+    if m1 < m2:
+        m1, m2 = m2, m1
+    
+    params = ParametersWithExtrinsic(
+        mass_ratio=m1/m2,
+        lambda_1=parameters['lambda_1'],
+        lambda_2=parameters['lambda_2'],
+        chi_1=parameters['a_1'],
+        chi_2=parameters['a_2'],
+        distance_mpc=parameters['luminosity_distance'],
+        inclination=parameters['theta_jn'],
+        total_mass=(m1+m2)*(1+parameters['redshift']),
+        reference_phase=parameters['phase'],
+        time_shift=parameters['geocent_time'],
+    )
+    hp, hc = mlgw_model.predict(frequencyvector[:, 0], params)
+    hp = hp[:, np.newaxis]
+    hc = hc[:, np.newaxis]
+    polarizations = np.hstack((hp, hc))
+
+    return polarizations
 
 def convert_args_list_to_float(*args_list):
     """ Converts inputs to floats, returns a list in the same order as the input"""
