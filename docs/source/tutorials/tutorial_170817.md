@@ -95,7 +95,7 @@ The output should look similar to
 ```bash
 LAL package is not installed. Only GWFish waveforms available.
 Processing CBC population
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:01<00:00,  1.15s/it]
+<...>
 Network: ET_LGWA
 Detected signals with SNR>9.000: 1.000 (1 out of 1); z<0.010
 SNR: 720.575 (min) , 720.575 (max) 
