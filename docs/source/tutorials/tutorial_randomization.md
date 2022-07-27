@@ -4,6 +4,10 @@ We want to achieve the same result as in the [previous tutorial](tutorial_170817
 but this time instead of fixing all the parameter values, we will randomize some of them,
 in order to get a better feel of how the error distribution looks in general.
 
+This is still not a realistic scenario --- for that, we'd need to look at the 
+mass distribution of neutron star mergers in redshift at the very least ---
+but it illustrates several points which are relevant for more advanced usage.
+
 ## Randomized population file
 
 We will need to generate some random points on a sphere for the angular distribution
