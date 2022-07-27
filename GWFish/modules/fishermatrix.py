@@ -158,10 +158,11 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
             header = "signal "+header
             save_data = np.c_[signal_ids.iloc[ii], save_data]
 
+        row_format = "%s " + " ".join(["%.3E" for _ in range(len(save_data[0,:])-1)])
+        file_name = 'Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt'
 
         if signals_haveids and (len(save_data)>0):
-            np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
-                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header, comments='')
+            np.savetxt(file_name, save_data, delimiter=' ', fmt=row_format, header=header, comments='')
         else:
-            np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
-                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header, comments='')
+            np.savetxt(file_name, save_data, delimiter=' ', fmt=row_format, header=header, comments='')
+
