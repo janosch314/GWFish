@@ -56,7 +56,7 @@ parameters = pd.DataFrame.from_dict({
     'phase': 0 * one,
     'geocent_time': 1187008882 * one, 
 })
-parameters.to_hdf('170817_like_population', mode='w', key='root')
+parameters.to_hdf('170817_like_population.hdf5', mode='w', key='root')
 ```
 
 where the values are approximately the [best fit estimates for GW170817](https://doi.org/10.1103/PhysRevX.9.011001).
@@ -87,7 +87,7 @@ Once we have this population file, we can simply run `CBC_Simulation.py` to
 compute the required errors:
 
 ```bash
-python CBC_Simulation.py --pop_id 170817like --pop_file 170817_like_population --detectors ET LGWA --networks "[[0, 1]]"
+python CBC_Simulation.py --pop_id 170817like --pop_file 170817_like_population.hdf5 --detectors ET LGWA --networks "[[0, 1]]"
 ```
 
 The output should look similar to
