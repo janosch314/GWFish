@@ -131,6 +131,15 @@ The Fisher matrix errors will be saved to a file named
 - the corresponding Fisher-matrix errors, with columns labelled `err_<param>` for every parameter;
 - additionally, the sky localization area in steradians, labelled `err_sky_location`.
 
+```{note}
+The reason for the `SNR9.0` label is that a cut is performed at that (customizable)
+SNR: signals below the threshold are not expected to be statistically distinguishable from noise,
+so they should not be included in the simulation.
+
+In our case, though, the source is so close that even in the worst case scenario
+the SNR is still well above the threshold. 
+```
+
 It should look like:
 
 ```
