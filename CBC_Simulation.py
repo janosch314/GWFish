@@ -25,17 +25,17 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default='./injections/CBC_pop.hdf5', nargs=1,
+        '--pop_file', type=str, default='./injections/CBC_pop.hdf5',
         help='Population to run the analysis on.'
              'Runs on BBH_1e5.hdf5 if no argument given.')
     parser.add_argument(
-        '--pop_id', type=str, default='BBH', nargs=1,
+        '--pop_id', type=str, default='BBH',
         help='Short population identifier for file names. Uses BBH if no argument given.')
     parser.add_argument(
         '--detectors', type=str, default=['ET'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
-        '--networks', default=['[[0]]'], nargs=1,
+        '--networks', default=['[[0]]'],
         help='Network IDs. Uses [[0]] as default if no argument given.')
     parser.add_argument(
         '--config', type=str, default='GWFish/detectors.yaml',
@@ -46,7 +46,7 @@ def main():
     ConfigDet = args.config
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    calculate_errors = False   # whether to calculate Fisher-matrix based PE errors
+    calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
     fisher_parameters = ['ra', 'dec', 'psi', 'theta_jn', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
@@ -56,7 +56,7 @@ def main():
     population = args.pop_id
 
     detectors_ids = args.detectors
-    networks_ids = json.loads(args.networks[0])
+    networks_ids = json.loads(args.networks)
 
     parameters = pd.read_hdf(pop_file)
 
@@ -69,8 +69,8 @@ def main():
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
-    #waveform_model = 'gwfish_TaylorF2'
-    waveform_model = 'gwfish_IMRPhenomD'
+    waveform_model = 'gwfish_TaylorF2'
+    # waveform_model = 'gwfish_IMRPhenomD'
     #waveform_model = 'lalsim_TaylorF2'
     #waveform_model = 'lalsim_IMRPhenomD'
     # waveform_model = 'lalsim_IMRPhenomXPHM'

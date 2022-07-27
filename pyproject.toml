@@ -3,6 +3,10 @@ name = "GWFish"
 version = "0.1.0"
 description = "A Fisher Matrix code for third-generation gravitational wave detectors."
 authors = ["Jan Harms <jan.harms@gssi.it>"]
+packages = [
+    { include = "GWFish" },
+    { include = "GWFish/**/*.py" },
+]
 
 [tool.poetry.dependencies]
 python = ">=3.8, <3.11"
@@ -12,10 +16,23 @@ pandas = "^1.4.1"
 astropy = "^5.0.1"
 scipy = "^1.8.0"
 matplotlib = "^3.5.1"
+tqdm = "^4.64.0"
+sympy = "^1.10.1"
+lalsuite = {version = "^7.5", optional = true}
+
+[tool.poetry.extras]
+waveforms = ["lalsuite"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
 tox = "^3.24.5"
+ipython = "^8.4.0"
+furo = "^2022.6.21"
+myst-parser = "^0.18.0"
+sphinx-copybutton = "^0.5.0"
+readthedocs-sphinx-search = "^0.1.2"
+sphinxcontrib-bibtex = "^2.4.2"
+sphinx-toolbox = "^3.1.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
