@@ -85,47 +85,70 @@ python population.py
 
 Once we have this population file, we can simply run `CBC_Simulation.py` to 
 compute the required errors:
-the basic syntax is 
 
 ```bash
 python CBC_Simulation.py --pop_id 170817like --pop_file 170817_like_population --detectors ET LGWA --networks "[[0, 1]]"
 ```
 
-This will use the default network: just Einstein Telescope. 
-In order to perform the same analysis for different networks, one may use the 
-`--detectors` argument, followed by a list of detectors to use, and then 
-the `--networks` argument to choose which combinations to consider.
-An example is as follows:
+The output should look similar to
 
 ```bash
-python CBC_Simulation.py --pop_id 170817like --pop_file 170817_like_population --detectors ET CE1 CE2 --networks [[0], [0, 1], [0, 1, 2]]
+LAL package is not installed. Only GWFish waveforms available.
+Processing CBC population
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:01<00:00,  1.15s/it]
+Network: ET_LGWA
+Detected signals with SNR>9.000: 1.000 (1 out of 1); z<0.010
+SNR: 720.575 (min) , 720.575 (max) 
+--- 1.3764996528625488 seconds ---
 ```
-which means performing the analysis first with only Einstein Telescope,
-then with ET as well as one Cosmic Explorer,
-then with ET and two Cosmic Explorers at different locations.
+
+```{admonition} Which detectors are available?
+:class: seealso
 
 The full list of available options, as well as more details on these detectors, 
 can be found in `GWFish/detectors.yaml`.
+```
 
 ## Results
 
-### Reading the results file
+Running the `CBC_Simulation.py` script will generate two files:
+`Signals_170817like.txt` and `Errors_ET_LGWA_170817like_SNR9.0.txt`.
 
-The results from the simulation (in the ET only case) will be saved to a file named 
-`Errors_ET_170817like_SNR9.0.txt`, a space-separated text file containing
+The first is simply a recap of the parameters we used, plus the computed SNR(s).
+It should look like:
+```
+# mass_1 mass_2 redshift luminosity_distance theta_jn ra dec psi phase geocent_time ET_LGWA_SNR
+1.400 1.400 0.010 40.000 2.618 3.450 -0.410 1.600 0.000 1187008882.000 720.575
+```
+
+### Reading the errors file
+
+The Fisher matrix errors will be saved to a file named 
+`Errors_ET_LGWA_170817like_SNR9.0.txt`, containing
 
 - a copy of the input parameters, with the same labels as before; 
 - the resulting SNRs, labelled `network_SNR`;
 - the corresponding Fisher-matrix errors, with columns labelled `err_<param>` for every parameter;
 - additionally, the sky localization area in steradians, labelled `err_sky_location`.
 
+It should look like:
 
+```
+network_SNR mass_1 mass_2 redshift luminosity_distance theta_jn ra dec psi phase geocent_time err_ra err_dec err_psi err_theta_jn err_luminosity_distance err_mass_1 err_mass_2 err_geocent_time err_phase err_sky_location
+720.5753783784745 1.400E+00 1.400E+00 1.000E-02 4.000E+01 2.618E+00 3.450E+00 -4.100E-01 1.600E+00 0.000E+00 1.187E+09 3.053E-03 2.591E-03 1.976E-01 1.011E-01 2.264E+00 4.372E-08 4.372E-08 5.555E-05 3.962E-01 2.264E-05 
+```
 
-### Interpreting the results
+So, for example, the second-to-last value is `3.962E-01`, corresponding to the error in the phase:
+the estimated error is $\sigma_\varphi \approx 0.3962 \text{rad}$.
 
+The last value is `2.264E-05` for the sky localization: 
+$\Delta \Omega \approx 2.264 \times 10^{-5} \text{sr} \approx 0.07 \text{deg}^2$ 
+(the conversion factor is $(180 / \pi)^2$).
 
-
-All errors are given at $1 \sigma$; note that for any single parameter
+```{caution}
+All errors are given at $1 \sigma$; for any single parameter
 this means roughly $68\%$ of the probability mass is expeced to be contained within the 
-$1\sigma$ interval, but this number is only $39\%$ for the sky localization, since it is bivariate
+$1\sigma$ interval, but this number is only $39\%$ for the sky localization, since it 
+corresponds to a bivariate distribution
 (see, for example, [wikipedia](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Geometric_interpretation) on this).
+```
