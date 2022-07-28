@@ -22,47 +22,21 @@ For more information about the theory than what is discussed here, refer to
 the __[`GWFish` paper](https://arxiv.org/abs/2205.02499)__ (preprint, submitted to 
 [Astronomy and Computing](https://www.journals.elsevier.com/astronomy-and-computing)).
 
-## Fisher matrix basics
-
-The estimates in GWFish are obtained by considering a quadratic approximation to the likelihood 
-(valid in the high-SNR limit), in the form 
-
-$$ \mathcal{L} \propto \exp \left( - \frac{1}{2} \Delta \theta ^i \Gamma_{ij} \Delta \theta ^j \right)
-$$
-
-where $\Delta \theta = \theta - \overline{\theta}$ is the vector of the errors in our
-estimates for the parameters, $\overline{\theta}$ being the vector of the true values.
-The matrix $\Gamma$ is computed as 
-
-$$\Gamma_{ij} = 
-\left( 
-    \frac{\partial h}{\partial \theta _i} 
-    \left| 
-    \frac{\partial h}{\partial \theta _j} 
-\right.\right)
-$$
-
-where $h$ is the strain at the detector corresponding to the parameters $\theta$,
-the product denoted as $(h|g)$ is 
-
-$$ (h | g) = 4 \Re \int_0^{ \infty } \mathrm{d}f \frac{h^* (f) g(f)}{S_n(f)}\,,
-$$
-
-$S_n$ being the power spectral density of the noise.
-
-The covariance matrix is therefore the inverse of $\Gamma _{ij}$, and the variance
-of each parameter can be computed as 
-
-$$ \operatorname{var} \theta _i = (\Gamma^{-1})_{ii}
-$$
-
-where no summation is intended.
-Intuitively, this is reasonable: if the measurable waveform varies little 
-in the direction of a specific parameter, that parameter will be hard to constrain.
+This software is developed by the gravitation group at the [Gran Sasso Science Institute](https://www.gssi.it/).
 
 ```{seealso}
 This documentation is written according to the [diátaxis framework](https://diataxis.fr).
 ```
+
+```{toctree}
+:glob:
+:maxdepth: 1
+:titlesonly:
+:caption: Introduction
+
+installation.md
+```
+
 
 ```{toctree}
 :glob:
@@ -80,6 +54,15 @@ tutorials/*
 :caption: How-to guides
 
 how-to/*
+```
+
+```{toctree}
+:glob:
+:maxdepth: 1
+:titlesonly:
+:caption: Explanation
+
+explanation/*
 ```
 
 ```{toctree}
