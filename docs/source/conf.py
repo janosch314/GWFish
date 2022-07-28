@@ -37,6 +37,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
+    "sphinx.ext.todo",
     "sphinx_search.extension",
     'sphinx_toolbox.collapse',
 ]
@@ -50,7 +51,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -71,6 +71,7 @@ intersphinx_mapping = {
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
 }
 
+todo_include_todos = True
 
 myst_enable_extensions = [
     "amsmath",
