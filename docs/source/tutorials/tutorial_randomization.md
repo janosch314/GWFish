@@ -138,3 +138,18 @@ plt.savefig('snr_skyloc_scatter.png', dpi=250)
 
 Scatter plot of the sky localization against the signal SNR.
 ```
+
+```{note}
+The funky things going on with the axes formatting are due to the care one must take when making
+[histograms with log-scale axes](https://arxiv.org/abs/2003.14327). 
+
+Doing something like `plt.hist(var); plt.xscale('log')` leads to a very misleading plot,
+with changing bin sizes.
+Instead, we should histogram the logarithm of our variable --- that way, we get the
+correct probability density per decade / octave / e-fold etc.
+
+The problem with this is that if we `plt.hist(np.log(var))` the labels of the 
+axis will be the logarithms of what we care about.
+We must therefore [change the formatting](https://matplotlib.org/stable/api/_as_gen/matplotlib.axis.Axis.set_major_formatter.html) to be the exponential of the values
+on the axis.
+```
