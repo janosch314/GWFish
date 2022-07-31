@@ -94,9 +94,21 @@ SNR: 720.575 (min) , 720.575 (max)
 ```{admonition} Which detectors are available?
 :class: seealso
 
-The full list of available options, as well as more details on these detectors, 
+The full list of available options, as well as more details on these detectors,
 can be found in `GWFish/detectors.yaml`.
+The syntax for this file is detailed {ref}`here <reference/detectors:Detectors>`.
+If you want to add a new detector, 
+see {ref}`here <how-to/adding_new_detectors:How to add a new detector to GWFish>`.
 ```
+
+```{note}
+More detail on the syntax of the `CBC_Simulation.py` script can be gotten 
+by running
+
+```python
+python CBC_Simulation.py --help
+```
+
 
 ## Results
 

@@ -22,7 +22,8 @@ For more information about the theory than what is discussed here, refer to
 the __[`GWFish` paper](https://arxiv.org/abs/2205.02499)__ (preprint, submitted to 
 [Astronomy and Computing](https://www.journals.elsevier.com/astronomy-and-computing)).
 
-This software is developed by the gravitation group at the [Gran Sasso Science Institute](https://www.gssi.it/).
+This software is developed by the [gravitation group](https://wikiet.gssi.it/index.php/Main_Page) 
+at the [Gran Sasso Science Institute](https://www.gssi.it/).
 
 ```{seealso}
 This documentation is written according to the [diátaxis framework](https://diataxis.fr).

@@ -3,14 +3,14 @@
 The estimates in GWFish are obtained by considering a quadratic approximation to the likelihood 
 (valid in the high-SNR limit), in the form 
 
-$$ \mathcal{L} \propto \exp \left( - \frac{1}{2} \Delta \theta ^i \Gamma_{ij} \Delta \theta ^j \right)
+$$ \mathcal{L} \propto \exp \left( - \frac{1}{2} \Delta \theta ^i \mathcal{F}_{ij} \Delta \theta ^j \right)
 $$
 
 where $\Delta \theta = \theta - \overline{\theta}$ is the vector of the errors in our
 estimates for the parameters, $\overline{\theta}$ being the vector of the true values.
 The matrix $\Gamma$ is computed as 
 
-$$\Gamma_{ij} = 
+$$\mathcal{F}_{ij} = 
 \left( 
     \frac{\partial h}{\partial \theta _i} 
     \left| 
@@ -18,18 +18,26 @@ $$\Gamma_{ij} =
 \right.\right)
 $$
 
-where $h$ is the strain at the detector corresponding to the parameters $\theta$,
-the product denoted as $(h|g)$ is 
+Here $h = h(f)$ is the frequency-domain strain at the detector corresponding to the parameters $\theta$:
+
+$$ h(f) = h_{ab} (f) \mathcal{A}_{ab}(t(f))
+$$
+
+where $\mathcal{A}$ is the time-dependent response matrix of our detector, $t(f)$ is the time at which
+the component of the signal at frequency $f$ is measured, and $h_{ab}(f)$ is the frequency-domain 
+metric perturbation.
+
+The product denoted as $(h|g)$ is the noise-weighted Wiener product:
 
 $$ (h | g) = 4 \Re \int_0^{ \infty } \mathrm{d}f \frac{h^* (f) g(f)}{S_n(f)}\,,
 $$
 
 $S_n$ being the power spectral density of the noise.
 
-The covariance matrix is therefore the inverse of $\Gamma _{ij}$, and the variance
+The covariance matrix is therefore the inverse of $\mathcal{F} _{ij}$, and the variance
 of each parameter can be computed as 
 
-$$ \operatorname{var} \theta _i = (\Gamma^{-1})_{ii}
+$$ \operatorname{var} \theta _i = (\mathcal{F}^{-1})_{ii}
 $$
 
 where no summation is intended.
@@ -39,7 +47,7 @@ in the direction of a specific parameter, that parameter will be hard to constra
 ## Computational challenges
 
 One of the most difficult steps in the computation outlined above is the inversion of the 
-matrix $\Gamma$, not because of its high dimensionality (it's on the order of $10\times 10$)
+matrix $\mathcal{F}$, not because of its high dimensionality (it's on the order of $10\times 10$)
 but because it is prone to having singular rows/columns.
 
 For example, consider a system seen head-on (observation direction aligned 

@@ -2,17 +2,15 @@
 
 Adding a new detector to GWFish is relatively straightforward, as long as it
 is in the same class as an existing one. 
+Let us suppose the detector you want to add falls into one of the 
+{ref}`existing categories <reference/detectors:Detector properties>`.
 
-The detector class can currently be one of the following:
+Modify the `GWFish/detectors.yaml` file, adding an entry 
+for the new detector's parameters, and if needed add its PSD to 
+the `GWFish/detector_psd` folder. 
+Refer to the {ref}`detector documentation <reference/detectors:Detector properties>` for the 
+conventions on how to format these parameters.
 
-- `earthDelta` (e.g. Einstein Telescope)
-- `earthL` (e.g. LIGO, Virgo, Cosmic Explorer)
-- `satellitesolarorbit` (e.g. LISA)
-- `lunararray` (e.g. LGWA)
-
-Let us suppose the detector we want to add falls into one of these categories.
-The way to add it, then, is to modify the `GWFish/detectors.yaml` file.
-
-```{todo}
-This how-to guide is unfinished.
-```
+Remember to give the new detector a unique identifier.
+Now, it will be possible to refer to this detector when calling the 
+{ref}`simulation script <tutorials/tutorial_170817:Simulation>`.

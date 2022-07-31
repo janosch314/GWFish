@@ -8,6 +8,8 @@ from numpy.random import default_rng
 import time
 import json
 
+from itertools import combinations, chain
+
 from tqdm import tqdm
 from astropy.cosmology import FlatLambdaCDM
 
@@ -18,6 +20,10 @@ import GWFish.modules as gw
 cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
 
 rng = default_rng()
+
+def powerset(length):
+    it = chain.from_iterable((combinations(range(length), r)) for r in range(length+1))
+    return list(it)[1:]
 
 def main():
     # example to run with command-line arguments:
@@ -36,11 +42,13 @@ def main():
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
         '--networks', default=['[[0]]'],
-        help='Network IDs. Uses [[0]] as default if no argument given.')
+        help='''Network IDs: list of lists of detector IDs. 
+Uses [[0]] (only the first detector) as default if no argument given.
+Use "all" to get all possible combinations of the detectors given.''')
     parser.add_argument(
         '--config', type=str, default='GWFish/detectors.yaml',
         help='Configuration file where the detector specifications are stored. Uses GWFish/detectors.yaml as default if no argument given.')
-   
+    
 
     args = parser.parse_args()
     ConfigDet = args.config
@@ -56,7 +64,11 @@ def main():
     population = args.pop_id
 
     detectors_ids = args.detectors
-    networks_ids = json.loads(args.networks)
+    
+    if args.networks == 'all':
+        networks_ids = powerset(len(detectors_ids))
+    else:
+        networks_ids = json.loads(args.networks)
 
     parameters = pd.read_hdf(pop_file)
 
