@@ -62,7 +62,7 @@ html_theme = 'furo'
 html_theme_options = {
     "source_repository": "https://github.com/janosch314/GWFish",
     "source_branch": "main",
-    "source_directory": "docs/",
+    "source_directory": "docs/source/",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
