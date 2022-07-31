@@ -42,11 +42,13 @@ def main():
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
         '--networks', default=['[[0]]'],
-        help='Network IDs. Uses [[0]] as default if no argument given.')
+        help='''Network IDs: list of lists of detector IDs. 
+Uses [[0]] (only the first detector) as default if no argument given.
+Use "all" to get all possible combinations of the detectors given.''')
     parser.add_argument(
         '--config', type=str, default='GWFish/detectors.yaml',
         help='Configuration file where the detector specifications are stored. Uses GWFish/detectors.yaml as default if no argument given.')
-   
+    
 
     args = parser.parse_args()
     ConfigDet = args.config
