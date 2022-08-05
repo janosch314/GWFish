@@ -8,6 +8,8 @@ from numpy.random import default_rng
 import time
 import json
 
+from itertools import combinations, chain
+
 from tqdm import tqdm
 from astropy.cosmology import FlatLambdaCDM
 
@@ -19,34 +21,40 @@ cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
 
 rng = default_rng()
 
+def powerset(length):
+    it = chain.from_iterable((combinations(range(length), r)) for r in range(length+1))
+    return list(it)[1:]
+
 def main():
     # example to run with command-line arguments:
     # python CBC_Simulation.py --pop_file=CBC_pop.hdf5 --detectors ET CE2 --networks [[0,1],[0],[1]]
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--pop_file', type=str, default='./injections/CBC_pop.hdf5', nargs=1,
+        '--pop_file', type=str, default='./injections/CBC_pop.hdf5',
         help='Population to run the analysis on.'
              'Runs on BBH_1e5.hdf5 if no argument given.')
     parser.add_argument(
-        '--pop_id', type=str, default='BBH', nargs=1,
+        '--pop_id', type=str, default='BBH',
         help='Short population identifier for file names. Uses BBH if no argument given.')
     parser.add_argument(
         '--detectors', type=str, default=['ET'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
-        '--networks', default=['[[0]]'], nargs=1,
-        help='Network IDs. Uses [[0]] as default if no argument given.')
+        '--networks', default=['[[0]]'],
+        help='''Network IDs: list of lists of detector IDs. 
+Uses [[0]] (only the first detector) as default if no argument given.
+Use "all" to get all possible combinations of the detectors given.''')
     parser.add_argument(
         '--config', type=str, default='GWFish/detectors.yaml',
         help='Configuration file where the detector specifications are stored. Uses GWFish/detectors.yaml as default if no argument given.')
-   
+    
 
     args = parser.parse_args()
     ConfigDet = args.config
 
     threshold_SNR = np.array([0., 9.])  # [min. individual SNR to be included in PE, min. network SNR for detection]
-    calculate_errors = False   # whether to calculate Fisher-matrix based PE errors
+    calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
     fisher_parameters = ['ra', 'dec', 'psi', 'theta_jn', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
@@ -56,7 +64,11 @@ def main():
     population = args.pop_id
 
     detectors_ids = args.detectors
-    networks_ids = json.loads(args.networks[0])
+    
+    if args.networks == 'all':
+        networks_ids = powerset(len(detectors_ids))
+    else:
+        networks_ids = json.loads(args.networks)
 
     parameters = pd.read_hdf(pop_file)
 
@@ -69,8 +81,8 @@ def main():
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
-    #waveform_model = 'gwfish_TaylorF2'
-    waveform_model = 'gwfish_IMRPhenomD'
+    waveform_model = 'gwfish_TaylorF2'
+    # waveform_model = 'gwfish_IMRPhenomD'
     #waveform_model = 'lalsim_TaylorF2'
     #waveform_model = 'lalsim_IMRPhenomD'
     # waveform_model = 'lalsim_IMRPhenomXPHM'
