@@ -7,19 +7,15 @@ import GWFish.modules.constants as cst
 
 class DetectorComponent:
 
-    def __init__(self, name, component, config, plot):
+    def __init__(self, name, component, detector_def, plot):
         self.plot = plot
         self.id = component
         self.name = name
-        self.config = config
+        self.detector_def = detector_def
         self.setProperties()
 
     def setProperties(self):
-        config = self.config
-
-        with open(config) as f:
-            doc = yaml.load(f, Loader=yaml.FullLoader)
-        detector_def = doc[self.name]
+        detector_def = self.detector_def
 
         self.duty_factor = eval(str(detector_def['duty_factor']))
 
@@ -59,10 +55,11 @@ class DetectorComponent:
             self.e2 = np.cos(self.azimuth) * self.e_long + np.sin(self.azimuth) * self.e_lat
 
             self.psd_data = np.loadtxt(detector_def['psd_data'])
+            self.psd_data[:, 1] = self.psd_data[:, 1]/eval(str(detector_def['number_stations']))
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             # see LISA 2017 mission document
-            ff = np.logspace(-4, 0, 1000)   # later interpolated onto frequencyvector
-            S_acc = 9e-30 * (1 + (4e-4 / ff) ** 2) * (1 + (ff / 8e-3) ** 4)
+            # ff = np.logspace(-4, 0, 1000)   # later interpolated onto frequencyvector
+            # S_acc = 9e-30 * (1 + (4e-4 / ff) ** 2) * (1 + (ff / 8e-3) ** 4)
 
             self.L = eval(str(detector_def['arm_length']))
             self.eps = self.L / cst.AU / (2 * np.sqrt(3))
@@ -153,8 +150,13 @@ class Detector:
             for k in np.arange(3):
                 self.components.append(DetectorComponent(name=name, component=k, config=config, plot=plot))
         elif detector_def['detector_class'] == 'lunararray':
-            for k in np.arange(4):
-                self.components.append(DetectorComponent(name=name, component=k, config=config, plot=plot))
+            if detector_def['azimuth']==None:
+                detector_def['azimuth'] = '0'
+                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
+                detector_def['azimuth'] = 'np.pi/2.'
+                self.components.append(DetectorComponent(name=name, component=1, detector_def=detector_def, plot=plot))
+            else:
+                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
         else:
             self.components.append(DetectorComponent(name=name, component=0, config=config, plot=plot))
 
@@ -664,6 +666,6 @@ def analyzeDetections(network, parameters, population, networks_ids):
 
     if 'id' in parameters.columns:
         np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%s '+"%.3f "*(len(save_data[0,:])-1),
-                   header=header)
+                   header=header, comments='')
     else:
-        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f', header=header)
+        np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f', header=header, comments='')
