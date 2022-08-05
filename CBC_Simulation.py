@@ -41,7 +41,7 @@ def main():
         '--detectors', type=str, default=['ET'], nargs='+',
         help='Detectors to analyze. Uses ET as default if no argument given.')
     parser.add_argument(
-        '--networks', default=['[[0]]'],
+        '--networks', default='[[0]]',
         help='''Network IDs: list of lists of detector IDs. 
 Uses [[0]] (only the first detector) as default if no argument given.
 Use "all" to get all possible combinations of the detectors given.''')
