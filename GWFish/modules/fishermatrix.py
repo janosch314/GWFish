@@ -4,14 +4,14 @@ import GWFish.modules.detection as det
 import GWFish.modules.auxiliary as aux
 
 def invertSVD(matrix):
+    thresh = 1e-10
+
     dm = np.sqrt(np.diag(matrix))
-    dm = np.maximum(dm, 1e-20*np.ones_like(dm))
     normalizer = np.outer(dm, dm)
     matrix_norm = matrix / normalizer
 
     [U, S, Vh] = np.linalg.svd(matrix_norm)
 
-    thresh = 1e-10
     kVal = sum(S > thresh)
     matrix_inverse_norm = U[:, 0:kVal] @ np.diag(1. / S[0:kVal]) @ Vh[0:kVal, :]
 
@@ -158,10 +158,11 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
             header = "signal "+header
             save_data = np.c_[signal_ids.iloc[ii], save_data]
 
+        file_name = 'Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt'
 
         if signals_haveids and (len(save_data)>0):
-            np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
-                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header, comments='')
+            row_format = "%s " + " ".join(["%.3E" for _ in range(len(save_data[0, :]) - 1)])
+            np.savetxt(file_name, save_data, delimiter=' ', fmt=row_format, header=header, comments='')
         else:
-            np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
-                       save_data, delimiter=' ', fmt='%s '+"%.3E "*(len(save_data[0,:])-1), header=header, comments='')
+            np.savetxt(file_name, save_data, delimiter=' ', header=header, comments='')
+

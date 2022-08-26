@@ -117,13 +117,27 @@ LISA:
             fmax:             0.3
             df:               1e-4     
 LGWA:
-            lat:              -89.9 * np.pi / 180.
+            lat:              -85 * np.pi / 180.
             lon:              0
-            azimuth:          np.pi
+            azimuth:
             psd_data:         GWFish/detector_psd/LGWA_psd.txt
-            duty_factor:      0.7  
+            duty_factor:      1
             detector_class:   lunararray
+            number_stations:  4
             mission_lifetime: 10 * 3.16e7
+            plotrange:        1e-3, 4, 1e-23, 1e-19
+            fmin:             1e-3
+            fmax:             4
+            df:               1./4096.
+LGWA_Soundcheck:
+            lat:              -85 * np.pi / 180.
+            lon:              0
+            azimuth:
+            psd_data:         GWFish/detector_psd/LGWA_Soundcheck_psd.txt
+            duty_factor:      1
+            detector_class:   lunararray
+            number_stations:  1
+            mission_lifetime: 2 * 2.7e6
             plotrange:        1e-3, 4, 1e-23, 1e-19
             fmin:             1e-3
             fmax:             4
