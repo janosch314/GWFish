@@ -14,16 +14,15 @@ def test_horizon_computation_result_170817_scaling():
     This also doubles as a smoke test. 
     """
     
-    one = np.ones((1,))
     params = {
-        'mass_1': 1.4 * one,
-        'mass_2': 1.4 * one,
-        'theta_jn': 5/6 * np.pi * one,
-        'ra': 3.45 * one,
-        'dec': -0.41 * one,
-        'psi': 1.6 * one,
-        'phase': 0 * one,
-        'geocent_time': 1187008882 * one, 
+        'mass_1': 1.4,
+        'mass_2': 1.4,
+        'theta_jn': 5/6 * np.pi,
+        'ra': 3.45,
+        'dec': -0.41,
+        'psi': 1.6,
+        'phase': 0,
+        'geocent_time': 1187008882, 
     }
     
     detector = Detector('LGWA', parameters= [None], fisher_parameters= [None])
@@ -31,8 +30,8 @@ def test_horizon_computation_result_170817_scaling():
     distance, redshift = horizon(params, detector)
     
     params2 = params | {
-        'mass_1': 2.8 * one, 
-        'mass_2': 2.8 * one, 
+        'mass_1': 2.8, 
+        'mass_2': 2.8, 
     }
     
     distance2, redshift2 = horizon(params2, detector)
@@ -40,17 +39,16 @@ def test_horizon_computation_result_170817_scaling():
     assert np.isclose(distance2, 2*distance, rtol=2e-1)
     
 def test_horizon_warns_when_given_redshift():
-    one = np.ones((1,))
     params = {
         'redshift': 0.4,
-        'mass_1': 1.4 * one, 
-        'mass_2': 1.4 * one, 
-        'theta_jn': 5/6 * np.pi * one,
-        'ra': 3.45 * one,
-        'dec': -0.41 * one,
-        'psi': 1.6 * one,
-        'phase': 0 * one,
-        'geocent_time': 1187008882 * one, 
+        'mass_1': 1.4, 
+        'mass_2': 1.4, 
+        'theta_jn': 5/6 * np.pi,
+        'ra': 3.45,
+        'dec': -0.41,
+        'psi': 1.6,
+        'phase': 0,
+        'geocent_time': 1187008882, 
     }
     
     detector = Detector('LGWA', parameters= [None], fisher_parameters= [None])
