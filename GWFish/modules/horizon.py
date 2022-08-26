@@ -16,6 +16,8 @@ import astropy.units as u
 from .detection import SNR, Detector, projection
 from .waveforms import hphc_amplitudes
 
+DEFAULT_RNG = np.random.default_rng(seed=1)
+
 WAVEFORM_MODEL = 'gwfish_TaylorF2'
 
 def horizon(
@@ -64,10 +66,32 @@ def horizon(
         component_SNRs = SNR(detector, signal)
         this_SNR = np.sqrt(np.sum(component_SNRs**2))
 
-        if abs(np.log(this_SNR / target_SNR)) < 1e-3:
+        if abs(np.log(this_SNR / target_SNR)) < 1e-4:
             break
         
         distance *= this_SNR / target_SNR
         redshift = cosmology.z_at_value(cosmology_model.luminosity_distance, distance * u.Mpc).value
         
     return distance, redshift
+
+def randomized_orientation_params(size: int, rng = DEFAULT_RNG):
+    
+    return {
+        'theta_jn': np.arccos(rng.uniform(-1., 1., size=size)),
+        'dec': np.arccos(rng.uniform(-1., 1., size=size)) - np.pi / 2.,
+        'ra': rng.uniform(0, 2. * np.pi, size=size),
+        'psi': rng.uniform(0, 2. * np.pi, size=size),
+        'phase': rng.uniform(0, 2. * np.pi, size=size),
+        'geocent_time': rng.uniform(1735257618, 1766793618, size=size) # full year 2035
+    }
+
+def horizon_varying_orientation(base_params: dict, samples: int, detector: Detector, **kwargs):
+    
+    distances = np.zeros(samples)
+    redshifts = np.zeros(samples)
+    
+    for i in range(samples):
+        params = base_params | randomized_orientation_params(1)
+        distances[i], redshifts[i] = horizon(params, detector, **kwargs)
+        
+    return distances, redshifts
