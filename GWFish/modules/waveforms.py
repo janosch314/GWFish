@@ -30,6 +30,10 @@ def hphc_amplitudes(waveform, parameters, frequencyvector, plot=None):
 
     t_of_f = t_of_f_PN(parameters, frequencyvector)
 
+    if fmax := parameters.pop('max_frequency', None):
+        for i in range(2):
+            hphc[:, i] = np.where(frequencyvector[:, 0] <= fmax, hphc[:, i], 0j)
+
     return hphc, t_of_f
 
 def convert_args_list_to_float(*args_list):
