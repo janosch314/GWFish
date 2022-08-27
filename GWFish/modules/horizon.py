@@ -39,6 +39,8 @@ def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM
     )
     
     component_SNRs = SNR(detector, signal)
+    if np.all(component_SNRs==0.):
+        raise ValueError('The SNR is zero in all components!')
     return np.sqrt(np.sum(component_SNRs**2))
 
 def horizon(
