@@ -5,13 +5,15 @@ The thing we want to compute is the luminosity distance at which a given
 signal will be detected (with a given SNR).
 """
 
-from warnings import warn
-
+import warnings
 import numpy as np
+from tqdm import tqdm
 
 from astropy.cosmology import Planck18
 import astropy.cosmology as cosmology
 import astropy.units as u
+
+from scipy.optimize import fsolve
 
 from .detection import SNR, Detector, projection
 from .waveforms import hphc_amplitudes
@@ -19,6 +21,25 @@ from .waveforms import hphc_amplitudes
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
 WAVEFORM_MODEL = 'gwfish_TaylorF2'
+
+def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
+    
+    polarizations, timevector = hphc_amplitudes(
+        waveform_model, 
+        params,
+        detector.frequencyvector,
+        plot=None
+    )
+    
+    signal = projection(
+        params,
+        detector,
+        polarizations,
+        timevector
+    )
+    
+    component_SNRs = SNR(detector, signal)
+    return np.sqrt(np.sum(component_SNRs**2))
 
 def horizon(
     params: dict,
@@ -38,40 +59,28 @@ def horizon(
     distance in Mpc, redshift
     """
     
-    relative_error = np.inf
     redshift = 1e-2
     distance = 40
     
     if 'redshift' in params or 'luminosity_distance' in params:
-        warn('The redshift and distance parameters will not be used in this function.')
+        warnings.warn('The redshift and distance parameters will not be used in this function.')
     
-    while True:
-        
-        params = params | {'redshift': redshift, 'luminosity_distance': distance}
-        
-        polarizations, timevector = hphc_amplitudes(
-            waveform_model, 
-            params, 
-            detector.frequencyvector, 
-            plot=None
-        )
-        
-        signal = projection(
-            params,
-            detector,
-            polarizations,
-            timevector
-        )
-        
-        component_SNRs = SNR(detector, signal)
-        this_SNR = np.sqrt(np.sum(component_SNRs**2))
+    def SNR_error(redshift):
+        distance = cosmology_model.luminosity_distance(redshift).value
+        mod_params = params | {'redshift': redshift, 'luminosity_distance': distance}
+        return np.log(compute_SNR(mod_params, detector)/target_SNR)
+    
+    starting_SNR = compute_SNR(params | {'redshift': redshift, 'luminosity_distance': distance}, detector)
+    
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', 'The iteration is not making good progress')
+        redshift = fsolve(
+            func=SNR_error, 
+            x0=redshift * starting_SNR / target_SNR,
+            )
 
-        if abs(np.log(this_SNR / target_SNR)) < 1e-4:
-            break
-        
-        distance *= this_SNR / target_SNR
-        redshift = cosmology.z_at_value(cosmology_model.luminosity_distance, distance * u.Mpc).value
-        
+    distance = cosmology_model.luminosity_distance(redshift).value
+
     return distance, redshift
 
 def randomized_orientation_params(size: int, rng = DEFAULT_RNG):
@@ -90,7 +99,7 @@ def horizon_varying_orientation(base_params: dict, samples: int, detector: Detec
     distances = np.zeros(samples)
     redshifts = np.zeros(samples)
     
-    for i in range(samples):
+    for i in tqdm(range(samples)):
         params = base_params | randomized_orientation_params(1)
         distances[i], redshifts[i] = horizon(params, detector, **kwargs)
         
