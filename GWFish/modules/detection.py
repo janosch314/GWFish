@@ -2,8 +2,11 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
+from pathlib import Path
 
 import GWFish.modules.constants as cst
+
+DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
 
 class DetectorComponent:
 
@@ -104,7 +107,7 @@ class DetectorComponent:
 
 class Detector:
 
-    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config='detectors.yaml', plot=False):
+    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG, plot=False):
         self.components = []
         if fisher_parameters is not None:
             nd = len(fisher_parameters)
