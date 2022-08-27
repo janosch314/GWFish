@@ -2,7 +2,7 @@ import numpy as np
 from GWFish.modules.waveforms import hphc_amplitudes
 from GWFish.modules.detection import Detector
 
-def test_max_f_cutoff():
+def test_max_f_cutoff_170817():
     
     params = {
         'mass_1': 1.4, 
@@ -26,3 +26,11 @@ def test_max_f_cutoff():
     assert hphc[-1, 1] == 0j
     assert hphc[0, 0] != 0j
     assert hphc[0, 1] != 0j
+    
+    params.pop('max_frequency')
+    
+    hphc, t_of_f = hphc_amplitudes('gwfish_TaylorF2', params, detector.frequencyvector)
+    
+    assert hphc[-1, 0] != 0j
+    assert hphc[-1, 1] != 0j
+    
