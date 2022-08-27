@@ -7,6 +7,7 @@ from pathlib import Path
 import GWFish.modules.constants as cst
 
 DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
+PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
 
 class DetectorComponent:
 
@@ -42,7 +43,7 @@ class DetectorComponent:
             self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * self.e_long + np.sin(
                 self.arm_azimuth + self.opening_angle) * self.e_lat
 
-            self.psd_data = np.loadtxt(detector_def['psd_data'])
+            self.psd_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
 
         elif detector_def['detector_class'] == 'lunararray':
 
@@ -57,7 +58,7 @@ class DetectorComponent:
             self.e1 = np.array([np.cos(self.lat) * np.cos(self.lon), np.cos(self.lat) * np.sin(self.lon), np.sin(self.lat)])
             self.e2 = np.cos(self.azimuth) * self.e_long + np.sin(self.azimuth) * self.e_lat
 
-            self.psd_data = np.loadtxt(detector_def['psd_data'])
+            self.psd_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
             self.psd_data[:, 1] = self.psd_data[:, 1]/eval(str(detector_def['number_stations']))
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             # see LISA 2017 mission document
@@ -74,7 +75,7 @@ class DetectorComponent:
             # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
             # S_opt = (2 / self.L) ** 2 * 2.5e-23 * (1 + (2e-3 / ff) ** 4)
             # S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
-            raw_data = np.loadtxt(detector_def['psd_data'])
+            raw_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
             ff = raw_data[:,0]
             S_pm = (2/self.L)**2 * raw_data[:,1]
             S_opt = (2/self.L)**2 * raw_data[:,2]
