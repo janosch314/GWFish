@@ -152,7 +152,7 @@ class Detector:
 
         if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'satellitesolarorbit'):
             for k in np.arange(3):
-                self.components.append(DetectorComponent(name=name, component=k, config=config, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=k, detector_def=detector_def, plot=plot))
         elif detector_def['detector_class'] == 'lunararray':
             if detector_def['azimuth']==None:
                 detector_def['azimuth'] = '0'
@@ -162,7 +162,7 @@ class Detector:
             else:
                 self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
         else:
-            self.components.append(DetectorComponent(name=name, component=0, config=config, plot=plot))
+            self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
 
 
 class Network:
