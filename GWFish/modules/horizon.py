@@ -76,12 +76,16 @@ def horizon(
     
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', 'The iteration is not making good progress')
-        redshift = fsolve(
+        redshift, _, ier, _ = fsolve(
             func=SNR_error, 
             x0=redshift * starting_SNR / target_SNR,
+            full_output=True
             )
 
     distance = cosmology_model.luminosity_distance(redshift).value
+    
+    if ier != 1:
+        raise ValueError('Horizon computation did not converge!')
 
     return distance, redshift
 
