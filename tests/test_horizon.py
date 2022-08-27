@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from GWFish.modules.horizon import horizon, Detector
+from GWFish.modules.horizon import horizon, Detector, compute_SNR
 
 def test_horizon_computation_result_170817_scaling():
     """
@@ -55,3 +55,54 @@ def test_horizon_warns_when_given_redshift():
 
     with pytest.warns():
         distance, redshift = horizon(params, detector)
+
+@pytest.mark.xfail
+def test_difficult_convergence_of_horizon_calculation():
+    """A few examples of parameters for which there have 
+    been problems in the past.
+    """
+    params_list = [
+        {
+            'mass_1': 1000.0,
+            'mass_2': 1000.0,
+            'theta_jn': 0.06243186,
+            'dec': 0.49576695,
+            'ra': 5.33470406,
+            'psi': 3.80561946,
+            'phase': 5.06447171,
+            'geocent_time': 1.75513532e+09,
+        },    
+        {
+            'mass_1': 1000.0, 
+            'mass_2': 1000.0, 
+            'theta_jn': 2.94417698, 
+            'dec': 0.35331536, 
+            'ra': 5.85076693, 
+            'psi': 4.97215904, 
+            'phase': 2.43065638, 
+            'geocent_time': 1.76231585e+09, 
+        },
+        {
+            'mass_1': 10000.0, 
+            'mass_2': 10000.0, 
+            'theta_jn': 2.94417698, 
+            'dec': 0.35331536, 
+            'ra': 5.85076693,
+            'psi': 4.97215904, 
+            'phase': 2.43065638, 
+            'geocent_time': 1.76231585e+09, 
+        }
+        ]
+    
+    for params in params_list:
+        detector = Detector('LGWA', parameters= [None], fisher_parameters= [None])
+        
+        distance, redshift = horizon(params, detector)
+        assert np.isclose(
+            compute_SNR(
+                params | {'redshift': redshift, 'luminosity_distance': distance}, 
+                detector), 
+            9, rtol=1e-3)
+
+def test_randomized_horizon_computation():
+    pass
