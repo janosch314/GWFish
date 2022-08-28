@@ -61,9 +61,6 @@ def horizon(
     distance in Mpc, redshift
     """
     
-    redshift = 1e-2
-    distance = 40
-    
     if 'redshift' in params or 'luminosity_distance' in params:
         warnings.warn('The redshift and distance parameters will not be used in this function.')
     
@@ -72,14 +69,13 @@ def horizon(
         mod_params = params | {'redshift': redshift, 'luminosity_distance': distance}
         return np.log(compute_SNR(mod_params, detector)/target_SNR)
     
-    starting_SNR = compute_SNR(params | {'redshift': redshift, 'luminosity_distance': distance}, detector)
-    
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', 'The iteration is not making good progress')
         redshift, _, ier, _ = fsolve(
             func=SNR_error, 
-            x0=redshift * starting_SNR / target_SNR,
-            full_output=True
+            x0=0.01,
+            full_output=True,
+            maxfev=10000,
             )
 
     distance = cosmology_model.luminosity_distance(redshift).value
