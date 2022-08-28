@@ -12,4 +12,5 @@ The parameters used to describe a CBC within `GWFish` are as follows:
 - `'phase'`: the initial phase of the waveform, in radians;
 - `'ra'`: the right ascension of the merger, in radians;
 - `'dec'`: the declination of the merger, in radians;
-- `'geocent_time'`: the time of merger, expressed as [GPS time](https://www.andrews.edu/~tzs/timeconv/timeconvert.php?)
+- `'geocent_time'`: the time of merger, expressed as [GPS time](https://www.andrews.edu/~tzs/timeconv/timeconvert.php?);
+- `'max_frequency'`: a maximum frequency at which to cut off the waveform, in Hz.

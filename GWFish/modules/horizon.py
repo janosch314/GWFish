@@ -5,20 +5,44 @@ The thing we want to compute is the luminosity distance at which a given
 signal will be detected (with a given SNR).
 """
 
-from warnings import warn
-
+import warnings
 import numpy as np
+from tqdm import tqdm
 
 from astropy.cosmology import Planck18
 import astropy.cosmology as cosmology
 import astropy.units as u
+
+from scipy.optimize import fsolve
 
 from .detection import SNR, Detector, projection
 from .waveforms import hphc_amplitudes
 
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
-WAVEFORM_MODEL = 'gwfish_TaylorF2'
+WAVEFORM_MODEL = 'lalsim_IMRPhenomD'
+MIN_REDSHIFT = 1e-8
+
+def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
+    
+    polarizations, timevector = hphc_amplitudes(
+        waveform_model, 
+        params,
+        detector.frequencyvector,
+        plot=None
+    )
+    
+    signal = projection(
+        params,
+        detector,
+        polarizations,
+        timevector
+    )
+    
+    component_SNRs = SNR(detector, signal)
+    if np.all(component_SNRs==0.):
+        raise ValueError('The SNR is zero in all components!')
+    return np.sqrt(np.sum(component_SNRs**2))
 
 def horizon(
     params: dict,
@@ -38,51 +62,43 @@ def horizon(
     distance in Mpc, redshift
     """
     
-    relative_error = np.inf
-    redshift = 1e-2
-    distance = 40
-    
     if 'redshift' in params or 'luminosity_distance' in params:
-        warn('The redshift and distance parameters will not be used in this function.')
+        warnings.warn('The redshift and distance parameters will not be used in this function.')
     
-    while True:
-        
-        params = params | {'redshift': redshift, 'luminosity_distance': distance}
-        
-        polarizations, timevector = hphc_amplitudes(
-            waveform_model, 
-            params, 
-            detector.frequencyvector, 
-            plot=None
-        )
-        
-        signal = projection(
-            params,
-            detector,
-            polarizations,
-            timevector
-        )
-        
-        component_SNRs = SNR(detector, signal)
-        this_SNR = np.sqrt(np.sum(component_SNRs**2))
+    def SNR_error(redshift):
+        redshift = redshift[0]
+        if redshift < MIN_REDSHIFT:
+            redshift = MIN_REDSHIFT
+        distance = cosmology_model.luminosity_distance(redshift).value
+        mod_params = params | {'redshift': redshift, 'luminosity_distance': distance}
+        return np.log(compute_SNR(mod_params, detector)/target_SNR)
+    
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', 'The iteration is not making good progress')
+        redshift, _, ier, _ = fsolve(
+            func=SNR_error, 
+            x0=0.01,
+            full_output=True,
+            maxfev=10000,
+            )
 
-        if abs(np.log(this_SNR / target_SNR)) < 1e-4:
-            break
-        
-        distance *= this_SNR / target_SNR
-        redshift = cosmology.z_at_value(cosmology_model.luminosity_distance, distance * u.Mpc).value
-        
+    redshift = redshift[0]
+    distance = cosmology_model.luminosity_distance(redshift).value
+    
+    if ier != 1:
+        raise ValueError('Horizon computation did not converge!')
+
     return distance, redshift
 
-def randomized_orientation_params(size: int, rng = DEFAULT_RNG):
+def randomized_orientation_params(rng = DEFAULT_RNG):
     
     return {
-        'theta_jn': np.arccos(rng.uniform(-1., 1., size=size)),
-        'dec': np.arccos(rng.uniform(-1., 1., size=size)) - np.pi / 2.,
-        'ra': rng.uniform(0, 2. * np.pi, size=size),
-        'psi': rng.uniform(0, 2. * np.pi, size=size),
-        'phase': rng.uniform(0, 2. * np.pi, size=size),
-        'geocent_time': rng.uniform(1735257618, 1766793618, size=size) # full year 2035
+        'theta_jn': np.arccos(rng.uniform(-1., 1.)),
+        'dec': np.arccos(rng.uniform(-1., 1.)) - np.pi / 2.,
+        'ra': rng.uniform(0, 2. * np.pi),
+        'psi': rng.uniform(0, 2. * np.pi),
+        'phase': rng.uniform(0, 2. * np.pi),
+        'geocent_time': rng.uniform(1735257618, 1766793618) # full year 2035
     }
 
 def horizon_varying_orientation(base_params: dict, samples: int, detector: Detector, **kwargs):
@@ -90,8 +106,8 @@ def horizon_varying_orientation(base_params: dict, samples: int, detector: Detec
     distances = np.zeros(samples)
     redshifts = np.zeros(samples)
     
-    for i in range(samples):
-        params = base_params | randomized_orientation_params(1)
+    for i in tqdm(range(samples)):
+        params = base_params | randomized_orientation_params()
         distances[i], redshifts[i] = horizon(params, detector, **kwargs)
         
     return distances, redshifts
