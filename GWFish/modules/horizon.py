@@ -20,7 +20,8 @@ from .waveforms import hphc_amplitudes
 
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
-WAVEFORM_MODEL = 'gwfish_TaylorF2'
+WAVEFORM_MODEL = 'lalsim_IMRPhenomD'
+MIN_REDSHIFT = 1e-8
 
 def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
     
@@ -65,6 +66,9 @@ def horizon(
         warnings.warn('The redshift and distance parameters will not be used in this function.')
     
     def SNR_error(redshift):
+        redshift = redshift[0]
+        if redshift < MIN_REDSHIFT:
+            redshift = MIN_REDSHIFT
         distance = cosmology_model.luminosity_distance(redshift).value
         mod_params = params | {'redshift': redshift, 'luminosity_distance': distance}
         return np.log(compute_SNR(mod_params, detector)/target_SNR)
@@ -78,6 +82,7 @@ def horizon(
             maxfev=10000,
             )
 
+    redshift = redshift[0]
     distance = cosmology_model.luminosity_distance(redshift).value
     
     if ier != 1:
@@ -85,15 +90,15 @@ def horizon(
 
     return distance, redshift
 
-def randomized_orientation_params(size: int, rng = DEFAULT_RNG):
+def randomized_orientation_params(rng = DEFAULT_RNG):
     
     return {
-        'theta_jn': np.arccos(rng.uniform(-1., 1., size=size)),
-        'dec': np.arccos(rng.uniform(-1., 1., size=size)) - np.pi / 2.,
-        'ra': rng.uniform(0, 2. * np.pi, size=size),
-        'psi': rng.uniform(0, 2. * np.pi, size=size),
-        'phase': rng.uniform(0, 2. * np.pi, size=size),
-        'geocent_time': rng.uniform(1735257618, 1766793618, size=size) # full year 2035
+        'theta_jn': np.arccos(rng.uniform(-1., 1.)),
+        'dec': np.arccos(rng.uniform(-1., 1.)) - np.pi / 2.,
+        'ra': rng.uniform(0, 2. * np.pi),
+        'psi': rng.uniform(0, 2. * np.pi),
+        'phase': rng.uniform(0, 2. * np.pi),
+        'geocent_time': rng.uniform(1735257618, 1766793618) # full year 2035
     }
 
 def horizon_varying_orientation(base_params: dict, samples: int, detector: Detector, **kwargs):
@@ -102,7 +107,7 @@ def horizon_varying_orientation(base_params: dict, samples: int, detector: Detec
     redshifts = np.zeros(samples)
     
     for i in tqdm(range(samples)):
-        params = base_params | randomized_orientation_params(1)
+        params = base_params | randomized_orientation_params()
         distances[i], redshifts[i] = horizon(params, detector, **kwargs)
         
     return distances, redshifts
