@@ -29,6 +29,9 @@ def test_horizon_computation_result_170817_scaling():
     
     distance, redshift = horizon(params, detector)
     
+    assert isinstance(distance, float)
+    assert isinstance(redshift, float)
+    
     params2 = params | {
         'mass_1': 2.8, 
         'mass_2': 2.8, 
@@ -56,7 +59,6 @@ def test_horizon_warns_when_given_redshift():
     with pytest.warns():
         distance, redshift = horizon(params, detector)
 
-@pytest.mark.xfail
 @pytest.mark.parametrize('mass', [1e3, 1e4, 1e5, 1e6])
 def test_difficult_convergence_of_horizon_calculation(mass):
     """A few examples of parameters for which there have 
