@@ -308,14 +308,9 @@ def IMRPhenomD(parameters, frequencyvector, plot=None):
         M1 = M2
         M2 = aux_mass
 
-    if 'a_1' in parameters:
-        chi_1 = parameters['a_1']
-    else:
-        chi_1 = 0.0
-    if 'a_2' in parameters:
-        chi_2 = parameters['a_2']
-    else:
-        chi_2 = 0.0
+    chi_1 = parameters.get('a_1', 0.0)
+    chi_2 = parameters.get('a_2', 0.0)
+    
     M = M1 + M2
     mu = M1 * M2 / M
     Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
