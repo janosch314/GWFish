@@ -21,8 +21,7 @@ The parameters used to describe a CBC within `GWFish` are as follows:
 - `'a_2'`: spin of the secondary object, not available for all approximants.
 - `'lambda_1'`: tidal polarizability $\Lambda_1$ of the primary (compact) star; 
     for details on the definition see e.g.
-    section III.D of [the GW170817 properties paper](https://arxiv.org/abs/1805.11579),
-    not available for all approximants;
+    section III.D of [the GW170817 properties paper](https://arxiv.org/abs/1805.11579). This parameter is not available for all approximants;
 - `'lambda_2'`: tidal polarizability $\Lambda_2$ of the secondary (compact) star,
     not available for all approximants.
 
