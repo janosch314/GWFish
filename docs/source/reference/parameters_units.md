@@ -13,4 +13,21 @@ The parameters used to describe a CBC within `GWFish` are as follows:
 - `'ra'`: the right ascension of the merger, in radians;
 - `'dec'`: the declination of the merger, in radians;
 - `'geocent_time'`: the time of merger, expressed as [GPS time](https://www.andrews.edu/~tzs/timeconv/timeconvert.php?);
-- `'max_frequency'`: a maximum frequency at which to cut off the waveform, in Hz.
+- `'max_frequency'`: a maximum frequency at which to cut off the waveform, in Hz;
+- `'a_1'`: spin of the primary object, in units of the square of the mass 
+    (often denoted as $\chi = J / M^2$ in $c=G=1$ natural units), 
+    dimensionless (and $\in [-1, 1]$), 
+    not available for all approximants;
+- `'a_2'`: spin of the secondary object, not available for all approximants.
+- `'lambda_1'`: tidal polarizability $\Lambda_1$ of the primary (compact) star; 
+    for details on the definition see e.g.
+    section III.D of [the GW170817 properties paper](https://arxiv.org/abs/1805.11579),
+    not available for all approximants;
+- `'lambda_2'`: tidal polarizability $\Lambda_2$ of the secondary (compact) star,
+    not available for all approximants.
+
+```{warning}
+Including parameters which do not apply for a specific approximants (e.g. giving `'a_1'` 
+for `'gwfish_TaylorF2'`) will not currently raise an error, 
+the parameters will be simply ignored.
+```
