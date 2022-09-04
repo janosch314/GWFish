@@ -324,6 +324,10 @@ def projection_solarorbit(parameters, detector, polarizations, timevector):
     tc = parameters['geocent_time']
     # proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
     # proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
+
+    if fmax := parameters.get('max_frequency', None):
+        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
+
     proj[np.where(timevector > tc + max_observation_time), :] = 0.j
 
     #i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
@@ -505,9 +509,11 @@ def projection_moon(parameters, detector, polarizations, timevector):
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     max_observation_time = detector.mission_lifetime
-    if fmax := parameters.get('max_frequency', None):
-        max_observation_time += time_of_fmax(timevector, detector.frequencyvector, fmax)
     tc = parameters['geocent_time']
+
+    if fmax := parameters.get('max_frequency', None):
+        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
+        
     proj[np.where(timevector < tc - max_observation_time), :] = 0.j
 
     return proj
