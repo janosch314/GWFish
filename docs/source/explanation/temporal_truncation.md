@@ -13,6 +13,14 @@ where $t_m$ is the mission lifetime.
 This is an optimistic choice, since it amounts to assuming that the system at hand 
 will merge precisely at the end of the mission's lifetime. 
 
+This correction is not required for Earth-based detectors, since they are 
+necessarily constrained to $f \gtrsim 1 \text{Hz}$, and even the lightest compact 
+objects will not take more than a few days to merge from those frequencies, which
+is much shorter than any sensible mission duration.
+
+Non-CBC sources do not respect these considerations, but at the moment `GWFish` 
+does not offer strong support for them.
+
 ## `max_frequency` details
 
 This [parameter](parameter-definitions-units) allows one to truncate the waveform at a specific upper frequency.
