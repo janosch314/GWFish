@@ -13,7 +13,7 @@ from astropy.cosmology import Planck18
 import astropy.cosmology as cosmology
 import astropy.units as u
 
-from scipy.optimize import fsolve
+from scipy.optimize import brentq
 
 from .detection import SNR, Detector, projection
 from .waveforms import hphc_amplitudes
@@ -22,6 +22,7 @@ DEFAULT_RNG = np.random.default_rng(seed=1)
 
 WAVEFORM_MODEL = 'lalsim_IMRPhenomD'
 MIN_REDSHIFT = 1e-8
+MAX_REDSHIFT = 100
 
 def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
     
@@ -41,7 +42,9 @@ def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM
     
     component_SNRs = SNR(detector, signal)
     if np.all(component_SNRs==0.):
-        raise ValueError('The SNR is zero in all components!')
+        raise ValueError(
+            'The SNR is zero in all components! '
+            f'Parameters are: {params}')
     return np.sqrt(np.sum(component_SNRs**2))
 
 def horizon(
@@ -65,29 +68,16 @@ def horizon(
     if 'redshift' in params or 'luminosity_distance' in params:
         warnings.warn('The redshift and distance parameters will not be used in this function.')
     
-    def SNR_error(redshift):
-        redshift = redshift[0]
-        if redshift < MIN_REDSHIFT:
-            redshift = MIN_REDSHIFT
+    def SNR_error(redshift):        
         distance = cosmology_model.luminosity_distance(redshift).value
         mod_params = params | {'redshift': redshift, 'luminosity_distance': distance}
         return np.log(compute_SNR(mod_params, detector)/target_SNR)
     
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', 'The iteration is not making good progress')
-        redshift, _, ier, _ = fsolve(
-            func=SNR_error, 
-            x0=0.01,
-            full_output=True,
-            maxfev=10000,
-            )
-
-    redshift = redshift[0]
-    distance = cosmology_model.luminosity_distance(redshift).value
-    
-    if ier != 1:
+    redshift, r = brentq(SNR_error, MIN_REDSHIFT, MAX_REDSHIFT, full_output=True)
+    if not r.converged:
         raise ValueError('Horizon computation did not converge!')
-
+        
+    distance = cosmology_model.luminosity_distance(redshift).value
     return distance, redshift
 
 def randomized_orientation_params(rng = DEFAULT_RNG):
