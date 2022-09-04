@@ -22,7 +22,7 @@ DEFAULT_RNG = np.random.default_rng(seed=1)
 
 WAVEFORM_MODEL = 'lalsim_IMRPhenomD'
 MIN_REDSHIFT = 1e-8
-MAX_REDSHIFT = 100
+MAX_REDSHIFT = 500
 
 def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
     
