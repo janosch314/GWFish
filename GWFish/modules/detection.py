@@ -686,4 +686,8 @@ def analyzeDetections(network, parameters, population, networks_ids):
         np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f', header=header, comments='')
 
 def time_of_fmax(timevector, frequencyvector, fmax):
-    return timevector[np.searchsorted(frequencyvector[:, 0], fmax)]
+    try:
+        return timevector[np.searchsorted(frequencyvector[:, 0], fmax)]
+    except IndexError as e:
+        raise ValueError("The max_frequency given was not found in the frequency vector - "
+                         "it might be outside the detector band.") from e
