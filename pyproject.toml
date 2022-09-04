@@ -18,14 +18,20 @@ scipy = "^1.8.0"
 matplotlib = "^3.5.1"
 tqdm = "^4.64.0"
 sympy = "^1.10.1"
-lalsuite = {version = "^7.5", optional = true}
-furo = {version="^2022.6.21", optional = true}
-myst-parser = {version="^0.18.0", optional = true}
-sphinx-copybutton = {version="^0.5.0", optional = true}
-readthedocs-sphinx-search = {version="^0.1.2", optional = true}
-sphinxcontrib-bibtex = {version="^2.4.2", optional = true}
-sphinx-toolbox = {version="^3.1.2", optional = true}
 
+[tool.poetry.group.waveforms.dependencies]
+lalsuite = "^7.5"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+furo = "^2022.6.21"
+myst-parser = "^0.18.0"
+sphinx-copybutton = "^0.5.0"
+readthedocs-sphinx-search = "^0.1.2"
+sphinxcontrib-bibtex = "^2.4.2"
+sphinx-toolbox = "^3.1.2"
 
 [tool.poetry.extras]
 waveforms = ["lalsuite"]
