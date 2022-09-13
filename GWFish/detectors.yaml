@@ -3,7 +3,7 @@ ET:
             lon:              (10 + 30. / 60 + 16.1878 / 3600) * np.pi / 180.
             opening_angle:    np.pi / 3.
             azimuth:          70.5674 * np.pi / 180.
-            psd_data:         GWFish/detector_psd/ET_psd.txt
+            psd_data:         ET_psd.txt
             duty_factor:      0.85
             detector_class:   earthDelta
             plotrange:        3, 1000, 1e-25, 1e-20
@@ -15,7 +15,7 @@ VOY:
             lon:              -119.4 * np.pi / 180.
             opening_angle:    np.pi / 2.
             azimuth:          126. * np.pi / 180.
-            psd_data:         GWFish/detector_psd/Voyager_psd.txt
+            psd_data:         Voyager_psd.txt
             duty_factor:      0.85
             detector_class:   earthL
             plotrange:        10, 1000, 1e-25, 1e-20
@@ -27,7 +27,7 @@ CE1:
             lon:              -119.4 * np.pi / 180.
             opening_angle:    np.pi / 2.
             azimuth:          126. * np.pi / 180.
-            psd_data:         GWFish/detector_psd/CE1_psd.txt
+            psd_data:         CE1_psd.txt
             duty_factor:      0.85
             detector_class:   earthL
             plotrange:        10, 1000, 1e-25, 1e-20
@@ -39,7 +39,7 @@ CE2:
             lon:              -119.4 * np.pi / 180.
             opening_angle:    np.pi / 2.
             azimuth:          126. * np.pi / 180.
-            psd_data:         GWFish/detector_psd/CE2_psd.txt
+            psd_data:         CE2_psd.txt
             duty_factor:      0.85
             detector_class:   earthL
             plotrange:        10, 1000, 1e-25, 1e-20
@@ -51,7 +51,7 @@ LLO:
             lon:              -90.77 * np.pi / 180.
             opening_angle:    np.pi / 2.
             azimuth:          197.7 * np.pi / 180.
-            psd_data:         GWFish/detector_psd/LIGO_O5_psd.txt
+            psd_data:         LIGO_O5_psd.txt
             duty_factor:      0.85
             detector_class:   earthL
             plotrange:        10, 1000, 1e-25, 1e-20
@@ -63,7 +63,7 @@ LHO:
             lon:              -119.4 * np.pi / 180.
             opening_angle:    np.pi / 2.
             azimuth:          126. * np.pi / 180.
-            psd_data:         GWFish/detector_psd/LIGO_O5_psd.txt
+            psd_data:         LIGO_O5_psd.txt
             duty_factor:      0.85
             detector_class:   earthL
             plotrange:        10, 1000, 1e-25, 1e-20
@@ -75,7 +75,7 @@ VIR:
             lon:              10.5 * np.pi / 180.
             opening_angle:    np.pi / 2.
             azimuth:          71. * np.pi / 180.
-            psd_data:         GWFish/detector_psd/Virgo_O5_psd.txt
+            psd_data:         Virgo_O5_psd.txt
             duty_factor:      0.85
             detector_class:   earthL
             plotrange:        10, 1000, 1e-25, 1e-20
@@ -87,7 +87,7 @@ KAG:
             lon:              137.3 * np.pi / 180.
             opening_angle:    np.pi / 2.
             azimuth:          29.6 * np.pi / 180.
-            psd_data:         GWFish/detector_psd/Kagra_128Mpc_psd.txt
+            psd_data:         Kagra_128Mpc_psd.txt
             duty_factor:      0.85
             detector_class:   earthL
             plotrange:        10, 1000, 1e-25, 1e-20
@@ -99,7 +99,7 @@ LIN:
             lon:              77.03 * np.pi / 180.
             opening_angle:    np.pi / 2.
             azimuth:          100. * np.pi / 180.
-            psd_data:         GWFish/detector_psd/LIGO_O5_psd.txt
+            psd_data:         LIGO_O5_psd.txt
             duty_factor:      0.85
             detector_class:   earthL
             plotrange:        10, 1000, 1e-25, 1e-20
@@ -108,7 +108,7 @@ LIN:
             df:               1./4.      
 LISA:  
             arm_length:       2.5e9
-            psd_data:         GWFish/detector_psd/LISA_psd.txt
+            psd_data:         LISA_psd.txt
             duty_factor:      1
             detector_class:   satellitesolarorbit
             mission_lifetime: 4 * 3.16e7
@@ -120,7 +120,7 @@ LGWA:
             lat:              -85 * np.pi / 180.
             lon:              0
             azimuth:
-            psd_data:         GWFish/detector_psd/LGWA_psd.txt
+            psd_data:         LGWA_psd.txt
             duty_factor:      1
             detector_class:   lunararray
             number_stations:  4
@@ -133,7 +133,7 @@ LGWA_Soundcheck:
             lat:              -85 * np.pi / 180.
             lon:              0
             azimuth:
-            psd_data:         GWFish/detector_psd/LGWA_Soundcheck_psd.txt
+            psd_data:         LGWA_Soundcheck_psd.txt
             duty_factor:      1
             detector_class:   lunararray
             number_stations:  1

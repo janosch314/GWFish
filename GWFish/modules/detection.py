@@ -2,8 +2,12 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
+from pathlib import Path
 
 import GWFish.modules.constants as cst
+
+DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
+PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
 
 class DetectorComponent:
 
@@ -39,7 +43,7 @@ class DetectorComponent:
             self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * self.e_long + np.sin(
                 self.arm_azimuth + self.opening_angle) * self.e_lat
 
-            self.psd_data = np.loadtxt(detector_def['psd_data'])
+            self.psd_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
 
         elif detector_def['detector_class'] == 'lunararray':
 
@@ -54,7 +58,7 @@ class DetectorComponent:
             self.e1 = np.array([np.cos(self.lat) * np.cos(self.lon), np.cos(self.lat) * np.sin(self.lon), np.sin(self.lat)])
             self.e2 = np.cos(self.azimuth) * self.e_long + np.sin(self.azimuth) * self.e_lat
 
-            self.psd_data = np.loadtxt(detector_def['psd_data'])
+            self.psd_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
             self.psd_data[:, 1] = self.psd_data[:, 1]/eval(str(detector_def['number_stations']))
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             # see LISA 2017 mission document
@@ -71,7 +75,7 @@ class DetectorComponent:
             # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
             # S_opt = (2 / self.L) ** 2 * 2.5e-23 * (1 + (2e-3 / ff) ** 4)
             # S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
-            raw_data = np.loadtxt(detector_def['psd_data'])
+            raw_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
             ff = raw_data[:,0]
             S_pm = (2/self.L)**2 * raw_data[:,1]
             S_opt = (2/self.L)**2 * raw_data[:,2]
@@ -104,7 +108,7 @@ class DetectorComponent:
 
 class Detector:
 
-    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config='detectors.yaml', plot=False):
+    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG, plot=False):
         self.components = []
         if fisher_parameters is not None:
             nd = len(fisher_parameters)
@@ -148,7 +152,7 @@ class Detector:
 
         if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'satellitesolarorbit'):
             for k in np.arange(3):
-                self.components.append(DetectorComponent(name=name, component=k, config=config, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=k, detector_def=detector_def, plot=plot))
         elif detector_def['detector_class'] == 'lunararray':
             if detector_def['azimuth']==None:
                 detector_def['azimuth'] = '0'
@@ -158,7 +162,7 @@ class Detector:
             else:
                 self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
         else:
-            self.components.append(DetectorComponent(name=name, component=0, config=config, plot=plot))
+            self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
 
 
 class Network:
@@ -314,6 +318,9 @@ def projection_solarorbit(parameters, detector, polarizations, timevector):
 
     # define LISA observation window
     max_observation_time = detector.mission_lifetime
+    if fmax := parameters.get('max_frequency', None):
+        max_observation_time += time_of_fmax(timevector, detector.frequencyvector, fmax)
+
     tc = parameters['geocent_time']
     # proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
     # proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
@@ -498,6 +505,8 @@ def projection_moon(parameters, detector, polarizations, timevector):
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     max_observation_time = detector.mission_lifetime
+    if fmax := parameters.get('max_frequency', None):
+        max_observation_time += time_of_fmax(timevector, detector.frequencyvector, fmax)
     tc = parameters['geocent_time']
     proj[np.where(timevector < tc - max_observation_time), :] = 0.j
 
@@ -669,3 +678,6 @@ def analyzeDetections(network, parameters, population, networks_ids):
                    header=header, comments='')
     else:
         np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f', header=header, comments='')
+
+def time_of_fmax(timevector, frequencyvector, fmax):
+    return timevector[np.searchsorted(frequencyvector[:, 0], fmax)]
