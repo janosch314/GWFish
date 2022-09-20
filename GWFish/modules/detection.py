@@ -168,7 +168,7 @@ class Detector:
 class Network:
 
     def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, fisher_parameters=None,
-                 config='detectors.yaml',  plot=False):
+                 config=DEFAULT_CONFIG, plot=False):
         if detector_ids is None:
             detector_ids = ['ET']
         self.name = detector_ids[0]
