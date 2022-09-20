@@ -20,18 +20,21 @@ from .waveforms import hphc_amplitudes
 
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
-WAVEFORM_MODEL = 'lalsim_IMRPhenomD'
-MIN_REDSHIFT = 1e-8
+WAVEFORM_MODEL = 'lalsim_IMRPhenomXHM'
+MIN_REDSHIFT = 1e-10
 MAX_REDSHIFT = 500
 
 def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
     
-    polarizations, timevector = hphc_amplitudes(
-        waveform_model, 
-        params,
-        detector.frequencyvector,
-        plot=None
-    )
+    try:
+        polarizations, timevector = hphc_amplitudes(
+            waveform_model, 
+            params,
+            detector.frequencyvector,
+            plot=None
+        )
+    except RuntimeError:
+        print(params)
     
     signal = projection(
         params,
@@ -68,10 +71,10 @@ def horizon(
     if 'redshift' in params or 'luminosity_distance' in params:
         warnings.warn('The redshift and distance parameters will not be used in this function.')
     
-    def SNR_error(redshift):        
+    def SNR_error(redshift):
         distance = cosmology_model.luminosity_distance(redshift).value
         mod_params = params | {'redshift': redshift, 'luminosity_distance': distance}
-        return np.log(compute_SNR(mod_params, detector)/target_SNR)
+        return np.log(compute_SNR(mod_params, detector, waveform_model)/target_SNR)
     
     redshift, r = brentq(SNR_error, MIN_REDSHIFT, MAX_REDSHIFT, full_output=True)
     if not r.converged:
@@ -91,12 +94,16 @@ def randomized_orientation_params(rng = DEFAULT_RNG):
         'geocent_time': rng.uniform(1735257618, 1766793618) # full year 2035
     }
 
-def horizon_varying_orientation(base_params: dict, samples: int, detector: Detector, **kwargs):
+def horizon_varying_orientation(base_params: dict, samples: int, detector: Detector, progressbar = True, **kwargs):
     
     distances = np.zeros(samples)
     redshifts = np.zeros(samples)
     
-    for i in tqdm(range(samples)):
+    iterator = range(samples)
+    if progressbar:
+        iterator = tqdm(iterator)
+    
+    for i in iterator:
         params = base_params | randomized_orientation_params()
         distances[i], redshifts[i] = horizon(params, detector, **kwargs)
         
