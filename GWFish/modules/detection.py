@@ -68,7 +68,8 @@ class DetectorComponent:
             self.L = eval(str(detector_def['arm_length']))
             self.eps = self.L / cst.AU / (2 * np.sqrt(3))
 
-            # self.psd_data = np.zeros((len(ff), 2))
+            self.psd_data = np.zeros((len(ff), 2))
+            
             # noises in units of GW strain
             # P_rec = 700e-12
             # f0 = cst.c / 1064e-9
