@@ -11,13 +11,10 @@ import json
 from itertools import combinations, chain
 
 from tqdm import tqdm
-from astropy.cosmology import FlatLambdaCDM
 
 import argparse
 
 import GWFish.modules as gw
-
-cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
 
 rng = default_rng()
 
@@ -57,7 +54,8 @@ Use "all" to get all possible combinations of the detectors given.''')
     calculate_errors = True   # whether to calculate Fisher-matrix based PE errors
     duty_cycle = False  # whether to consider the duty cycle of detectors
 
-    fisher_parameters = ['ra', 'dec', 'psi', 'theta_jn', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
+    #fisher_parameters = ['ra', 'dec', 'psi', 'theta_jn', 'luminosity_distance', 'mass_1', 'mass_2', 'geocent_time', 'phase']
+    fisher_parameters = ['ra', 'dec', 'psi', 'theta_jn', 'luminosity_distance', 'mass_1', 'mass_2']
     #fisher_parameters = ['luminosity_distance','ra','dec']
 
     pop_file = args.pop_file
@@ -81,11 +79,11 @@ Use "all" to get all possible combinations of the detectors given.''')
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
-    waveform_model = 'gwfish_TaylorF2'
+    #waveform_model = 'gwfish_TaylorF2'
     # waveform_model = 'gwfish_IMRPhenomD'
     #waveform_model = 'lalsim_TaylorF2'
     #waveform_model = 'lalsim_IMRPhenomD'
-    # waveform_model = 'lalsim_IMRPhenomXPHM'
+    waveform_model = 'lalsim_IMRPhenomXPHM'
 
 
     print('Processing CBC population')
