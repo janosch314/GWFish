@@ -37,16 +37,6 @@ def assert_matrix_inverse_correctness(matrix):
     
     assert np.allclose(identity, should_be_identity)
 
-@pytest.mark.xfail
-@pytest.mark.parametrize("seed", SEEDS)
-@pytest.mark.parametrize("matrix_size", MATRIX_SIZES)
-def test_matrix_inversion_all_entries_uniform(seed, matrix_size):
-
-    rng = np.random.default_rng(seed=seed)
-    matrix = rng.uniform(low=0, high=1, size=(matrix_size, matrix_size))
-    
-    assert_matrix_inverse_correctness(matrix)
-
 
 @pytest.mark.parametrize("seed", SEEDS)
 @pytest.mark.parametrize("matrix_size", MATRIX_SIZES)

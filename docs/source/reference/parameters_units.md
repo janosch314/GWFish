@@ -1,3 +1,4 @@
+(parameter-definitions-units)=
 # Parameter definitions and units
 
 The parameters used to describe a CBC within `GWFish` are as follows:

@@ -169,7 +169,7 @@ class Detector:
 class Network:
 
     def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, fisher_parameters=None,
-                 config='detectors.yaml',  plot=False):
+                 config=DEFAULT_CONFIG, plot=False):
         if detector_ids is None:
             detector_ids = ['ET']
         self.name = detector_ids[0]
@@ -325,6 +325,10 @@ def projection_solarorbit(parameters, detector, polarizations, timevector):
     tc = parameters['geocent_time']
     # proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
     # proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
+
+    if fmax := parameters.get('max_frequency', None):
+        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
+
     proj[np.where(timevector > tc + max_observation_time), :] = 0.j
 
     #i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
@@ -506,9 +510,11 @@ def projection_moon(parameters, detector, polarizations, timevector):
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     max_observation_time = detector.mission_lifetime
-    if fmax := parameters.get('max_frequency', None):
-        max_observation_time += time_of_fmax(timevector, detector.frequencyvector, fmax)
     tc = parameters['geocent_time']
+
+    if fmax := parameters.get('max_frequency', None):
+        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
+        
     proj[np.where(timevector < tc - max_observation_time), :] = 0.j
 
     return proj
@@ -681,4 +687,8 @@ def analyzeDetections(network, parameters, population, networks_ids):
         np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f', header=header, comments='')
 
 def time_of_fmax(timevector, frequencyvector, fmax):
-    return timevector[np.searchsorted(frequencyvector[:, 0], fmax)]
+    try:
+        return timevector[np.searchsorted(frequencyvector[:, 0], fmax)]
+    except IndexError as e:
+        raise ValueError("The max_frequency given was not found in the frequency vector - "
+                         "it might be outside the detector band.") from e

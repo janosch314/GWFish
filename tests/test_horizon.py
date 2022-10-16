@@ -59,8 +59,9 @@ def test_horizon_warns_when_given_redshift():
     with pytest.warns():
         distance, redshift = horizon(params, detector)
 
-@pytest.mark.parametrize('mass', [1e3, 1e4, 1e5, 1e6])
-def test_difficult_convergence_of_horizon_calculation(mass):
+@pytest.mark.parametrize('detector_name', ['LGWA_Soundcheck', 'LGWA'])
+@pytest.mark.parametrize('mass', [.6, 1e3, 1e4, 1e5, 1e6])
+def test_difficult_convergence_of_horizon_calculation(mass, detector_name):
     """A few examples of parameters for which there have 
     been problems in the past.
     """
@@ -75,7 +76,7 @@ def test_difficult_convergence_of_horizon_calculation(mass):
             'phase': 2.43065638, 
             'geocent_time': 1.76231585e+09,
         }
-    detector = Detector('LGWA', parameters= [None], fisher_parameters= [None])
+    detector = Detector(detector_name, parameters= [None], fisher_parameters= [None])
     
     distance, redshift = horizon(params, detector)
     assert np.isclose(
