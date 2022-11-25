@@ -90,7 +90,7 @@ def scalar_product(deriv1, deriv2, detector):
 
     scalar_prods = np.zeros(len(components))
     for k in np.arange(len(components)):
-        scalar_prods[k] = 4 * df * np.sum(
-            np.real(deriv1[:, k] * np.conjugate(deriv2[:, k])) / components[k].Sn(ff[:, 0]), axis=0)
+        scalar_prods[k] = 4 * np.trapz(
+                np.real(deriv1[:, k] * np.conjugate(deriv2[:, k])) / components[k].Sn(ff[:, 0]), ff[:, 0], axis=0)
 
     return scalar_prods
