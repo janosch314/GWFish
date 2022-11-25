@@ -137,9 +137,15 @@ class Detector:
 
         fmin = eval(str(detector_def['fmin']))
         fmax = eval(str(detector_def['fmax']))
-        df = eval(str(detector_def['df']))
+        spacing = str(detector_def['spacing'])
 
-        self.frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
+        if spacing == 'linear':
+            df = eval(str(detector_def['df']))
+            self.frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
+        elif spacing == 'geometric':
+            npoints = eval(str(detector_def['npoints']))
+            self.frequencyvector = np.geomspace(fmin, fmax, num=int(npoints))
+
         self.frequencyvector = self.frequencyvector[:, np.newaxis]
 
         if detector_def['detector_class'] == 'lunararray':
@@ -602,7 +608,7 @@ def SNR(detector, signals, duty_cycle=False, plot=None):
     SNRs = np.zeros(len(components))
     for k in np.arange(len(components)):
 
-        SNRs[k] = np.sqrt(4 * df * np.sum(np.abs(signals[:, k]) ** 2 / components[k].Sn(ff[:, 0]), axis=0))
+        SNRs[k] = np.sqrt(4 * np.trapz(np.abs(signals[:, k]) ** 2 / components[k].Sn(ff[:, 0]), ff[:, 0], axis=0))
         #print(components[k].name + ': ' + str(SNRs[k]))
         if plot != None:
             plotrange = components[k].plotrange
