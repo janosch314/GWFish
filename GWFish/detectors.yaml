@@ -9,7 +9,9 @@ ET:
             plotrange:        3, 1000, 1e-25, 1e-20
             fmin:             2.
             fmax:             1024.
+            spacing:          geometric
             df:               1./16.
+            npoints:          5000
 VOY:
             lat:              46.5 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
@@ -21,7 +23,9 @@ VOY:
             plotrange:        10, 1000, 1e-25, 1e-20
             fmin:             8
             fmax:             1024
-            df:               1./4.             
+            spacing:          geometric 
+            df:               1./4.    
+            npoints:          5000           
 CE1:
             lat:              46.5 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
@@ -33,7 +37,9 @@ CE1:
             plotrange:        10, 1000, 1e-25, 1e-20
             fmin:             8
             fmax:             1024
-            df:               1./4.     
+            spacing:          geometric 
+            df:               1./4.    
+            npoints:          5000 
 CE2:
             lat:              46.5 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
@@ -45,7 +51,9 @@ CE2:
             plotrange:        10, 1000, 1e-25, 1e-20
             fmin:             8
             fmax:             1024
+            spacing:          geometric 
             df:               1./4.    
+            npoints:          5000 
 LLO:
             lat:              30.56 * np.pi / 180.
             lon:              -90.77 * np.pi / 180.
@@ -57,7 +65,9 @@ LLO:
             plotrange:        10, 1000, 1e-25, 1e-20
             fmin:             8
             fmax:             1024
-            df:               1./4.     
+            spacing:          geometric 
+            df:               1./4.    
+            npoints:          5000    
 LHO:
             lat:              46.46 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
@@ -69,7 +79,9 @@ LHO:
             plotrange:        10, 1000, 1e-25, 1e-20
             fmin:             8
             fmax:             1024
-            df:               1./4.     
+            spacing:          geometric 
+            df:               1./4.    
+            npoints:          5000 
 VIR:
             lat:              43.6 * np.pi / 180.
             lon:              10.5 * np.pi / 180.
@@ -81,7 +93,9 @@ VIR:
             plotrange:        10, 1000, 1e-25, 1e-20
             fmin:             8
             fmax:             1024
+            spacing:          geometric 
             df:               1./4.    
+            npoints:          5000 
 KAG:
             lat:              36.41 * np.pi / 180.
             lon:              137.3 * np.pi / 180.
@@ -93,7 +107,9 @@ KAG:
             plotrange:        10, 1000, 1e-25, 1e-20
             fmin:             8
             fmax:             1024
+            spacing:          geometric 
             df:               1./4.    
+            npoints:          5000 
 LIN:
             lat:              19.61 * np.pi / 180.
             lon:              77.03 * np.pi / 180.
@@ -105,7 +121,9 @@ LIN:
             plotrange:        10, 1000, 1e-25, 1e-20
             fmin:             8
             fmax:             1024
-            df:               1./4.      
+            spacing:          geometric 
+            df:               1./4.    
+            npoints:          5000     
 LISA:  
             arm_length:       2.5e9
             psd_data:         LISA_psd.txt
@@ -115,6 +133,7 @@ LISA:
             plotrange:        1e-3, 0.3, 1e-22, 1e-19
             fmin:             1e-3
             fmax:             0.3
+            spacing:          linear
             df:               1e-4     
 LGWA:
             lat:              -85 * np.pi / 180.
@@ -128,6 +147,7 @@ LGWA:
             plotrange:        1e-3, 4, 1e-23, 1e-19
             fmin:             1e-3
             fmax:             4
+            spacing:          linear
             df:               1./4096.
 LGWA_Soundcheck:
             lat:              -85 * np.pi / 180.
@@ -141,4 +161,5 @@ LGWA_Soundcheck:
             plotrange:        1e-3, 4, 1e-23, 1e-19
             fmin:             1e-3
             fmax:             4
+            spacing:          linear
             df:               1./4096.
