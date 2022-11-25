@@ -17,7 +17,7 @@ def invertSVD(matrix):
 
     # print(matrix @ (matrix_inverse_norm / normalizer))
 
-    return matrix_inverse_norm / normalizer
+    return matrix_inverse_norm / normalizer, S
 
 
 def derivative(waveform, parameter_values, p, detector):
@@ -126,6 +126,10 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
         parameter_errors = np.zeros((ns, npar))
         sky_localization = np.zeros((ns,))
         networkSNR = np.zeros((ns,))
+        fishers = np.zeros((ns, npar, npar))
+        inv_fishers = np.zeros((ns, npar, npar))
+        sing_values = np.zeros((ns, npar))
+        
         for d in networks_ids[n]:
             networkSNR += network.detectors[d].SNR ** 2
         networkSNR = np.sqrt(networkSNR)
@@ -139,7 +143,10 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
                         network_fisher_matrix += np.squeeze(network.detectors[d].fisher_matrix[k, :, :])
 
                 if npar > 0:
-                    network_fisher_inverse = invertSVD(network_fisher_matrix)
+                    network_fisher_inverse, S = invertSVD(network_fisher_matrix)
+                    fishers[k, :, :] = network_fisher_matrix
+                    inv_fishers[k, :, :] = network_fisher_inverse
+                    sing_values[k, :] = S
                     parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
 
                     if signals_havesky:
@@ -151,6 +158,14 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
 
         ii = np.where(networkSNR > detect_SNR[1])[0]
         save_data = np.c_[networkSNR[ii], parameter_values.iloc[ii], parameter_errors[ii, :]]
+        fishers = fishers[ii, :, :]
+        inv_fishers = inv_fishers[ii, :, :]
+        sing_values = sing_values[ii, :]
+        
+        np.save('Fishers_'+ network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.npy', fishers)
+        np.save('Inv_Fishers_'+ network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.npy', inv_fishers)
+        np.save('Sing_Values_'+ network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.npy', sing_values)
+        
         if signals_havesky:
             header += " err_sky_location"
             save_data = np.c_[save_data, sky_localization[ii]]
