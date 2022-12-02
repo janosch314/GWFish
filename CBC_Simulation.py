@@ -85,7 +85,8 @@ Use "all" to get all possible combinations of the detectors given.''')
     #waveform_model = 'lalsim_IMRPhenomD'
     waveform_model = 'lalsim_IMRPhenomXPHM'
 
-
+    np.random.seed(0)
+    
     print('Processing CBC population')
     for k in tqdm(np.arange(len(parameters))):
         parameter_values = parameters.iloc[k]
