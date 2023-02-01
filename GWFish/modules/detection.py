@@ -421,7 +421,8 @@ def projection_earth(parameters, detector, polarizations, timevector):
         x_det = components[k].position[0] * cst.R_earth
         y_det = components[k].position[1] * cst.R_earth
         z_det = components[k].position[2] * cst.R_earth
-        phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
+
+        #phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
 
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
         proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
@@ -430,7 +431,12 @@ def projection_earth(parameters, detector, polarizations, timevector):
                      + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
                      + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
                      + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
-        proj[:, k] *= np.exp(-1.j * phase_shift)
+
+        # For frequency-domain models make a phase shift as Earth rotates below
+        # For time-domain models, we will need to shift a waveform based on time delay
+        if ff.shape == timevector.shape:
+          phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
+          proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     return proj
