@@ -169,7 +169,7 @@ def derivative(waveform, parameter_values, pp, detector, time_domain=False, eps=
 
 # ========= Functions for LAL FFD of derivatives of time-domain waveforms ========= #
 
-def fft_time_domain_derivative(deriv, delta_f, f_start=0.):
+def fft_lal_timeseries(lal_timeseries, delta_f, f_start=0.):
     """
 
     f_start: not recommended to change, f_start=0 is in lalsim.SimInspiralFD when calling time-domain waveforms
@@ -180,21 +180,21 @@ def fft_time_domain_derivative(deriv, delta_f, f_start=0.):
     and resized in waveform.td_lal_caller(), as in lalsim.SimInspiralFD.
     """
 
-    chirplen = deriv.data.length
-    lal_frequency_series = lal.CreateCOMPLEX16FrequencySeries('FD_H', deriv.epoch, f_start, delta_f, 
+    chirplen = lal_timeseries.data.length
+    lal_frequency_series = lal.CreateCOMPLEX16FrequencySeries('FD_H', lal_timeseries.epoch, f_start, delta_f, 
                            lal.DimensionlessUnit,int(chirplen / 2 + 1))
     plan = lal.CreateForwardREAL8FFTPlan(chirplen,0)
-    lal.REAL8TimeFreqFFT(lal_frequency_series,deriv,plan)
+    lal.REAL8TimeFreqFFT(lal_frequency_series,lal_timeseries,plan)
     return lal_frequency_series
 
 def fft_derivs_at_detectors(deriv_list, frequency_vector):
     """
-    A wrapper for fft_time_domain_derivative
+    A wrapper for fft_lal_timeseries
     """
     delta_f = frequency_vector[1,0] - frequency_vector[0,0]
     ffd_deriv_list = []
     for deriv in deriv_list:
-        ffd_deriv_list.append(fft_time_domain_derivative(deriv, delta_f, f_start=0.).data.data)
+        ffd_deriv_list.append(fft_lal_timeseries(deriv, delta_f, f_start=0.).data.data)
 
     # Because f_start = 0 Hz, we need to mask some frequencies
     idx_f_low = int(frequency_vector[0,0]/delta_f)

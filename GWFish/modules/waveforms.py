@@ -30,6 +30,9 @@ from bilby.gw.conversion import chirp_mass_and_mass_ratio_to_total_mass, total_m
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
 
+# BORIS: only for FFT
+import GWFish.modules as gw
+
 def fft(hh, dt, t_start, t_end, roll_off = 0.2):
     """
     Perform FFT to convert the data from time domain to frequency domain. 
@@ -50,7 +53,7 @@ def ifft(hh_tilde, df):
     """
     return np.fft.ifft(hh_tilde) * df
 
-def hphc_amplitudes(waveform, parameters, frequencyvector, time_domain=False, plot=None, preserve_lal_timeseries=False):
+def hphc_amplitudes(waveform, parameters, frequencyvector, time_domain=False, plot=None, preserve_lal_timeseries=False, fft_lal_timeseries=False, time_domain_sph_modes=False):
     parameters = parameters.copy()
 
     if preserve_lal_timeseries:
@@ -62,13 +65,76 @@ def hphc_amplitudes(waveform, parameters, frequencyvector, time_domain=False, pl
         hphc = IMRPhenomD(parameters, frequencyvector, plot=plot)
     elif waveform[0:7] == 'lalsim_':
         if time_domain:
-            delta_t = 0.5/frequencyvector[-1,0] # Sufficient to sample the highest frequency at Nyquist limit
-            f_low = frequencyvector[0,0]
-            f_max = frequencyvector[-1,0]
-            delta_f = frequencyvector[1,0] - f_low
-            hphc, hp_lal, hc_lal = td_lal_caller(waveform[7:], delta_t, f_low, f_max, delta_f, **parameters)
+
+            # New
+            data_params = {'frequencyvector': frequencyvector}
+            if not time_domain_sph_modes:
+                waveform_obj = LALTD_Waveform(waveform[7:], parameters, data_params)
+            else:
+                raise NotImplementedError()
+            hphc = waveform_obj.frequency_domain_strain()
+            hp_lal = waveform_obj._lal_ht_plus
+            hc_lal = waveform_obj._lal_ht_cross
+
+            # Old
+            #delta_t = 0.5/frequencyvector[-1,0] # Sufficient to sample the highest frequency at Nyquist limit
+            #f_low = frequencyvector[0,0]
+            #f_max = frequencyvector[-1,0]
+            #delta_f = frequencyvector[1,0] - f_low
+            #if not time_domain_sph_modes:
+            #    hphc, hp_lal, hc_lal = td_lal_caller(waveform[7:], delta_t, f_low, f_max, delta_f, **parameters)
+            #else:
+            #    hphc, hp_lal, hc_lal = sph_lal_caller(waveform[7:], delta_t, f_low, f_max, delta_f, **parameters)
+            #if fft_lal_timeseries:
+            #    hptilde_lal = gw.fishermatrix.fft_lal_timeseries(hp_lal, delta_f)
+            #    hctilde_lal = gw.fishermatrix.fft_lal_timeseries(hc_lal, delta_f)
+
+            #    # ======== This is copied over from lal_caller ======== #
+
+            #    # Frequency array starts from zero, so we need to mask some frequencies
+            #    idx_low = int(f_low / delta_f)
+            #    idx_high = int(f_max / delta_f)
+            #    h_cross_out = hctilde_lal.data.data[idx_low:idx_high+1]
+            #    h_plus_out = hptilde_lal.data.data[idx_low:idx_high+1]
+       
+            #    frequencyvector = np.squeeze(frequencyvector)
+ 
+            #    # BORIS: weird Bilby correction
+            #    dt = 1. / delta_f + (hptilde_lal.epoch.gpsSeconds + hptilde_lal.epoch.gpsNanoSeconds * 1e-9)
+            #    h_plus_out *= np.exp(
+            #        -1j * 2 * np.pi * dt * frequencyvector)
+            #    h_cross_out *= np.exp(
+            #        -1j * 2 * np.pi * dt * frequencyvector)
+        
+            #    #plt.figure()
+            #    #plt.plot(ifft(h_plus.data.data,0.0625))
+            #    ##plt.plot(ifft(hc.T,0.0625)[0,:])
+            #    #plt.savefig('/Users/boris.goncharov/projects/out_gwmem_2022/td_phenom_2.png')
+            #    #plt.close()
+            #
+            #    # Add initial 2pi*f*tc - phic - pi/4 to phase
+            #    phi_in = np.exp(1.j*(2*frequencyvector*np.pi*parameters.geocent_time))
+            #
+            #    hp = phi_in * np.conjugate(h_plus_out)  # it's already multiplied by the phase
+            #    hc = phi_in * np.conjugate(h_cross_out)
+            #
+            #    hp = hp[:, np.newaxis]
+            #    hc = hc[:, np.newaxis]
+            #    #polarizations = np.hstack((hp, hc)) # original
+            #    polarizations = np.hstack((hp, -hc)) # modified
+            #    print('Warning: inverting hx in LAL caller')
+
+            #    hphc = polarizations
+
+            #    # ================================================== #
+
         else:
-            hphc = lal_caller(waveform[7:], frequencyvector, **parameters)
+            # Old
+            #hphc = lal_caller(waveform[7:], frequencyvector, **parameters)
+            # New
+            data_params = {'frequencyvector': frequencyvector}
+            waveform_obj = LALFD_Waveform(waveform[7:], parameters, data_params)
+            hphc = waveform_obj()
     elif waveform[0:6] == 'nrsur_':
         hphc = nrsur_caller(waveform[6:], frequencyvector, **parameters)
     else:
@@ -77,7 +143,7 @@ def hphc_amplitudes(waveform, parameters, frequencyvector, time_domain=False, pl
 
     if time_domain:
         # Here it is not really t_of_f, it is just a time vector
-        t_of_f = np.arange(0,hphc.shape[0]*delta_t,delta_t)
+        t_of_f = np.arange(0,hphc.shape[0]*waveform_obj.delta_t,waveform_obj.delta_t)
         t_of_f = np.expand_dims(t_of_f, axis=1)
     else:
         t_of_f = t_of_f_PN(parameters, frequencyvector)
@@ -190,7 +256,7 @@ def nrsur_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance,
       #raise ValueError('Must be mass_1 >= mass_2')
     qq = mass_1/mass_2                # q = m1/m2 >= 1
     M_tot = (mass_1 + mass_2)#*(1+redshift)
-    f_ref = 10.  # BORIS: was 50 for LAL # Reference frequecny in Hz. The spins are assumed to specified at this frequency
+    f_ref = frequencyvector[0,0]  # BORIS: was 50 for LAL # Reference frequecny in Hz. The spins are assumed to specified at this frequency
     iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
         theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
         phi_12=phi_12, a_1=a_1, a_2=a_2, mass_1=mass_1, mass_2=mass_2,
@@ -245,7 +311,27 @@ def nrsur_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance,
 
         #hh_tilde = hh_tilde_re + 1j * hh_tilde_im
 
-        return np.hstack((hh_tilde_plus_re + 1j*hh_tilde_plus_im, hh_tilde_cross_re + 1j*hh_tilde_cross_im))
+        h_plus_out = hh_tilde_plus_re + 1j*hh_tilde_plus_im
+        h_cross_out = hh_tilde_cross_re + 1j*hh_tilde_cross_im
+
+        # BORIS: weird Bilby correction: this is 100% needed to match complex phase with frequency-domain waveforms.
+        # Not doing so introduces extremely low mass errors!
+        delta_f = frequencyvector[1,0] - frequencyvector[0,0]
+        dt = 1. / delta_f #+ geocent_time
+        h_plus_out *= np.exp(-1j * 2 * np.pi * dt * frequencyvector)
+        h_cross_out *= np.exp(-1j * 2 * np.pi * dt * frequencyvector)
+
+        # Add initial 2pi*f*tc - phic - pi/4 to phase
+        phi_in = np.exp(1.j*(2*frequencyvector*np.pi*geocent_time))
+
+        hp = phi_in * np.conjugate(h_plus_out)  # it's already multiplied by the phase
+        hc = phi_in * np.conjugate(h_cross_out)
+
+        polarizations = np.hstack((hp, hc)) # original, here in NRSur caller we have already inverted hc
+        #polarizations = np.hstack((hp, -hc)) # modified
+        print('Warning: inverting hx in LAL caller')
+
+        return np.hstack((h_plus_out, h_cross_out))
 
     else:
         raise NotImplementedError('Frequency-domain surrogate waveforms are not implemented yet.')
@@ -255,6 +341,297 @@ def nrsur_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance,
 
 #def bilby_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
 #           a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, lambda_1=0, lambda_2=0, **kwargs):
+
+class Waveform(object):
+    def __init__(self, name, gw_params, data_params):
+        self.name = name
+        self._set_default_gw_params()
+        self.gw_params.update(gw_params)
+        self.data_params = data_params
+
+        if 'frequencyvector' in data_params:
+            self.frequencyvector = data_params['frequencyvector']
+        else:
+            self.frequencyvector = None
+
+        if 'delta_t' in data_params:
+            self.delta_t = delta_t
+        else:
+            # Set sampling frequency to Nyquist frequency
+            self.delta_t = 0.5/self.f_max
+
+    def __call__(self):
+        """ Return frequency-domain polarization modes """
+        return self.frequency_domain_strain()
+
+    def frequency_domain_strain(self):
+        return None
+
+    def _set_default_gw_params(self):
+        self.gw_params = {
+            'mass_1': 0., 'mass_2': 0., 'luminosity_distance': 0., 
+            'redshift': 0., 'theta_jn': 0., 'phase': 0., 'geocent_time': 0., 
+            'a_1': 0., 'tilt_1': 0., 'phi_12': 0., 'a_2': 0., 'tilt_2': 0., 
+            'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0.
+        }
+
+    @property
+    def frequencyvector(self):
+        return self._frequencyvector
+
+    @frequencyvector.setter
+    def frequencyvector(self, new_frequencyvector):
+        self._frequencyvector = np.squeeze(new_frequencyvector)
+
+    @property
+    def delta_t(self):
+        return self._delta_t
+
+    @delta_t.setter
+    def delta_t(self, new_delta_t):
+        self._delta_t = new_delta_t
+
+    @property
+    def f_ref(self):
+        """ Setting reference frequency to minimum frequency """
+        return self._frequencyvector[0]
+
+    @property
+    def f_min(self):
+        return self._frequencyvector[0]
+
+    @property
+    def f_max(self):
+        return self._frequencyvector[-1]
+
+    @property
+    def delta_f(self):
+        return self._frequencyvector[1] - self._frequencyvector[0]
+
+class LALFD_Waveform(Waveform):
+    """ Calls waveforms from LAL in frequency domain """
+    def __init__(self, name, gw_params, data_params):
+        super(LALFD_Waveform, self).__init__(name, gw_params, data_params)
+        self._params_lal = lal.CreateDict()
+        self._approx_lal = lalsim.GetApproximantFromString(self.name)
+        self._init_lambda()
+        self._init_lal_gw_parameters()
+        self._setup_lal_caller_args()
+
+    @property
+    def _gw_params_for_spin_conversion(self):
+        return ['theta_jn', 'phi_jl', 'tilt_1', 'tilt_2',
+                'phi_12', 'a_1', 'a_2', 'mass_1', 'mass_2', 'phase']
+
+    def _init_lambda(self):
+        if self.gw_params['lambda_1'] != 0:
+            from lalsimulation import SimInspiralWaveformParamsInsertTidalLambda1
+            SimInspiralWaveformParamsInsertTidalLambda1(self._params_lal, float(self.gw_params['lambda_1']))
+        if self.gw_params['lambda_2'] != 0:
+            from lalsimulation import SimInspiralWaveformParamsInsertTidalLambda2
+            SimInspiralWaveformParamsInsertTidalLambda2(self._params_lal, float(self.gw_params['lambda_2']))
+
+    def _init_lal_gw_parameters(self):
+        gwfish_input_params = {kk: self.gw_params[kk] for kk in self._gw_params_for_spin_conversion}
+        self.gw_params['iota'], self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'], self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'] = bilby_to_lalsimulation_spins(reference_frequency=self.f_ref, **gwfish_input_params)
+
+    def _setup_lal_caller_args(self):
+        if lalsim.SimInspiralImplementedFDApproximants(self._approx_lal):
+            self._lal_frequency_array = CreateREAL8Vector(len(self.frequencyvector))
+            self._lal_frequency_array.data = self.frequencyvector
+            self._waveform_postprocessing = self._hf_postproccessing_SimInspiralCFDWS
+            self._lalsim_caller = lalsim.SimInspiralChooseFDWaveformSequence
+            self._lalsim_args = [
+                self.gw_params['phase'],
+                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'], 
+                self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
+                self.f_ref,  # reference frequency
+                self.gw_params['luminosity_distance'] * lal.PC_SI * 1e6,  # in [m]
+                self.gw_params['iota'],
+                self._params_lal,
+                self._approx_lal,
+                self._lal_frequency_array
+            ]
+        else:
+            self._waveform_postprocessing = self._hf_postproccessing_SimInspiralFD
+            self._lalsim_caller = lalsim.SimInspiralFD
+            self._lalsim_args = [
+                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'], 
+                self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
+                self.gw_params['luminosity_distance'] * lal.PC_SI * 1e6,  # in [m]
+                self.gw_params['iota'],
+                0, # phiRef, the phase at f_ref or peak amplitude (depends on waveform)
+                0, # longAscNodes, longitude of ascending nodes
+                0, # eccentricity
+                0, # meanPerAno, mean anomaly at reference epoch
+                self.delta_f,
+                self.f_min,
+                self.f_max,
+                self.f_ref,
+                self._params_lal,
+                self._approx_lal
+            ]
+            logging.warning("{} does not allow arbitrary frequency vectors "
+                            "in LALSimulation, using standard frequency vector."
+                            "Try calling this waveform outside lalsim.".format(self.name))
+            logging.warning("Parameters phiRef, longAscNodes, eccentricity, meanPerAno"
+                            "are set to zero.")
+
+    def _lal_fd_strain_adjust_frequency_range(self):
+        """ Frequency array starts from zero, so we need to mask some frequencies """
+        idx_low = int(self.f_min / self.delta_f)
+        idx_high = int(self.f_max / self.delta_f)
+        self.hf_cross_out = self._lal_hf_cross.data.data[idx_low:idx_high+1]
+        self.hf_plus_out = self._lal_hf_plus.data.data[idx_low:idx_high+1]
+
+    def _lal_fd_phase_correction_by_epoch_and_df(self):
+        """ This correction is also done in Bilby after calling SimInspiralFD """
+        # BORIS: weird Bilby correction
+        dt = 1. / self.delta_f + (self._lal_hf_plus.epoch.gpsSeconds +
+                                  self._lal_hf_plus.epoch.gpsNanoSeconds * 1e-9)
+        self.hf_plus_out *= np.exp(
+            -1j * 2 * np.pi * dt * self.frequencyvector)
+        self.hf_cross_out *= np.exp(
+            -1j * 2 * np.pi * dt * self.frequencyvector)
+
+    def _hf_postproccessing_SimInspiralFD(self):
+        self._lal_fd_strain_adjust_frequency_range()
+        self._lal_fd_phase_correction_by_epoch_and_df()
+
+    def _hf_postproccessing_SimInspiralCFDWS(self):
+        self.hf_plus_out, self.hf_cross_out = self._lal_hf_plus.data.data, self._lal_hf_cross.data.data
+
+    def _fd_phase_correction_geocent_time(self):
+        """ Add initial 2pi*f*tc - phic - pi/4 to phase """
+        phi_in = np.exp(1.j*(2*self.frequencyvector*np.pi*self.gw_params['geocent_time']))
+
+        hfp = phi_in * np.conjugate(self.hf_plus_out)  # it's already multiplied by the phase
+        hfc = phi_in * np.conjugate(self.hf_cross_out)
+
+        return hfp, hfc
+
+    def _fd_gwfish_output_format(self, hfp, hfc):
+
+        hfp = hfp[:, np.newaxis]
+        hfc = hfc[:, np.newaxis]
+
+        #polarizations = np.hstack((hfp, hfc)) # original
+        polarizations = np.hstack((hfp, -hfc)) # modified
+        print('Warning: inverting hx in LAL caller')
+
+        return polarizations
+
+    def frequency_domain_strain(self):
+        self._lal_hf_plus, self._lal_hf_cross = self._lalsim_caller(*self._lalsim_args)
+        self._waveform_postprocessing()
+
+        hfp, hfc = self._fd_phase_correction_geocent_time()
+        polarizations = self._fd_gwfish_output_format(hfp, hfc)
+        
+        return polarizations
+
+class LALTD_Waveform(LALFD_Waveform):
+    """ Calls waveforms from LAL in time domain """
+    def __init__(self, name, gw_params, data_params):
+        super(LALTD_Waveform, self).__init__(name, gw_params, data_params)
+        self.ht_plus_out = None
+        self.ht_cross_out = None
+
+    def _setup_lal_caller_args(self):
+        if lalsim.SimInspiralImplementedTDApproximants(self._approx_lal):
+            self._waveform_postprocessing = self._ht_postproccessing_SimInspiralTD    
+            self._lalsim_caller = lalsim.SimInspiralTD
+            self._lalsim_args = [
+                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'],
+                self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
+                self.gw_params['luminosity_distance'] * lal.PC_SI * 1e6,  # in [m]
+                self.gw_params['iota'],
+                0, # phiRef, the phase at f_ref or peak amplitude (depends on waveform)
+                0, # longAscNodes, longitude of ascending nodes
+                0, # eccentricity
+                0, # meanPerAno, mean anomaly at reference epoch
+                self.delta_t,
+                self.f_min,
+                self.f_ref,
+                self._params_lal,
+                self._approx_lal
+            ]
+            logging.warning("Parameters phiRef, longAscNodes, eccentricity, meanPerAno"
+                            "are set to zero.")
+        else:
+            raise ValueError('Waveform approximant is not implemented in time-domain in LALSimulation.')
+
+    def calculate_time_domain_strain(self):
+        # Note, waveform below is already conditioned (tapered)
+        self._lal_ht_plus, self._lal_ht_cross = self._lalsim_caller(*self._lalsim_args)
+        self._waveform_postprocessing()
+
+    def time_domain_strain(self):
+        if self.ht_plus_out is None:
+            self.calculate_time_domain_strain()
+    
+        htp = self.ht_plus_out[:, np.newaxis]
+        htc = self.ht_cross_out[:, np.newaxis]
+
+        #polarizations = np.hstack((htp, htc)) # original
+        polarizations = np.hstack((htp, -htc)) # modified
+        print('Warning: inverting hx in LAL caller')
+    
+        return polarizations
+
+    def _ht_postproccessing_SimInspiralTD(self):
+    
+            # This is done in LAL prior to a Fourier transform in SimInspiralFD, after SimInspiralTD is called.
+            # Step 0 (even before SimInspiralTD). Set up a Nyqist frequency to be equal to maximum frequency
+            # https://git.ligo.org/lscsoft/lalsuite/-/blob/master/lalsimulation/lib/LALSimInspiral.c#L2895
+            f_nyquist = self.f_max
+            if int(np.log2(self.f_max/self.delta_f)) == np.log2(self.f_max/self.delta_f):
+                logging.warning('f_max/deltaF is not a power of two: changing f_max.')
+                f_nyquist = 2**(np.floor(np.log2(f_nyquist/self.delta_f))-np.log2(1/self.delta_f))
+                if self.f_max != f_nyquist:
+                    raise ValueError('f_nyquist should be equal to f_max')
+
+            # Step 1. Setting variable chirplen, and also frequency resolution (latter, if not set already)
+            # Waveforms will be resized to chirplen. So, zeros added at the beginning (zero-padded) if
+            # chirplen > h_plus.data.length, otherwise truncated
+            # https://git.ligo.org/lscsoft/lalsuite/-/blob/master/lalsimulation/lib/LALSimInspiral.c#L3023
+            if self.delta_f==0.: # This would never be the case, if frequency array is set up
+                # round length of time domain signal to next power of two
+                pass
+            else:
+                chirplen = 2 * f_nyquist / self.delta_f
+                if chirplen < self._lal_ht_plus.data.length: # This number should be h_plus.data.length
+                    logging.warning('Specified frequency interval of %g Hz is too large for a chirp'+\
+                                    'of duration %g s with Nyquist frequency %g Hz.'+\
+                                    'The inspiral will be truncated.')
+
+            # Step 3. Resizing the time-domain waveform to match some criteria above
+            lal.ResizeREAL8TimeSeries(self._lal_ht_plus, 
+                                      int(self._lal_ht_plus.data.length - chirplen), int(chirplen))
+            lal.ResizeREAL8TimeSeries(self._lal_ht_cross, 
+                                      int(self._lal_ht_cross.data.length - chirplen), int(chirplen))
+    
+            self.ht_plus_out, self.ht_cross_out = self._lal_ht_plus.data.data, self._lal_ht_cross.data.data
+
+
+    def frequency_domain_strain(self):
+        if self.ht_plus_out is None:
+            self.calculate_time_domain_strain()
+        self._lal_hf_plus = gw.fishermatrix.fft_lal_timeseries(self._lal_ht_plus, self.delta_f)
+        self._lal_hf_cross = gw.fishermatrix.fft_lal_timeseries(self._lal_ht_cross, self.delta_f)
+
+        self._hf_postproccessing_SimInspiralFD()
+
+        hfp, hfc = self._fd_phase_correction_geocent_time()
+        polarizations = self._fd_gwfish_output_format(hfp, hfc)
+
+        return polarizations
 
 # Original version
 def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
@@ -270,7 +647,7 @@ def lal_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, r
         SimInspiralWaveformParamsInsertTidalLambda2(params_lal, float(lambda_2))
 
     frequencyvector = frequencyvector.copy().flatten()
-    f_ref = 10. # BORIS: was 50
+    f_ref = frequencyvector[0] # BORIS: was 50
 
     iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
         theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
@@ -384,7 +761,7 @@ def td_lal_caller(waveform, delta_t, f_min, f_max, delta_f, mass_1, mass_2, lumi
         SimInspiralWaveformParamsInsertTidalLambda2(params_lal, float(lambda_2))
 
     #frequencyvector = frequencyvector.copy().flatten()
-    f_ref = 10. # BORIS: was 50
+    f_ref = f_min # BORIS: was 50
 
     iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
         theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
@@ -452,8 +829,8 @@ def td_lal_caller(waveform, delta_t, f_min, f_max, delta_f, mass_1, mass_2, lumi
     # This part is not complete
     # Add initial 2pi*f*tc - phic - pi/4 to phase
     #phi_in = np.exp(1.j*(2*frequencyvector*np.pi*geocent_time))
-    hp = np.conjugate(h_plus_out) # phi_in * np.conjugate(h_plus_out)  # it's already multiplied by the phase
-    hc = np.conjugate(h_cross_out) # phi_in * np.conjugate(h_cross_out)
+    hp = h_plus_out # np.conjugate(h_plus_out) # phi_in * np.conjugate(h_plus_out)  # it's already multiplied by the phase
+    hc = h_cross_out # np.conjugate(h_cross_out) # phi_in * np.conjugate(h_cross_out)
 
     hp = hp[:, np.newaxis]
     hc = hc[:, np.newaxis]
