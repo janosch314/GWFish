@@ -29,29 +29,7 @@ from bilby.gw.conversion import chirp_mass_and_mass_ratio_to_total_mass, total_m
 
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
-
-# BORIS: only for FFT
-import GWFish.modules as gw
-
-def fft(hh, dt, t_start, t_end, roll_off = 0.2):
-    """
-    Perform FFT to convert the data from time domain to frequency domain. 
-    Roll-off is specified for the Tukey window in [s].
-    """
-    alpha = 2 * roll_off / (t_end - t_start)
-    window = tukey(len(hh), alpha=alpha)
-    hh_tilde = np.fft.rfft(hh * window)
-    hh_tilde /= 1/dt
-    ff = np.linspace(0, (1/dt) / 2, len(hh_tilde))
-    # Future: here, one can check if frequency resolution and minimum frequency requested are
-    # lower than waveform time span. Resolution freq: warning. Minimum freq: ValueError.
-    return hh_tilde, ff
-
-def ifft(hh_tilde, df):
-    """
-    Perform inverse FFT to convert the data from frequency domain to time domain.
-    """
-    return np.fft.ifft(hh_tilde) * df
+import GWFish.modules.fft as fft
 
 def hphc_amplitudes(waveform, parameters, frequencyvector, time_domain=False, plot=None, preserve_lal_timeseries=False, fft_lal_timeseries=False, time_domain_sph_modes=False):
     parameters = parameters.copy()
@@ -75,63 +53,7 @@ def hphc_amplitudes(waveform, parameters, frequencyvector, time_domain=False, pl
             hphc = waveform_obj.frequency_domain_strain()
             hp_lal = waveform_obj._lal_ht_plus
             hc_lal = waveform_obj._lal_ht_cross
-
-            # Old
-            #delta_t = 0.5/frequencyvector[-1,0] # Sufficient to sample the highest frequency at Nyquist limit
-            #f_low = frequencyvector[0,0]
-            #f_max = frequencyvector[-1,0]
-            #delta_f = frequencyvector[1,0] - f_low
-            #if not time_domain_sph_modes:
-            #    hphc, hp_lal, hc_lal = td_lal_caller(waveform[7:], delta_t, f_low, f_max, delta_f, **parameters)
-            #else:
-            #    hphc, hp_lal, hc_lal = sph_lal_caller(waveform[7:], delta_t, f_low, f_max, delta_f, **parameters)
-            #if fft_lal_timeseries:
-            #    hptilde_lal = gw.fishermatrix.fft_lal_timeseries(hp_lal, delta_f)
-            #    hctilde_lal = gw.fishermatrix.fft_lal_timeseries(hc_lal, delta_f)
-
-            #    # ======== This is copied over from lal_caller ======== #
-
-            #    # Frequency array starts from zero, so we need to mask some frequencies
-            #    idx_low = int(f_low / delta_f)
-            #    idx_high = int(f_max / delta_f)
-            #    h_cross_out = hctilde_lal.data.data[idx_low:idx_high+1]
-            #    h_plus_out = hptilde_lal.data.data[idx_low:idx_high+1]
-       
-            #    frequencyvector = np.squeeze(frequencyvector)
- 
-            #    # BORIS: weird Bilby correction
-            #    dt = 1. / delta_f + (hptilde_lal.epoch.gpsSeconds + hptilde_lal.epoch.gpsNanoSeconds * 1e-9)
-            #    h_plus_out *= np.exp(
-            #        -1j * 2 * np.pi * dt * frequencyvector)
-            #    h_cross_out *= np.exp(
-            #        -1j * 2 * np.pi * dt * frequencyvector)
-        
-            #    #plt.figure()
-            #    #plt.plot(ifft(h_plus.data.data,0.0625))
-            #    ##plt.plot(ifft(hc.T,0.0625)[0,:])
-            #    #plt.savefig('/Users/boris.goncharov/projects/out_gwmem_2022/td_phenom_2.png')
-            #    #plt.close()
-            #
-            #    # Add initial 2pi*f*tc - phic - pi/4 to phase
-            #    phi_in = np.exp(1.j*(2*frequencyvector*np.pi*parameters.geocent_time))
-            #
-            #    hp = phi_in * np.conjugate(h_plus_out)  # it's already multiplied by the phase
-            #    hc = phi_in * np.conjugate(h_cross_out)
-            #
-            #    hp = hp[:, np.newaxis]
-            #    hc = hc[:, np.newaxis]
-            #    #polarizations = np.hstack((hp, hc)) # original
-            #    polarizations = np.hstack((hp, -hc)) # modified
-            #    print('Warning: inverting hx in LAL caller')
-
-            #    hphc = polarizations
-
-            #    # ================================================== #
-
         else:
-            # Old
-            #hphc = lal_caller(waveform[7:], frequencyvector, **parameters)
-            # New
             data_params = {'frequencyvector': frequencyvector}
             waveform_obj = LALFD_Waveform(waveform[7:], parameters, data_params)
             hphc = waveform_obj()
@@ -621,10 +543,14 @@ class LALTD_Waveform(LALFD_Waveform):
 
 
     def frequency_domain_strain(self):
+        """
+        Note, time-domain data is previously conditioned (tapered) in lalsim.SimInspiralTD,
+        and resized in waveform.td_lal_caller(), as in lalsim.SimInspiralFD.
+        """
         if self.ht_plus_out is None:
             self.calculate_time_domain_strain()
-        self._lal_hf_plus = gw.fishermatrix.fft_lal_timeseries(self._lal_ht_plus, self.delta_f)
-        self._lal_hf_cross = gw.fishermatrix.fft_lal_timeseries(self._lal_ht_cross, self.delta_f)
+        self._lal_hf_plus = fft.fft_lal_timeseries(self._lal_ht_plus, self.delta_f)
+        self._lal_hf_cross = fft.fft_lal_timeseries(self._lal_ht_cross, self.delta_f)
 
         self._hf_postproccessing_SimInspiralFD()
 
