@@ -4,8 +4,6 @@ import GWFish.modules.detection as det
 import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
 
-import lal
-
 import copy
 
 def invertSVD(matrix):
