@@ -11,18 +11,7 @@ try:
     from lal import CreateREAL8Vector
 except ModuleNotFoundError as err:
     uselal = err
-    print('LAL package is not installed. Only GWFish waveforms available.')
-
-try:
-    import gwsurrogate
-    from scipy.signal.windows import tukey
-    from scipy import interpolate
-    #sur = gwsurrogate.LoadSurrogate('NRSur7dq4')
-    sur = gwsurrogate.LoadSurrogate('NRHybSur3dq8')
-
-    import copy # only temporary
-except ModuleNotFoundError as err_gwsur:
-    print('Module gwsurrogate not found. Surrogate waveforms are not available.')
+    logging.warning('LAL package is not installed. Only GWFish waveforms available.')
 
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
@@ -39,15 +28,11 @@ def hphc_amplitudes(waveform, parameters, frequencyvector, time_domain=False, pl
         if time_domain:
             data_params = {'frequencyvector': frequencyvector}
             waveform_obj = LALTD_Waveform(waveform[7:], parameters, data_params)
-            hphc = waveform_obj.frequency_domain_strain()
-            hp_lal = waveform_obj._lal_ht_plus
-            hc_lal = waveform_obj._lal_ht_cross
+            hphc = waveform_obj()
         else:
             data_params = {'frequencyvector': frequencyvector}
             waveform_obj = LALFD_Waveform(waveform[7:], parameters, data_params)
             hphc = waveform_obj()
-    elif waveform[0:6] == 'nrsur_':
-        hphc = nrsur_caller(waveform[6:], frequencyvector, **parameters)
     else:
         waveform_error = '{} is not a valid waveform. '.format(str(waveform)) + \
                          'Valid options are gwfish_TaylorF2, gwfish_IMRPhenomD, lalsim_XXX.'
@@ -148,105 +133,6 @@ def t_of_f_PN(parameters, frequencyvector):
 
     return t_of_f+parameters['geocent_time']
 
-def nrsur_caller(waveform, frequencyvector, mass_1, mass_2, luminosity_distance, redshift, theta_jn, phase, geocent_time,
-           a_1=0, tilt_1=0, phi_12=0, a_2=0, tilt_2=0, phi_jl=0, lambda_1=0, lambda_2=0, **kwargs):
-    """
-    kwargs:
-    - fft_roll_off: roll-off for the FFT window in seconds. Zero-padding data will be added after the end of the waveform, 
-    so that windowing does not apply to the merger part of the signal.
-    """
-
-    # Conversion
-    if mass_1 < mass_2:
-      mass_x = copy.copy(mass_1)
-      mass_1 = copy.copy(mass_2)
-      mass_2 = mass_x
-      # Above quick fix
-      #raise ValueError('Must be mass_1 >= mass_2')
-    qq = mass_1/mass_2                # q = m1/m2 >= 1
-    M_tot = (mass_1 + mass_2)#*(1+redshift)
-    f_ref = frequencyvector[0,0]  # BORIS: was 50 for LAL # Reference frequecny in Hz. The spins are assumed to specified at this frequency
-    iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z = bilby_to_lalsimulation_spins(
-        theta_jn=theta_jn, phi_jl=phi_jl, tilt_1=tilt_1, tilt_2=tilt_2,
-        phi_12=phi_12, a_1=a_1, a_2=a_2, mass_1=mass_1, mass_2=mass_2,
-        reference_frequency=f_ref, phase=phase)
-
-    chiA = [spin_1x, spin_1y, spin_1z]          # dimensionless spin of the heavier BH 
-    chiB = [spin_2x, spin_2y, spin_2z]         # dimensionless spin of the lighter BH
-
-    #f_low = 0                        # initial frequency, f_low=0 returns the full surrogate
-
-    ellMax = 4                       # Highest ell index for modes to use
-
-    # dyn stands for dynamics, do dyn.keys() to see contents
-    if sur._domain_type == 'Time':
-        dt = 1./4096                     # step size in seconds
-
-        # f_low=np.min(frequencyvector) (2 Hz) yields an error related to omega for NRSur2, but not for NRSur4
-        # For NRHybSur3dq8, any minimum frequency works (including 2 Hz for ET)
-        tt, hh, dyn = sur(qq, chiA, chiB, dt=dt, f_low=np.min(frequencyvector), f_ref=f_ref, ellMax=ellMax, M=M_tot, dist_mpc=luminosity_distance,
-                          inclination=iota, phi_ref=phase, units='mks')
-        # For NRSur7dq4, NRSur7dq2, 2 Hz does not work (possibly, waveforms are too short)
-        #tt, hh, dyn = sur(qq, chiA, chiB, dt=dt, f_low=2.0, f_ref=f_ref, ellMax=ellMax, M=M_tot, dist_mpc=luminosity_distance,
-        #                  inclination=iota, phi_ref=phase, units='mks')
-
-        # Zero-padding data at the merger, not to erase a merger with a window
-        fft_roll_off = 0.2
-        zeropad_tt = np.arange(tt[-1] + dt, tt[-1] + dt + fft_roll_off, dt)
-        zeropad_hh = np.repeat(0, len(zeropad_tt))
-        tt = np.append(tt, zeropad_tt)
-        hh = np.append(hh, zeropad_hh)
-
-        # Fourier transforming time-domain strain
-        #hh_tilde, ff = fft(hh, dt, tt[0], tt[-1], roll_off=fft_roll_off)
-        # Minus sign following equations 2.5 and 2.6 from IMRPhenomXPHM paper,
-        # so that im matches exactly h_cross
-        hh_plus_tilde, ff = fft(np.real(hh), dt, tt[0], tt[-1], roll_off=fft_roll_off)
-        hh_cross_tilde, ff = fft(-np.imag(hh), dt, tt[0], tt[-1], roll_off=fft_roll_off) # CORRECT
-        #hh_cross_tilde, ff = fft(np.imag(hh), dt, tt[0], tt[-1], roll_off=fft_roll_off) # INCORRECT, TO FOLLOW GWFISH
-        #print('Warning! Check hx convention')
-
-        # Matching user-defined frequencies
-        #tck_re = interpolate.splrep(ff, np.real(hh_tilde), s=0)
-        #tck_im = interpolate.splrep(ff, np.imag(hh_tilde), s=0)
-        tck_plus_re = interpolate.splrep(ff, np.real(hh_plus_tilde), s=0)
-        tck_plus_im = interpolate.splrep(ff, np.imag(hh_plus_tilde), s=0)
-        tck_cross_re = interpolate.splrep(ff, np.real(hh_cross_tilde), s=0)
-        tck_cross_im = interpolate.splrep(ff, np.imag(hh_cross_tilde), s=0)
-        hh_tilde_plus_re = interpolate.splev(frequencyvector, tck_plus_re, der=0)
-        hh_tilde_plus_im = interpolate.splev(frequencyvector, tck_plus_im, der=0)
-        hh_tilde_cross_re = interpolate.splev(frequencyvector, tck_cross_re, der=0)
-        hh_tilde_cross_im = interpolate.splev(frequencyvector, tck_cross_im, der=0)
-
-        #hh_tilde = hh_tilde_re + 1j * hh_tilde_im
-
-        h_plus_out = hh_tilde_plus_re + 1j*hh_tilde_plus_im
-        h_cross_out = hh_tilde_cross_re + 1j*hh_tilde_cross_im
-
-        # BORIS: weird Bilby correction: this is 100% needed to match complex phase with frequency-domain waveforms.
-        # Not doing so introduces extremely low mass errors!
-        delta_f = frequencyvector[1,0] - frequencyvector[0,0]
-        dt = 1. / delta_f #+ geocent_time
-        h_plus_out *= np.exp(-1j * 2 * np.pi * dt * frequencyvector)
-        h_cross_out *= np.exp(-1j * 2 * np.pi * dt * frequencyvector)
-
-        # Add initial 2pi*f*tc - phic - pi/4 to phase
-        phi_in = np.exp(1.j*(2*frequencyvector*np.pi*geocent_time))
-
-        hp = phi_in * np.conjugate(h_plus_out)  # it's already multiplied by the phase
-        hc = phi_in * np.conjugate(h_cross_out)
-
-        polarizations = np.hstack((hp, hc)) # original, here in NRSur caller we have already inverted hc
-        #polarizations = np.hstack((hp, -hc)) # modified
-        print('Warning: inverting hx in LAL caller')
-
-        return np.hstack((h_plus_out, h_cross_out))
-
-    else:
-        raise NotImplementedError('Frequency-domain surrogate waveforms are not implemented yet.')
-        # The code below should work, but not tested
-        tt, hh, dyn = sur(q, chiA, chiB, freqs=frequencyvector, f_ref=f_ref, ellMax=ellMax, M=M_tot, dist_mpc=luminosity_distance,
-                          inclination=iota, phi_ref=phase, units='mks')
 
 class Waveform(object):
     def __init__(self, name, gw_params, data_params):
@@ -387,12 +273,15 @@ class LALFD_Waveform(Waveform):
             logging.warning("Parameters phiRef, longAscNodes, eccentricity, meanPerAno"
                             "are set to zero.")
 
+    def _update_frequency_range_indices(self):
+        self.idx_low = int(self.f_min / self.delta_f)
+        self.idx_high = int(self.f_max / self.delta_f)
+
     def _lal_fd_strain_adjust_frequency_range(self):
         """ Frequency array starts from zero, so we need to mask some frequencies """
-        idx_low = int(self.f_min / self.delta_f)
-        idx_high = int(self.f_max / self.delta_f)
-        self.hf_cross_out = self._lal_hf_cross.data.data[idx_low:idx_high+1]
-        self.hf_plus_out = self._lal_hf_plus.data.data[idx_low:idx_high+1]
+        self._update_frequency_range_indices()
+        self.hf_cross_out = self._lal_hf_cross.data.data[self.idx_low:self.idx_high+1]
+        self.hf_plus_out = self._lal_hf_plus.data.data[self.idx_low:self.idx_high+1]
 
     def _lal_fd_phase_correction_by_epoch_and_df(self):
         """ This correction is also done in Bilby after calling SimInspiralFD """
@@ -425,8 +314,8 @@ class LALFD_Waveform(Waveform):
         hfp = hfp[:, np.newaxis]
         hfc = hfc[:, np.newaxis]
 
-        #polarizations = np.hstack((hfp, hfc)) # original
-        polarizations = np.hstack((hfp, -hfc)) # modified
+        polarizations = np.hstack((hfp, hfc))
+
         print('Warning: inverting hx in LAL caller')
 
         return polarizations
@@ -485,8 +374,8 @@ class LALTD_Waveform(LALFD_Waveform):
         htp = self.ht_plus_out[:, np.newaxis]
         htc = self.ht_cross_out[:, np.newaxis]
 
-        #polarizations = np.hstack((htp, htc)) # original
-        polarizations = np.hstack((htp, -htc)) # modified
+        polarizations = np.hstack((htp, htc))
+
         print('Warning: inverting hx in LAL caller')
     
         return polarizations
