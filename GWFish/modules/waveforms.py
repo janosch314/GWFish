@@ -111,21 +111,18 @@ def bilby_to_lalsimulation_spins(
     return iota, spin_1x, spin_1y, spin_1z, spin_2x, spin_2y, spin_2z
 
 def t_of_f_PN(parameters, frequencyvector):
-    # t(f) is required to calculate slowly varying antenna pattern as function of instantaneous frequency.
-    # This FD approach follows Marsat/Baker arXiv:1806.10734v1; equation (22) neglecting the phase term, which does not
-    # matter for SNR calculations.
+    """
+    t(f) is required to calculate slowly varying antenna pattern as function 
+    of instantaneous frequency. This FD approach follows Marsat/Baker 
+    arXiv:1806.10734v1; equation (22) neglecting the phase term, which does not
+    matter for SNR calculations.
+    """
 
-    z = parameters['redshift']
-    # BORIS: m1,2 to mu,sigma
-    if 'mass_1' in parameters:
-        M1 = parameters['mass_1'] * (1 + z) * cst.Msol
-        M2 = parameters['mass_2'] * (1 + z) * cst.Msol
+    M1 = parameters['mass_1'] * (1 + parameters['redshift']) * cst.Msol
+    M2 = parameters['mass_2'] * (1 + parameters['redshift']) * cst.Msol
 
-        M = M1 + M2
-        mu = M1 * M2 / M
-    elif 'mass_ratio' in parameters:
-        M = chirp_mass_and_mass_ratio_to_total_mass(parameters.mass_chirp, parameters.mass_ratio)
-        mu = parameters.mass_ratio * M / (1 + parameters.mass_ratio)**2
+    M = M1 + M2
+    mu = M1 * M2 / M
 
     Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
 
@@ -225,7 +222,11 @@ class LALFD_Waveform(Waveform):
 
     def _init_lal_gw_parameters(self):
         gwfish_input_params = {kk: self.gw_params[kk] for kk in self._gw_params_for_spin_conversion}
-        self.gw_params['iota'], self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'], self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'] = bilby_to_lalsimulation_spins(reference_frequency=self.f_ref, **gwfish_input_params)
+        self.gw_params['iota'], self.gw_params['spin_1x'], \
+            self.gw_params['spin_1y'], self.gw_params['spin_1z'], \
+            self.gw_params['spin_2x'], self.gw_params['spin_2y'], \
+            self.gw_params['spin_2z'] = bilby_to_lalsimulation_spins(\
+            reference_frequency=self.f_ref, **gwfish_input_params)
 
     def _setup_lal_caller_args(self):
         if lalsim.SimInspiralImplementedFDApproximants(self._approx_lal):
