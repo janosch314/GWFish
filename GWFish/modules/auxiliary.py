@@ -8,17 +8,8 @@ import GWFish.modules.detection as det
 import GWFish.modules.constants as cst
 
 def fisco(parameters):
-    # BORIS, for m_1,2 to M, q: replaced this part:
-    #M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + parameters['redshift'])
+    M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + parameters['redshift'])
 
-    #return 1 / (np.pi) * cst.c ** 3 / (cst.G * M) / 6 ** 1.5  # frequency of innermost stable circular orbit
-    if 'mass_1' in parameters:
-        M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + parameters['redshift'])
-    elif 'mass_total' in parameters:
-        M = parameters['mass_total']
-    elif 'mass_chirp' in parameters:
-        symm_mass_ratio = parameters['mass_1'] * parameters['mass_2'] / (parameters['mass_1'] + parameters['mass_2'])**2
-        M = parameters['mass_chirp'] * symm_mass_ratio**(-3/5)
     return 1 / (np.pi) * cst.c ** 3 / (cst.G * M) / 6 ** 1.5  # frequency of innermost stable circular orbit
 
 def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
