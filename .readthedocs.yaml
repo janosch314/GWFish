@@ -5,9 +5,9 @@ build:
   tools:
     python: "3.9"
 
-python:
-  install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - docs
+build:
+  jobs:
+    post_install:
+      - pip install poetry
+      - poetry config virtualenvs.create false
+      - poetry install --with docs
