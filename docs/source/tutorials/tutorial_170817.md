@@ -161,4 +161,15 @@ this means roughly $68\%$ of the probability mass is expeced to be contained wit
 $1\sigma$ interval, but this number is only $39\%$ for the sky localization, since it 
 corresponds to a bivariate distribution
 (see, for example, [wikipedia](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Geometric_interpretation) on this).
+In order to convert this figure to a 90% interval the conversion factor
+is given by the inverse survival function of the  
+$\chi^2$ distribution with two degrees of freedom evaluated at 10%:
+4.605, so in this case the 90% area would be roughly $0.07 \text{deg}^2\times 4.6 \approx 0.3 \text{deg}^2$.
+This conversion factor (and others like it) can be computed with, 
+for example, the following `scipy` code:
+
+```python
+>>> from scipy.stats import chi2
+>>> print(chi2.isf(1 - 0.90, df=2))
+4.605170185988092
 ```
