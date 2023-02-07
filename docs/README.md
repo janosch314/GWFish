@@ -17,4 +17,4 @@ which will make a PDF file `./build/latex/gwfish.pdf`.
 
 In order for this to work, some packages need to be installed: they 
 are all specified as development dependencies in the `pyproject.toml`
-for GWFish, and can be installed with `poetry install`.
+for GWFish, and can be installed with `poetry install --with docs`.
