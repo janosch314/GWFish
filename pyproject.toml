@@ -48,6 +48,7 @@ docs = ["furo",
 pytest = "^7.0.1"
 tox = "^3.24.5"
 ipython = "^8.4.0"
+pytest-sugar = "^0.9.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
