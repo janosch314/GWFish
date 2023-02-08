@@ -107,6 +107,51 @@ class DetectorComponent:
             plt.savefig('Sensitivity_' + self.name + '.png')
             plt.close()
 
+    def antenna_pattern(self, ra, dec, psi, gps_time):
+
+        theta = np.pi / 2. - dec
+        gmst = GreenwichMeanSiderealTime(gps_time)
+        phi = ra - gmst
+
+        # wave vector components
+        kx = -np.sin(theta) * np.cos(phi)
+        ky = -np.sin(theta) * np.sin(phi)
+        kz = -np.cos(theta)
+
+        # start_time = time.time()
+        # u = np.array([np.cos(theta) * np.cos(phi[:,0]), np.cos(theta) * np.sin(phi[:,0]), -np.sin(theta)*np.ones_like(phi[:,0])])
+        ux = np.cos(theta) * np.cos(phi)
+        uy = np.cos(theta) * np.sin(phi)
+        uz = -np.sin(theta)
+        # v = np.array([-np.sin(phi[:,0]), np.cos(phi[:,0]), np.zeros_like(phi[:,0])])
+        vx = -np.sin(phi)
+        vy = np.cos(phi)
+        vz = 0
+        # print("Creating vectors u,v: %s seconds" % (time.time() - start_time))
+
+        # start_time = time.time()
+        # m = -u * np.sin(psi) - v * np.cos(psi)
+        mx = -ux * np.sin(psi) - vx * np.cos(psi)
+        my = -uy * np.sin(psi) - vy * np.cos(psi)
+        mz = -uz * np.sin(psi) - vz * np.cos(psi)
+        # n = -u * np.cos(psi) + v * np.sin(psi)
+        nx = -ux * np.cos(psi) + vx * np.sin(psi)
+        ny = -uy * np.cos(psi) + vy * np.sin(psi)
+        nz = -uz * np.cos(psi) + vz * np.sin(psi)
+
+        m = np.array([mx, my, mz])
+        n = np.array([nx, ny, nz])
+        
+        e1m = np.dot(self.e1, m)
+        e1n = np.dot(self.e1, n)
+        e2m = np.dot(self.e2, m)
+        e2n = np.dot(self.e2, n)
+        
+        F_plus = .5 * (e1m**2 - e1n**2 - e2m**2 + e2n**2)
+        F_cross = e1m*e1n - e2m*e2n
+        
+        return F_plus, F_cross 
+
 class Detector:
 
     def __init__(self, name='ET', parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG, plot=False):
