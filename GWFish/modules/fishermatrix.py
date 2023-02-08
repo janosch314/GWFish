@@ -37,7 +37,7 @@ def fft_derivs_at_detectors(deriv_list, frequency_vector):
 
     return np.vstack(ffd_deriv_list).T[idx_f_low:idx_f_high+1,:]
 
-class Derivative(object):
+class Derivative:
     """
     Standard GWFish waveform derivative class, based on finite differencing in frequency domain.
     Calculates derivatives with respect to geocent_time, merger phase, and distance analytically.
@@ -88,7 +88,7 @@ class Derivative(object):
     def projection_at_parameters(self, new_projection_data):
         self._projection_at_parameters = new_projection_data
 
-    def at_parameter(self, target_parameter):
+    def with_respect_to(self, target_parameter):
         """
         Return a derivative with respect to target_parameter at the point in 
         parameter space determined by the argument parameters.
@@ -139,17 +139,17 @@ class Derivative(object):
         return derivative
 
     def __call__(self, target_parameter):
-        return self.at_parameter(target_parameter)
+        return self.with_respect_to(target_parameter)
 
-class FisherMatrix(object):
+class FisherMatrix:
     def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, hphc_caller=wf.hphc_amplitudes):
         self.fisher_parameters = fisher_parameters
         self.detector = detector
         self.derivative = Derivative(waveform, parameters, detector, eps=eps, hphc_caller=hphc_caller)
         self.nd = len(fisher_parameters)
+        self.fm = None
 
-    @property
-    def fm(self):
+    def update_fm(self):
         self._fm = np.zeros((self.nd, self.nd))
         for p1 in np.arange(self.nd):
             deriv1_p = self.fisher_parameters[p1]
@@ -160,7 +160,16 @@ class FisherMatrix(object):
                 deriv2 = self.derivative(deriv2_p)
                 self._fm[p1, p2] = np.sum(aux.scalar_product(deriv1, deriv2, self.detector), axis=0)
                 self._fm[p2, p1] = self._fm[p1, p2]
+
+    @property
+    def fm(self):
+        if self._fm is None:
+            self.update_fm()
         return self._fm
+
+    @fm.setter
+    def fm(self, hardcode_fm):
+        self._fm = hardcode_fm
 
     def __call__(self):
         return self.fm
