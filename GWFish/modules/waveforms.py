@@ -131,7 +131,7 @@ def t_of_f_PN(parameters, frequencyvector):
     return t_of_f+parameters['geocent_time']
 
 
-class Waveform(object):
+class Waveform:
     def __init__(self, name, gw_params, data_params):
         self.name = name
         self._set_default_gw_params()
