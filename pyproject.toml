@@ -33,6 +33,14 @@ readthedocs-sphinx-search = "^0.1.2"
 sphinxcontrib-bibtex = "^2.4.2"
 sphinx-toolbox = "^3.1.2"
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.1"
+tox = "^3.24.5"
+ipython = "^8.4.0"
+pytest-sugar = "^0.9.6"
+hypothesis = "^6.67.1"
+
 [tool.poetry.extras]
 waveforms = ["lalsuite"]
 docs = ["furo", 
@@ -42,13 +50,6 @@ docs = ["furo",
         "sphinxcontrib-bibtex", 
         "sphinx-toolbox"
 ]
-
-
-[tool.poetry.dev-dependencies]
-pytest = "^7.0.1"
-tox = "^3.24.5"
-ipython = "^8.4.0"
-pytest-sugar = "^0.9.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
