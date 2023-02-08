@@ -18,13 +18,16 @@ REL_TOLERANCE = 1e-2
 MIN_NORM = 1e-5
 MAX_NORM = 1e5
 
+
 def assert_matrix_pseudo_inverse_correctness(matrix, pseudo_inverse):
-    
+
     product_1 = matrix @ pseudo_inverse @ matrix
     product_2 = pseudo_inverse @ matrix @ pseudo_inverse
-    
+
     assert np.allclose(product_1, matrix, atol=ABS_TOLERANCE, rtol=REL_TOLERANCE)
-    assert np.allclose(product_2, pseudo_inverse, atol=ABS_TOLERANCE, rtol=REL_TOLERANCE)
+    assert np.allclose(
+        product_2, pseudo_inverse, atol=ABS_TOLERANCE, rtol=REL_TOLERANCE
+    )
 
 
 @seed(1)
