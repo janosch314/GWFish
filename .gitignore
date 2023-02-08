@@ -3,3 +3,4 @@
 GWFish.egg-info/
 build/
 dist/
+.hypothesis/
