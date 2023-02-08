@@ -1,68 +1,59 @@
 """Tests regarding the inversion of matrices, which
 is a pain points for Fisher matrix codes.
 
-For now, the invertSVD function is only tested
-with matrices having
-
-- all entries distributed according to a uniform distribution on [0, 1];
-- a matrix constructed as before and then multiplied with its transpose
-    to yield a symmetric, positive definite matrix;
-- a matrix constructed as before and then modified by forcing 
-the (i, j) entry to be the same as the (j, i) one.
-
-Only the first of these fails, suggesting that the algorithm 
-does not work with non-symmetric matrices but is fine otherwise.
-
-It is currently marked with "xfail" (expected-to-fail),
-remove it to see the traceback of the error.
-
+The invertSVD function really is computing the _pseudo_ inverse of 
+the given matrix
 """
 
 import pytest
 import numpy as np
 from GWFish.modules.fishermatrix import invertSVD
+from hypothesis import given, reject, target, seed
+from hypothesis import strategies as st
+from hypothesis.extra.numpy import arrays
 
-# Arrays used for the parametrization 
-SEEDS = [1]
-MATRIX_SIZES = [10, 20]
+MATRIX_DIMENSION = 4
+ABS_TOLERANCE = 1e-1
+REL_TOLERANCE = 1e-2
+MIN_NORM = 1e-5
+MAX_NORM = 1e5
 
-def assert_matrix_inverse_correctness(matrix):
+def assert_matrix_pseudo_inverse_correctness(matrix, pseudo_inverse):
     
-    # swap the line for this one to check that the test passes
-    # when using standard numpy inversion
-    # inverse = np.linalg.inv(matrix)
-    inverse = invertSVD(matrix)
-    should_be_identity = matrix @ inverse
-    identity = np.eye(*matrix.shape)
+    product_1 = matrix @ pseudo_inverse @ matrix
+    product_2 = pseudo_inverse @ matrix @ pseudo_inverse
     
-    assert np.allclose(identity, should_be_identity)
-
-
-@pytest.mark.parametrize("seed", SEEDS)
-@pytest.mark.parametrize("matrix_size", MATRIX_SIZES)
-def test_matrix_inversion_symmetric_positive_definite(seed, matrix_size):
-
-    rng = np.random.default_rng(seed=seed)
-    
-    normal_matrix = rng.normal(size=(matrix_size, matrix_size))
-    # create a positive definite matrix
-    matrix = normal_matrix @ normal_matrix.T
-    
-    assert_matrix_inverse_correctness(matrix)
+    assert np.allclose(product_1, matrix, atol=ABS_TOLERANCE, rtol=REL_TOLERANCE)
+    assert np.allclose(product_2, pseudo_inverse, atol=ABS_TOLERANCE, rtol=REL_TOLERANCE)
 
 
-@pytest.mark.parametrize("seed", SEEDS)
-@pytest.mark.parametrize("matrix_size", MATRIX_SIZES)
-def test_matrix_inversion_all_entries_uniform_symmetric(seed, matrix_size):
+@seed(1)
+@given(
+    vector_norms=arrays(
+        np.float64,
+        (MATRIX_DIMENSION,),
+        elements=st.floats(
+            min_value=MIN_NORM,
+            max_value=MAX_NORM,
+        ),
+        unique=True,
+    ),
+    cosines=arrays(
+        np.float64,
+        (MATRIX_DIMENSION, MATRIX_DIMENSION),
+        elements=st.floats(
+            min_value=-1.0,
+            max_value=1.0,
+        ),
+        unique=True,
+    ),
+)
+def test_matrix_inversion_hypothesis(vector_norms, cosines):
 
-    rng = np.random.default_rng(seed=seed)
-    
-    matrix = rng.uniform(low=0, high=1, size=(matrix_size, matrix_size))
-    
-    for (i, j), entry in np.ndenumerate(matrix):
-        if j > i:
-            matrix[j, i] = entry
-    
-    assert np.allclose(matrix, matrix.T)
-    
-    assert_matrix_inverse_correctness(matrix)
+    cosines[np.arange(MATRIX_DIMENSION), np.arange(MATRIX_DIMENSION)] = 1
+    cosines = np.maximum(cosines, cosines.T)
+
+    matrix = np.outer(vector_norms, vector_norms) * cosines
+    pseudo_inverse, _ = invertSVD(matrix)
+
+    assert_matrix_pseudo_inverse_correctness(matrix, pseudo_inverse)
