@@ -46,7 +46,7 @@ def test_antenna_pattern_between_zero_and_one(detector_component, coordinates):
     assert -1.0 <= F_cross <= 1.0
 
 
-# @pytest.mark.xfail
+@pytest.mark.xfail
 @settings(suppress_health_check=(HealthCheck.function_scoped_fixture,))
 @given(coordinates=coordinates())
 def test_antenna_pattern_against_analytical_formula(detector_component, coordinates):
@@ -59,12 +59,17 @@ def test_antenna_pattern_against_analytical_formula(detector_component, coordina
         gps_time=gps_time,
     )
 
-    theta = np.pi / 2.0 - declination
     gmst = GreenwichMeanSiderealTime(gps_time)
+    theta = np.pi / 2.0 - declination
     phi = right_ascension - gmst
     psi = polarization
     
     # but this is a different coordinate system!
+    # these formulas give the antenna pattern as a function of 
+    # the two angles theta, phi of the source in the frame of the detector
+    # while here, they are in the frame of the Earth
+    
+    # so here there should be a rotation by detector_component.
 
     F_plus_theoretical = .5 * (1 + np.cos(theta) ** 2) * np.cos(2 * phi) * np.cos(
         2 * psi
