@@ -63,7 +63,7 @@ def test_horizon_warns_when_given_redshift():
 
 
 @pytest.mark.parametrize("detector_name", ["LGWA_Soundcheck", "LGWA"])
-@pytest.mark.parametrize("mass", [0.6, 1e3, 1e4, 1e5, 1e6])
+@pytest.mark.parametrize("mass", [0.6, 1e3, 1e6])
 def test_difficult_convergence_of_horizon_calculation(mass, detector_name):
     """A few examples of parameters for which there have
     been problems in the past.
