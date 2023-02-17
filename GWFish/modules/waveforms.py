@@ -222,7 +222,9 @@ class Waveform:
 
 class LALFD_Waveform(Waveform):
     """
-    Calls waveforms from LAL in frequency domain. Works with both time-domain
+    Calls LAL to provide waveforms in frequency domain. Works with both
+    time-domain and frequency-domain waveforms. Time-domain waveforms
+    are FFT'ed in LALSimulation.
     """
     def __init__(self, name, gw_params, data_params):
         super().__init__(name, gw_params, data_params)
@@ -363,7 +365,11 @@ class LALFD_Waveform(Waveform):
         self._frequency_domain_strain = polarizations
 
 class LALTD_Waveform(LALFD_Waveform):
-    """ Calls waveforms from LAL in time domain """
+    """
+    Calls LAL to provide waveforms in time domain, then converts them
+    to frequency domain in GWFish.modules.fft. This wrapper class 
+    works only with time-domain waveforms.
+    """
     def __init__(self, name, gw_params, data_params):
         super().__init__(name, gw_params, data_params)
         self.ht_plus_out = None
