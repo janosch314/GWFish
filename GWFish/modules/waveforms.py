@@ -222,7 +222,9 @@ class Waveform:
 
 class LALFD_Waveform(Waveform):
     """
-    Calls waveforms from LAL in frequency domain. Works with both time-domain
+    Calls LAL to provide waveforms in frequency domain. Works with both
+    time-domain and frequency-domain waveforms. Time-domain waveforms
+    are FFT'ed in LALSimulation.
     """
     def __init__(self, name, gw_params, data_params):
         super().__init__(name, gw_params, data_params)
@@ -363,7 +365,11 @@ class LALFD_Waveform(Waveform):
         self._frequency_domain_strain = polarizations
 
 class LALTD_Waveform(LALFD_Waveform):
-    """ Calls waveforms from LAL in time domain """
+    """
+    Calls LAL to provide waveforms in time domain, then converts them
+    to frequency domain in GWFish.modules.fft. This wrapper class 
+    works only with time-domain waveforms.
+    """
     def __init__(self, name, gw_params, data_params):
         super().__init__(name, gw_params, data_params)
         self.ht_plus_out = None
@@ -395,15 +401,6 @@ class LALTD_Waveform(LALFD_Waveform):
         else:
             raise ValueError('Waveform approximant is not implemented in time-domain in LALSimulation.')
 
-    #def calculate_time_domain_strain(self):
-    #    # Note, waveform below is already conditioned (tapered)
-    #    self._lal_ht_plus, self._lal_ht_cross = self._lalsim_caller(*self._lalsim_args)
-    #    # The following time vector for the waveform to peak at merger at zero time
-    #    #max_idx = np.argmax(np.abs(self._lal_ht_plus.data.data - 1j * self._lal_ht_cross.data.data))
-    #    #temp_tt = np.arange(0,self.delta_t*self._lal_ht_plus.data.length,self.delta_t)
-    #    #temp_tt = temp_tt - temp_tt[max_idx]
-    #    self._waveform_postprocessing()
-
     @property
     def lal_time_ht_plus(self):
         """Zero time at the merger """
@@ -423,12 +420,8 @@ class LALTD_Waveform(LALFD_Waveform):
     def calculate_time_domain_strain(self):
         # Note, waveform below is already conditioned (tapered)
         self._lal_ht_plus, self._lal_ht_cross = self._lalsim_caller(*self._lalsim_args)
-        # The following time vector for the waveform to peak at merger at zero time
-        #max_idx = np.argmax(np.abs(self._lal_ht_plus.data.data - 1j * self._lal_ht_cross.data.data))
-        #temp_tt = np.arange(0,self.delta_t*self._lal_ht_plus.data.length,self.delta_t)
-        #temp_tt = temp_tt - temp_tt[max_idx]
-        self._waveform_postprocessing()
 
+        self._waveform_postprocessing()
     
         htp = self.ht_plus_out[:, np.newaxis]
         htc = self.ht_cross_out[:, np.newaxis]
