@@ -45,11 +45,13 @@ class Derivative:
 
     eps: 1e-5, this follows the simple "cube root of numerical precision" recommendation, which is 1e-16 for double
     """
-    def __init__(self, waveform, parameters, detector, eps=1e-5, hphc_caller=wf.hphc_amplitudes):
+    def __init__(self, waveform, parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
         self.waveform = waveform
         self.detector = detector
         self.eps = eps
-        self.hphc_caller = hphc_caller
+        self.waveform_class = waveform_class
+        self.data_params = {'frequencyvector': detector.frequencyvector}
+        self.waveform_object = waveform_class(waveform, parameters, self.data_params)
         self.waveform_at_parameters = None
         self.projection_at_parameters = None
 
@@ -68,8 +70,11 @@ class Derivative:
         Returns tuple, (wave, t_of_f).
         """
         if self._waveform_at_parameters is None:
-            self._waveform_at_parameters = self.hphc_caller(self.waveform, self.local_params, 
-                                                            self.detector.frequencyvector)
+            wave = self.waveform_object()
+            t_of_f = self.waveform_object.t_of_f
+            self._waveform_at_parameters = (wave, t_of_f)
+            #self._waveform_at_parameters = self.hphc_caller(self.waveform, self.local_params, 
+            #                                                self.detector.frequencyvector)
         return self._waveform_at_parameters
 
     @waveform_at_parameters.setter
@@ -123,10 +128,19 @@ class Derivative:
                 # to improve precision of numerical differentiation
                 self.pv_set1['geocent_time'] = 0.
                 self.pv_set2['geocent_time'] = 0.
-                wave1, t_of_f1 = self.hphc_caller(self.waveform, self.pv_set1, 
-                                                  self.detector.frequencyvector)
-                wave2, t_of_f2 = self.hphc_caller(self.waveform, self.pv_set2, 
-                                                  self.detector.frequencyvector)
+
+                self.waveform_object.update_gw_params(self.pv_set1)
+                wave1 = self.waveform_object()
+                t_of_f1 = self.waveform_object.t_of_f
+                #wave1, t_of_f1, _ = self.hphc_caller(self.waveform, self.pv_set1, 
+                #                                  self.detector.frequencyvector)
+
+                self.waveform_object.update_gw_params(self.pv_set2)
+                wave2 = self.waveform_object()
+                t_of_f2 = self.waveform_object.t_of_f                
+                #wave2, t_of_f2, _ = self.hphc_caller(self.waveform, self.pv_set2, 
+                #                                  self.detector.frequencyvector)
+
                 self.pv_set1['geocent_time'] = self.tc
                 self.pv_set2['geocent_time'] = self.tc
                 signal1 = det.projection(self.pv_set1, self.detector, wave1, t_of_f1 + self.tc)
@@ -142,10 +156,10 @@ class Derivative:
         return self.with_respect_to(target_parameter)
 
 class FisherMatrix:
-    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, hphc_caller=wf.hphc_amplitudes):
+    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
         self.fisher_parameters = fisher_parameters
         self.detector = detector
-        self.derivative = Derivative(waveform, parameters, detector, eps=eps, hphc_caller=hphc_caller)
+        self.derivative = Derivative(waveform, parameters, detector, eps=eps, waveform_class=waveform_class)
         self.nd = len(fisher_parameters)
         self.fm = None
 

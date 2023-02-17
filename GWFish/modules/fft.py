@@ -19,3 +19,4 @@ def fft_lal_timeseries(lal_timeseries, delta_f, f_start=0.):
     lal.REAL8TimeFreqFFT(lal_frequency_series,lal_timeseries,plan)
     return lal_frequency_series
 
+
