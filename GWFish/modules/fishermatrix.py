@@ -73,8 +73,6 @@ class Derivative:
             wave = self.waveform_object()
             t_of_f = self.waveform_object.t_of_f
             self._waveform_at_parameters = (wave, t_of_f)
-            #self._waveform_at_parameters = self.hphc_caller(self.waveform, self.local_params, 
-            #                                                self.detector.frequencyvector)
         return self._waveform_at_parameters
 
     @waveform_at_parameters.setter
@@ -132,14 +130,10 @@ class Derivative:
                 self.waveform_object.update_gw_params(self.pv_set1)
                 wave1 = self.waveform_object()
                 t_of_f1 = self.waveform_object.t_of_f
-                #wave1, t_of_f1, _ = self.hphc_caller(self.waveform, self.pv_set1, 
-                #                                  self.detector.frequencyvector)
 
                 self.waveform_object.update_gw_params(self.pv_set2)
                 wave2 = self.waveform_object()
                 t_of_f2 = self.waveform_object.t_of_f                
-                #wave2, t_of_f2, _ = self.hphc_caller(self.waveform, self.pv_set2, 
-                #                                  self.detector.frequencyvector)
 
                 self.pv_set1['geocent_time'] = self.tc
                 self.pv_set2['geocent_time'] = self.tc

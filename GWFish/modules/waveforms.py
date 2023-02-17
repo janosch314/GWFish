@@ -395,15 +395,6 @@ class LALTD_Waveform(LALFD_Waveform):
         else:
             raise ValueError('Waveform approximant is not implemented in time-domain in LALSimulation.')
 
-    #def calculate_time_domain_strain(self):
-    #    # Note, waveform below is already conditioned (tapered)
-    #    self._lal_ht_plus, self._lal_ht_cross = self._lalsim_caller(*self._lalsim_args)
-    #    # The following time vector for the waveform to peak at merger at zero time
-    #    #max_idx = np.argmax(np.abs(self._lal_ht_plus.data.data - 1j * self._lal_ht_cross.data.data))
-    #    #temp_tt = np.arange(0,self.delta_t*self._lal_ht_plus.data.length,self.delta_t)
-    #    #temp_tt = temp_tt - temp_tt[max_idx]
-    #    self._waveform_postprocessing()
-
     @property
     def lal_time_ht_plus(self):
         """Zero time at the merger """
@@ -423,12 +414,8 @@ class LALTD_Waveform(LALFD_Waveform):
     def calculate_time_domain_strain(self):
         # Note, waveform below is already conditioned (tapered)
         self._lal_ht_plus, self._lal_ht_cross = self._lalsim_caller(*self._lalsim_args)
-        # The following time vector for the waveform to peak at merger at zero time
-        #max_idx = np.argmax(np.abs(self._lal_ht_plus.data.data - 1j * self._lal_ht_cross.data.data))
-        #temp_tt = np.arange(0,self.delta_t*self._lal_ht_plus.data.length,self.delta_t)
-        #temp_tt = temp_tt - temp_tt[max_idx]
-        self._waveform_postprocessing()
 
+        self._waveform_postprocessing()
     
         htp = self.ht_plus_out[:, np.newaxis]
         htc = self.ht_cross_out[:, np.newaxis]
