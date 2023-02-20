@@ -12,7 +12,6 @@ def fisco(parameters):
 
     return 1 / (np.pi) * cst.c ** 3 / (cst.G * M) / 6 ** 1.5  # frequency of innermost stable circular orbit
 
-
 def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
     ff = frequencyvector
 

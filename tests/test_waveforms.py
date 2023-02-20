@@ -1,5 +1,5 @@
 import numpy as np
-from GWFish.modules.waveforms import hphc_amplitudes
+from GWFish.modules.waveforms import TaylorF2
 from GWFish.modules.detection import Detector, projection
 
 def test_max_f_cutoff_170817():
@@ -19,8 +19,14 @@ def test_max_f_cutoff_170817():
     }
     
     detector = Detector('ET', parameters = [None], fisher_parameters = [None])
-    
-    hphc, t_of_f = hphc_amplitudes('gwfish_TaylorF2', params, detector.frequencyvector)
+
+    data_params = {
+        'frequencyvector': detector.frequencyvector,
+        'f_ref': 50.
+    }
+    waveform_obj = TaylorF2('TaylorF2', params, data_params)
+    hphc = waveform_obj()
+    t_of_f = waveform_obj.t_of_f
     
     assert hphc[-1, 0] == 0j
     assert hphc[-1, 1] == 0j
@@ -29,7 +35,13 @@ def test_max_f_cutoff_170817():
     
     params.pop('max_frequency')
     
-    hphc, t_of_f = hphc_amplitudes('gwfish_TaylorF2', params, detector.frequencyvector)
+    data_params = {
+        'frequencyvector': detector.frequencyvector,
+        'f_ref': 50.
+    }
+    waveform_obj = TaylorF2('TaylorF2', params, data_params)
+    hphc = waveform_obj()
+    t_of_f = waveform_obj.t_of_f
     
     assert hphc[-1, 0] != 0j
     assert hphc[-1, 1] != 0j
@@ -58,7 +70,13 @@ def test_max_f_cutoff_signal_duration():
     # at best the one from 0.13Hz to 0.2Hz, since the BWD will take ~10yr to get
     # through that interval.
     
-    polarizations, timevector = hphc_amplitudes('gwfish_TaylorF2', params, detector.frequencyvector)
+    data_params = {
+        'frequencyvector': detector.frequencyvector,
+        'f_ref': 50.
+    }
+    waveform_obj = TaylorF2('TaylorF2', params, data_params)
+    polarizations = waveform_obj()
+    timevector = waveform_obj.t_of_f
 
     signal = projection(
         params,

@@ -79,11 +79,12 @@ Use "all" to get all possible combinations of the detectors given.''')
     # horizon(network, parameters.iloc[0], frequencyvector, threshold_SNR, 1./df, fmax)
     # exit()
 
-    #waveform_model = 'gwfish_TaylorF2'
-    # waveform_model = 'gwfish_IMRPhenomD'
-    #waveform_model = 'lalsim_TaylorF2'
-    #waveform_model = 'lalsim_IMRPhenomD'
-    waveform_model = 'lalsim_IMRPhenomXPHM'
+    #waveform_model = 'TaylorF2'
+    # waveform_model = 'IMRPhenomD'
+    waveform_model = 'IMRPhenomXPHM'
+
+    #waveform_class = gw.waveforms.IMRPhenomD
+    waveform_class = gw.waveforms.LALFD_Waveform
 
     np.random.seed(0)
     
@@ -93,9 +94,14 @@ Use "all" to get all possible combinations of the detectors given.''')
 
         networkSNR_sq = 0
         for d in np.arange(len(network.detectors)):
-            wave, t_of_f = gw.waveforms.hphc_amplitudes(waveform_model, parameter_values,
-                                                        network.detectors[d].frequencyvector)
-                                                        #plot=network.detectors[d].plotrange)
+            data_params = {
+                'frequencyvector': network.detectors[d].frequencyvector,
+                'f_ref': 50.
+            }
+            waveform_obj = waveform_class(waveform_model, parameter_values, data_params)
+            wave = waveform_obj()
+            t_of_f = waveform_obj.t_of_f
+
             signal = gw.detection.projection(parameter_values, network.detectors[d], wave, t_of_f)
 
             SNRs = gw.detection.SNR(network.detectors[d], signal, duty_cycle=duty_cycle)
@@ -104,7 +110,7 @@ Use "all" to get all possible combinations of the detectors given.''')
 
             if calculate_errors:
                 network.detectors[d].fisher_matrix[k, :, :] = \
-                    gw.fishermatrix.FisherMatrix(waveform_model, parameter_values, fisher_parameters, network.detectors[d])
+                    gw.fishermatrix.FisherMatrix(waveform_model, parameter_values, fisher_parameters, network.detectors[d], waveform_class=waveform_class).fm
 
         network.SNR[k] = np.sqrt(networkSNR_sq)
 

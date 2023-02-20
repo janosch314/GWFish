@@ -2,7 +2,7 @@ import numpy as np
 from astropy.cosmology import Planck18
 
 from GWFish.modules.detection import SNR, Detector, projection
-from GWFish.modules.waveforms import hphc_amplitudes
+from GWFish.modules.waveforms import TaylorF2
 
 import matplotlib.pyplot as plt
 
@@ -28,12 +28,13 @@ for redshift in redshifts:
     distance = Planck18.luminosity_distance(redshift)
     params = params | {'redshift': redshift, 'luminosity_distance': distance}
 
-    polarizations, timevector = hphc_amplitudes(
-        'gwfish_TaylorF2', 
-        params,
-        detector.frequencyvector,
-        plot=None
-    )
+    data_params = {
+        'frequencyvector': detector.frequencyvector,
+        'f_ref': 50.
+    }
+    waveform_obj = TaylorF2('TaylorF2', params, data_params)
+    polarizations = waveform_obj()
+    timevector = waveform_obj.t_of_f
 
     signal = projection(
         params,
