@@ -119,9 +119,11 @@ def main():
     network = gw.detection.Network(detectors_ids, detection_SNR=threshold_SNR, parameters=parameters,
                                    fisher_parameters=None, config=ConfigDet)
 
-    waveform_model = 'lalbbh_IMRPhenomD'
-    #waveform_model = 'gwfish_TaylorF2'
-    # waveform_model = 'lalbbh_TaylorF2'
+    waveform_model = 'IMRPhenomD'
+    #waveform_model = 'TaylorF2'
+
+    #waveform_class = gw.waveforms.LALFD_Waveform
+    waveform_class = gw.waveforms.IMRPhenomD
 
     frequencyvector = network.detectors[0].frequencyvector
 
@@ -137,8 +139,14 @@ def main():
         if ((tc>t0) & (tc-3*86400<t0+N*dT)):
             signals = np.zeros((len(frequencyvector), len(network.detectors)), dtype=complex)  # contains only 1 of 3 streams in case of ET
             for d in np.arange(len(network.detectors)):
-                wave, t_of_f = gw.waveforms.hphc_amplitudes(waveform_model, parameter_values,
-                                                            network.detectors[d].frequencyvector)
+
+                data_params = {
+                    'frequencyvector': network.detectors[d].frequencyvector,
+                    'f_ref': 50.
+                }
+                waveform_obj = waveform_class(waveform_model, parameter_values, data_params)
+                wave = waveform_obj()
+                t_of_f = waveform_obj.t_of_f
 
                 det_signals = gw.detection.projection(parameter_values, network.detectors[d], wave, t_of_f)
                 signals[:,d] = det_signals[:,0]

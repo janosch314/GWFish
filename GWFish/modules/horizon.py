@@ -16,23 +16,24 @@ import astropy.units as u
 from scipy.optimize import brentq
 
 from .detection import SNR, Detector, projection
-from .waveforms import hphc_amplitudes
+from .waveforms import LALFD_Waveform
 
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
-WAVEFORM_MODEL = 'lalsim_IMRPhenomXHM'
+WAVEFORM_MODEL = 'IMRPhenomXHM'
 MIN_REDSHIFT = 1e-10
 MAX_REDSHIFT = 500
 
 def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
     
     try:
-        polarizations, timevector = hphc_amplitudes(
-            waveform_model, 
-            params,
-            detector.frequencyvector,
-            plot=None
-        )
+        data_params = {
+            'frequencyvector': detector.frequencyvector,
+            'f_ref': 50.
+        }
+        waveform_obj = LALFD_Waveform(waveform_model, params, data_params)
+        polarizations = waveform_obj()
+        timevector = waveform_obj.t_of_f
     except RuntimeError:
         print(params)
     
