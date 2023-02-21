@@ -100,9 +100,9 @@ def test_max_f_cutoff_signal_duration():
     
     # print(len(signal_nonzero_indices))
     # print(timevector.shape)
-    
-    # hardest check: the region of the signal for which the 
-    nonzero_times = timevector[signal_nonzero_indices, 0]
+
+    # hardest check: the region of the signal for which the
+    nonzero_times = timevector[signal_nonzero_indices]
     delta_t = nonzero_times[1] - nonzero_times[0]
     
     # time delta corresponding to the lowest frequency spacing 
