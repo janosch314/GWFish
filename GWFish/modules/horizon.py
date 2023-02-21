@@ -20,7 +20,7 @@ from .waveforms import LALFD_Waveform
 
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
-WAVEFORM_MODEL = 'IMRPhenomXHM'
+WAVEFORM_MODEL = 'IMRPhenomD'
 MIN_REDSHIFT = 1e-10
 MAX_REDSHIFT = 500
 
