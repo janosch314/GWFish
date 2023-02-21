@@ -125,8 +125,8 @@ class Waveform:
             # Set sampling frequency to Nyquist frequency
             self.delta_t = 0.5/self.f_max
         
-        if 'max_frequency' in gw_params:
-            self.max_frequency_cutoff = gw_params['max_frequency']
+        if 'max_frequency_cutoff' in gw_params:
+            self.max_frequency_cutoff = gw_params['max_frequency_cutoff']
         else:
             self.max_frequency_cutoff = None
 
