@@ -18,32 +18,28 @@ def test_max_f_cutoff_170817():
         "geocent_time": 1187008882,
         "max_frequency": 400,
     }
-    
-    detector = Detector('ET', parameters = [None], fisher_parameters = [None])
+
+    detector = Detector("ET", parameters=[None], fisher_parameters=[None])
 
     data_params = {
-        'frequencyvector': detector.frequencyvector,
-        'f_ref': 50.
+        "frequencyvector": detector.frequencyvector,
+        "f_ref": 50.0,
     }
-    waveform_obj = TaylorF2('TaylorF2', params, data_params)
+    waveform_obj = TaylorF2("TaylorF2", params, data_params)
     hphc = waveform_obj()
     t_of_f = waveform_obj.t_of_f
-    
+
     assert hphc[-1, 0] == 0j
     assert hphc[-1, 1] == 0j
     assert hphc[0, 0] != 0j
     assert hphc[0, 1] != 0j
-    
-    params.pop('max_frequency')
-    
-    data_params = {
-        'frequencyvector': detector.frequencyvector,
-        'f_ref': 50.
-    }
-    waveform_obj = TaylorF2('TaylorF2', params, data_params)
+
+    params.pop("max_frequency")
+    data_params = {"frequencyvector": detector.frequencyvector, "f_ref": 50.0}
+    waveform_obj = TaylorF2("TaylorF2", params, data_params)
     hphc = waveform_obj()
     t_of_f = waveform_obj.t_of_f
-    
+
     assert hphc[-1, 0] != 0j
     assert hphc[-1, 1] != 0j
 
@@ -71,12 +67,12 @@ def test_max_f_cutoff_signal_duration():
     # if the BWD merges at 0.2 Hz (say), then the relevant part of the waveform is
     # at best the one from 0.13Hz to 0.2Hz, since the BWD will take ~10yr to get
     # through that interval.
-    
+
     data_params = {
-        'frequencyvector': detector.frequencyvector,
-        'f_ref': 50.
+        "frequencyvector": detector.frequencyvector,
+        "f_ref": 50.0,
     }
-    waveform_obj = TaylorF2('TaylorF2', params, data_params)
+    waveform_obj = TaylorF2("TaylorF2", params, data_params)
     polarizations = waveform_obj()
     timevector = waveform_obj.t_of_f
 
@@ -99,6 +95,7 @@ def test_max_f_cutoff_signal_duration():
     # print(timevector.shape)
 
     # hardest check: the region of the signal for which the
+    # signal is nonzero should be as long as the detector lifetime
     nonzero_times = timevector[signal_nonzero_indices]
     delta_t = nonzero_times[1] - nonzero_times[0]
 

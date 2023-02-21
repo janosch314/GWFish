@@ -29,7 +29,6 @@ def coordinates(draw):
     return right_ascension, declination, polarization, gps_time
 
 
-
 @given(coordinates=coordinates())
 @settings(suppress_health_check=(HealthCheck.function_scoped_fixture,))
 def test_antenna_pattern_between_zero_and_one(detector_component, coordinates):
@@ -63,18 +62,18 @@ def test_antenna_pattern_against_analytical_formula(detector_component, coordina
     theta = np.pi / 2.0 - declination
     phi = right_ascension - gmst
     psi = polarization
-    
+
     # but this is a different coordinate system!
-    # these formulas give the antenna pattern as a function of 
+    # these formulas give the antenna pattern as a function of
     # the two angles theta, phi of the source in the frame of the detector
     # while here, they are in the frame of the Earth
-    
+
     # so here there should be a rotation by detector_component.
 
-    F_plus_theoretical = .5 * (1 + np.cos(theta) ** 2) * np.cos(2 * phi) * np.cos(
+    F_plus_theoretical = 0.5 * (1 + np.cos(theta) ** 2) * np.cos(2 * phi) * np.cos(
         2 * psi
     ) - np.cos(theta) * np.sin(2 * phi) * np.sin(2 * psi)
-    F_cross_theoretical = - .5 * (1 + np.cos(theta) ** 2) * np.cos(2 * phi) * np.sin(
+    F_cross_theoretical = -0.5 * (1 + np.cos(theta) ** 2) * np.cos(2 * phi) * np.sin(
         2 * psi
     ) - np.cos(theta) * np.sin(2 * phi) * np.cos(2 * psi)
 
