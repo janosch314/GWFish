@@ -80,10 +80,6 @@ def test_max_f_cutoff_signal_duration():
     polarizations = waveform_obj()
     timevector = waveform_obj.t_of_f
 
-    polarizations, timevector = hphc_amplitudes(
-        "gwfish_TaylorF2", params, detector.frequencyvector
-    )
-
     signal = projection(params, detector, polarizations, timevector)
 
     # if the signal is all zero that's a problem
