@@ -40,6 +40,8 @@ tox = "^3.24.5"
 ipython = "^8.4.0"
 pytest-sugar = "^0.9.6"
 hypothesis = "^6.67.1"
+black = "^23.1.0"
+cartopy = "^0.21.1"
 
 [tool.poetry.extras]
 waveforms = ["lalsuite"]
