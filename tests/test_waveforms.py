@@ -4,7 +4,6 @@ from GWFish.modules.detection import Detector, projection
 
 
 def test_max_f_cutoff_170817():
-
     params = {
         "mass_1": 1.4,
         "mass_2": 1.4,
@@ -45,7 +44,6 @@ def test_max_f_cutoff_170817():
 
 
 def test_max_f_cutoff_signal_duration():
-
     # 170817-like parameters, with masses switched to BWD-like ones.
     params = {
         "mass_1": 0.6,

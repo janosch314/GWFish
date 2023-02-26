@@ -20,7 +20,6 @@ MAX_NORM = 1e5
 
 
 def assert_matrix_pseudo_inverse_correctness(matrix, pseudo_inverse):
-
     product_1 = matrix @ pseudo_inverse @ matrix
     product_2 = pseudo_inverse @ matrix @ pseudo_inverse
 
@@ -52,7 +51,6 @@ def assert_matrix_pseudo_inverse_correctness(matrix, pseudo_inverse):
     ),
 )
 def test_matrix_inversion_hypothesis(vector_norms, cosines):
-
     cosines[np.arange(MATRIX_DIMENSION), np.arange(MATRIX_DIMENSION)] = 1
     cosines = np.maximum(cosines, cosines.T)
 
