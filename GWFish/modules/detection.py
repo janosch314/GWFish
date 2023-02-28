@@ -68,7 +68,6 @@ class DetectorComponent:
             self.L = eval(str(detector_def['arm_length']))
             self.eps = self.L / cst.AU / (2 * np.sqrt(3))
 
-            self.psd_data = np.zeros((len(ff), 2))
             
             # noises in units of GW strain
             # P_rec = 700e-12
@@ -78,6 +77,7 @@ class DetectorComponent:
             # S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
             raw_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
             ff = raw_data[:,0]
+            self.psd_data = np.zeros((len(ff), 2))
             S_pm = (2/self.L)**2 * raw_data[:,1]
             S_opt = (2/self.L)**2 * raw_data[:,2]
 
