@@ -21,21 +21,19 @@ from .waveforms import LALFD_Waveform
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
 WAVEFORM_MODEL = 'IMRPhenomD'
-MIN_REDSHIFT = 1e-10
+MIN_REDSHIFT = 1e-20
 MAX_REDSHIFT = 500
 
 def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
-    
-    try:
-        data_params = {
-            'frequencyvector': detector.frequencyvector,
-            'f_ref': 50.
-        }
-        waveform_obj = LALFD_Waveform(waveform_model, params, data_params)
-        polarizations = waveform_obj()
-        timevector = waveform_obj.t_of_f
-    except RuntimeError:
-        print(params)
+
+    data_params = {
+        'frequencyvector': detector.frequencyvector,
+        'f_ref': 50.
+    }
+    waveform_obj = LALFD_Waveform(waveform_model, params, data_params)
+    polarizations = waveform_obj()
+    timevector = waveform_obj.t_of_f
+
     
     signal = projection(
         params,
@@ -45,10 +43,6 @@ def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM
     )
     
     component_SNRs = SNR(detector, signal)
-    if np.all(component_SNRs==0.):
-        raise ValueError(
-            'The SNR is zero in all components! '
-            f'Parameters are: {params}')
     return np.sqrt(np.sum(component_SNRs**2))
 
 def horizon(
@@ -75,7 +69,13 @@ def horizon(
     def SNR_error(redshift):
         distance = cosmology_model.luminosity_distance(redshift).value
         mod_params = params | {'redshift': redshift, 'luminosity_distance': distance}
-        return np.log(compute_SNR(mod_params, detector, waveform_model)/target_SNR)
+        with np.errstate(divide='ignore'):
+            return np.log(compute_SNR(mod_params, detector, waveform_model)/target_SNR)
+
+    
+    if not SNR_error(MIN_REDSHIFT) > 0:
+        warnings.warn('The source is completely out of band')
+        return 0., 0.
     
     redshift, r = brentq(SNR_error, MIN_REDSHIFT, MAX_REDSHIFT, full_output=True)
     if not r.converged:
