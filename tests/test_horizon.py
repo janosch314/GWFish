@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from GWFish.modules.horizon import horizon, Detector, compute_SNR
+from GWFish.modules.horizon import horizon, Detector, compute_SNR, MIN_REDSHIFT
 from hypothesis import strategies as st
 from hypothesis import given, settings, example
 from datetime import timedelta
@@ -85,7 +85,7 @@ def test_horizon_warns_when_given_redshift():
         distance, redshift = horizon(params, detector)
 
 @pytest.mark.parametrize('detector_name', ['LGWA_Soundcheck', 'LGWA', 'LISA'])
-@pytest.mark.parametrize('mass', [.6, 1e3, 1e6])
+@pytest.mark.parametrize('mass', [.6, 1e3, 1e7])
 @given(extrinsic())
 @settings(max_examples=4, deadline=timedelta(milliseconds=500))
 # @example(
@@ -122,3 +122,49 @@ def test_difficult_convergence_of_horizon_calculation(mass, detector_name, extri
             params | {'redshift': redshift, 'luminosity_distance': distance}, 
             detector), 
         9, rtol=1e-3)
+
+@pytest.mark.parametrize('detector_name', ['LGWA'])
+@pytest.mark.parametrize('mass,equals_zero', [
+    (1e7, False),
+    (3e7, False),
+    (1e9, True),
+    (1e10, True)
+])
+@given(extrinsic())
+@settings(max_examples=4, deadline=timedelta(milliseconds=500))
+def test_horizon_for_very_large_masses(mass, equals_zero, detector_name, extrinsic):
+    """Test horizon computation for large masses.
+    
+    For masses 5e6 <~ m <~ 3e7, the computed SNR is zero in some cases when the source is at high redshift,
+    but at low redshift it is in band.
+    
+    For even larger masses, the computed SNR is zero even if the source is nearby. So,
+    the horizon function should just return zero, and a warning.
+    """
+    right_ascension, declination, polarization, gps_time, theta_jn, phase = extrinsic
+    
+    params = {
+            'mass_1': mass,
+            'mass_2': mass,
+            'theta_jn': theta_jn, 
+            'dec': declination, 
+            'ra': right_ascension, 
+            'psi': polarization, 
+            'phase': phase, 
+            'geocent_time': gps_time,
+        }
+    detector = Detector(detector_name, parameters= [None], fisher_parameters= [None])
+    
+    if equals_zero:
+        with pytest.warns():
+            distance, redshift = horizon(params, detector)
+            assert distance == 0.
+    else:
+        distance, redshift = horizon(params, detector)
+        assert distance > 0.
+        assert np.isclose(
+            compute_SNR(
+                params | {'redshift': redshift, 'luminosity_distance': distance}, 
+                detector), 
+            9, rtol=1e-3)
+    
