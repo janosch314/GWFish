@@ -15,7 +15,7 @@ def test_max_f_cutoff_170817():
         'psi': 1.6,
         'phase': 0,
         'geocent_time': 1187008882, 
-        'max_frequency': 400,
+        'max_frequency_cutoff': 400,
     }
     
     detector = Detector('ET', parameters = [None], fisher_parameters = [None])
@@ -33,7 +33,7 @@ def test_max_f_cutoff_170817():
     assert hphc[0, 0] != 0j
     assert hphc[0, 1] != 0j
     
-    params.pop('max_frequency')
+    params.pop('max_frequency_cutoff')
     
     data_params = {
         'frequencyvector': detector.frequencyvector,
@@ -60,7 +60,7 @@ def test_max_f_cutoff_signal_duration():
         'psi': 1.6,
         'phase': 0,
         'geocent_time': 1187008882, 
-        'max_frequency': .2,
+        'max_frequency_cutoff': .2,
     }
 
     # LGWA mission duration is 10 years
@@ -100,9 +100,9 @@ def test_max_f_cutoff_signal_duration():
     
     # print(len(signal_nonzero_indices))
     # print(timevector.shape)
-    
-    # hardest check: the region of the signal for which the 
-    nonzero_times = timevector[signal_nonzero_indices, 0]
+
+    # hardest check: the region of the signal for which the
+    nonzero_times = timevector[signal_nonzero_indices]
     delta_t = nonzero_times[1] - nonzero_times[0]
     
     # time delta corresponding to the lowest frequency spacing 

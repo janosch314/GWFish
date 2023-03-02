@@ -14,7 +14,7 @@ The parameters used to describe a CBC within `GWFish` are as follows:
 - `'ra'`: the right ascension of the merger, in radians;
 - `'dec'`: the declination of the merger, in radians;
 - `'geocent_time'`: the time of merger, expressed as [GPS time](https://www.andrews.edu/~tzs/timeconv/timeconvert.php?);
-- `'max_frequency'`: a maximum frequency at which to cut off the waveform, in Hz;
+- `'max_frequency_cutoff'`: a maximum frequency at which to cut off the waveform, in Hz;
 - `'a_1'`: component of spin of the primary object along the orbital angular momentum, in units of the square of the mass 
     (often denoted as $\chi = J / M^2$ in $c=G=1$ natural units), 
     dimensionless (and $\in [-1, 1]$), 

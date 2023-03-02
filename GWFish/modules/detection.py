@@ -325,14 +325,14 @@ def projection_solarorbit(parameters, detector, polarizations, timevector):
 
     # define LISA observation window
     max_observation_time = detector.mission_lifetime
-    if fmax := parameters.get('max_frequency', None):
+    if fmax := parameters.get('max_frequency_cutoff', None):
         max_observation_time += time_of_fmax(timevector, detector.frequencyvector, fmax)
 
     tc = parameters['geocent_time']
     # proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
     # proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
 
-    if fmax := parameters.get('max_frequency', None):
+    if fmax := parameters.get('max_frequency_cutoff', None):
         tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
 
     proj[np.where(timevector > tc + max_observation_time), :] = 0.j
@@ -520,7 +520,7 @@ def projection_moon(parameters, detector, polarizations, timevector):
     max_observation_time = detector.mission_lifetime
     tc = parameters['geocent_time']
 
-    if fmax := parameters.get('max_frequency', None):
+    if fmax := parameters.get('max_frequency_cutoff', None):
         tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
         
     proj[np.where(timevector < tc - max_observation_time), :] = 0.j
