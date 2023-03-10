@@ -139,7 +139,7 @@ LGWA:
             lat:              -85 * np.pi / 180.
             lon:              0
             azimuth:
-            psd_data:         LGWA_psd.txt
+            psd_data:         LGWA_Si_psd.txt
             duty_factor:      1
             detector_class:   lunararray
             number_stations:  4
