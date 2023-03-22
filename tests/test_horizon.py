@@ -87,17 +87,15 @@ def test_horizon_warns_when_given_redshift():
 @pytest.mark.parametrize('detector_name', ['LGWA_Soundcheck', 'LGWA', 'LISA'])
 @pytest.mark.parametrize('mass', [.6, 1e3, 1e7])
 @given(extrinsic())
-@settings(max_examples=4, deadline=timedelta(milliseconds=500))
-# @example(
-#     extrinsic(theta_jn= 2.94417698, 
-#             dec= 0.35331536, 
-#             ra= 5.85076693, 
-#             psi= 4.97215904, 
-#             phase= 2.43065638, 
-#             geocent_time= 1.76231585e+09
-#     )
-# this syntax is incorrect, see https://github.com/HypothesisWorks/hypothesis/issues/3591
-# waiting on a reply there
+@settings(max_examples=4, deadline=timedelta(milliseconds=1000))
+@example((
+    2.94417698, 
+    0.35331536, 
+    5.85076693, 
+    4.97215904, 
+    2.43065638, 
+    1.76231585e+09
+))
 def test_difficult_convergence_of_horizon_calculation(mass, detector_name, extrinsic):
     """A few examples of parameters for which there have 
     been problems in the past.
