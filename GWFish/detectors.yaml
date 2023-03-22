@@ -134,12 +134,26 @@ LISA:
             fmin:             1e-3
             fmax:             0.3
             spacing:          linear
-            df:               1e-4     
+            df:               1e-4
 LGWA:
             lat:              -85 * np.pi / 180.
             lon:              0
             azimuth:
             psd_data:         LGWA_Si_psd.txt
+            duty_factor:      1
+            detector_class:   lunararray
+            number_stations:  4
+            mission_lifetime: 10 * 3.16e7
+            plotrange:        1e-3, 4, 1e-23, 1e-19
+            fmin:             1e-3
+            fmax:             4
+            spacing:          linear
+            df:               1./4096.
+LGWA_Nb:
+            lat:              -85 * np.pi / 180.
+            lon:              0
+            azimuth:
+            psd_data:         LGWA_Nb_psd.txt
             duty_factor:      1
             detector_class:   lunararray
             number_stations:  4
