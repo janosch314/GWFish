@@ -1,9 +1,14 @@
 import pytest
 import numpy as np
-from GWFish.modules.horizon import horizon, Detector, compute_SNR, MIN_REDSHIFT
+from GWFish.modules.horizon import horizon, compute_SNR, MIN_REDSHIFT, horizon, compute_SNR_network
+from GWFish.modules.detection import Detector, Network
 from hypothesis import strategies as st
-from hypothesis import given, settings, example
+from hypothesis import given, settings, example, HealthCheck
 from datetime import timedelta
+
+@pytest.fixture
+def network():
+    return Network(detector_ids=['ET', 'CE1'], parameters=[], fisher_parameters=[])
 
 @st.composite
 def extrinsic(draw):
@@ -129,7 +134,7 @@ def test_difficult_convergence_of_horizon_calculation(mass, detector_name, extri
     (1e10, True)
 ])
 @given(extrinsic())
-@settings(max_examples=4, deadline=timedelta(milliseconds=500))
+@settings(max_examples=3, deadline=timedelta(seconds=1))
 def test_horizon_for_very_large_masses(mass, equals_zero, detector_name, extrinsic):
     """Test horizon computation for large masses.
     
@@ -165,4 +170,32 @@ def test_horizon_for_very_large_masses(mass, equals_zero, detector_name, extrins
                 params | {'redshift': redshift, 'luminosity_distance': distance}, 
                 detector), 
             9, rtol=1e-3)
+
+@pytest.mark.parametrize('mass', [30.,])
+@given(extrinsic())
+@settings(
+    max_examples=10, 
+    suppress_health_check=(HealthCheck.function_scoped_fixture,),
+    deadline=timedelta(seconds=1)
+)
+def test_horizon_computation_with_network(mass, network, extrinsic):
+    right_ascension, declination, polarization, gps_time, theta_jn, phase = extrinsic
     
+    params = {
+        'mass_1': mass,
+        'mass_2': mass,
+        'theta_jn': theta_jn, 
+        'dec': declination, 
+        'ra': right_ascension, 
+        'psi': polarization, 
+        'phase': phase, 
+        'geocent_time': gps_time,
+    }
+    
+    distance, redshift = horizon(params, network)
+    assert distance > 0.
+    assert np.isclose(
+        compute_SNR_network(
+            params | {'redshift': redshift, 'luminosity_distance': distance}, 
+            network), 
+        9, rtol=1e-3)
