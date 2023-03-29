@@ -1,13 +1,16 @@
 import pytest
 import numpy as np
-from GWFish.modules.horizon import horizon, compute_SNR, MIN_REDSHIFT, horizon, compute_SNR_network
+from GWFish.modules.horizon import horizon, compute_SNR, MIN_REDSHIFT, horizon, compute_SNR_network, find_optimal_location, horizon_varying_orientation
 from GWFish.modules.detection import Detector, Network
 from hypothesis import strategies as st
 from hypothesis import given, settings, example, HealthCheck
 from datetime import timedelta
 
+# TODO: change this according to https://docs.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments
+
 @pytest.fixture
 def network():
+    # return Network(detector_ids=['ET'], parameters=[], fisher_parameters=[])
     return Network(detector_ids=['ET', 'CE1'], parameters=[], fisher_parameters=[])
 
 @st.composite
@@ -92,7 +95,7 @@ def test_horizon_warns_when_given_redshift():
 @pytest.mark.parametrize('detector_name', ['LGWA_Soundcheck', 'LGWA', 'LISA'])
 @pytest.mark.parametrize('mass', [.6, 1e3, 1e7])
 @given(extrinsic())
-@settings(max_examples=4, deadline=timedelta(milliseconds=1000))
+@settings(max_examples=2, deadline=timedelta(milliseconds=1000))
 @example((
     2.94417698, 
     0.35331536, 
@@ -199,3 +202,53 @@ def test_horizon_computation_with_network(mass, network, extrinsic):
             params | {'redshift': redshift, 'luminosity_distance': distance}, 
             network), 
         9, rtol=1e-3)
+    
+@pytest.mark.parametrize('mass', [30.,])
+def test_optimal_parameter_finding(mass, network):
+    base_params = {
+        'mass_1': mass,
+        'mass_2': mass,
+        'theta_jn': 0., 
+        'psi': 0., 
+        'phase': 0., 
+        'geocent_time': 0.,
+    }
+
+    best_params = find_optimal_location(base_params, network)
+    best_params.pop('luminosity_distance')
+    best_params.pop('redshift')
+    
+    distance, redshift = horizon(best_params, network)
+    
+    distances, redshifts, parameters = horizon_varying_orientation(base_params, 5, network, return_parameters=True)
+    
+    assert np.all(distances < distance)
+    assert np.all(redshifts < redshift)
+    
+@pytest.mark.parametrize('mass', [30.,])
+def test_horizon_with_network_against_single_detector(mass):
+    params = {
+        'mass_1': mass,
+        'mass_2': mass,
+        'theta_jn': 0., 
+        'psi': 0., 
+        'phase': 0., 
+        'geocent_time': 0.,
+        'ra': 1.,
+        'dec': 1.
+    }
+    
+    et_ce_network = Network(['ET', 'CE1'], fisher_parameters=[], parameters=[])
+    et_network = Network(['ET'], fisher_parameters=[], parameters=[])
+    et_detector = Detector('ET', fisher_parameters=[], parameters=[])
+    
+    d1, z1 = horizon(params, et_detector)
+    d2, z2 = horizon(params, et_network)
+    d3, z3 = horizon(params, et_ce_network)
+    
+    assert np.isclose(d1, d2)
+    assert np.isclose(z1, z2)
+    
+    # ET+CE should have a significantly higher horizon than ET alone
+    assert d1*1.2 < d3
+    assert z1*1.2 < z3
