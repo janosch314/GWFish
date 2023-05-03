@@ -1,6 +1,6 @@
 ET:
-            lat:              (43 + 37. / 60 + 53.0921 / 3600) * np.pi / 180.
-            lon:              (10 + 30. / 60 + 16.1878 / 3600) * np.pi / 180.
+            lat:              (40 + 31. / 60 ) * np.pi / 180.
+            lon:              (9 + 25. / 60) * np.pi / 180.
             opening_angle:    np.pi / 3.
             azimuth:          70.5674 * np.pi / 180.
             psd_data:         ET_psd.txt
