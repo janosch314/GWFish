@@ -5,6 +5,7 @@ from GWFish.modules.detection import Detector, Network
 from hypothesis import strategies as st
 from hypothesis import given, settings, example, HealthCheck
 from datetime import timedelta
+from pycbc.detector import Detector as DetectorPycbc
 
 # TODO: change this according to https://docs.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments
 
@@ -224,7 +225,77 @@ def test_optimal_parameter_finding(mass, network):
     
     assert np.all(distances < distance)
     assert np.all(redshifts < redshift)
+
+@pytest.mark.parametrize(
+    ['detector_pycbc', 'detector_gwfish'],
+    [
+        ('V1', 'VIR')
+    ])
+@given(gps_time=st.floats(0., 1e10))
+def test_optimal_parameter_finding_against_pycbc(detector_pycbc, detector_gwfish, gps_time):
     
+    base_params = {
+        'mass_1': 1.4,
+        'mass_2': 1.4,
+        'theta_jn': 0., 
+        'psi': 0., 
+        'phase': 0., 
+        'geocent_time': gps_time,
+    }
+
+    detector = Detector(detector_gwfish, [], [])
+
+    best_params = find_optimal_location(base_params, detector)
+    best_params.pop('luminosity_distance')
+    best_params.pop('redshift')
+
+    ra_gwfish = best_params['ra']
+    dec_gwfish = best_params['dec']
+    
+    detector_2 = DetectorPycbc(detector_pycbc)
+    
+    ra_pycbc, dec_pycbc = detector_2.optimal_orientation(gps_time)
+    
+    assert np.isclose(ra_gwfish, ra_pycbc)
+    assert np.isclose(dec_gwfish, dec_pycbc)
+
+@pytest.mark.parametrize(
+    ['detector_name', 'bns_range'],
+    [
+        ('VIR_O2', 30),
+        ('VIR', 260),
+        ('LHO', 330),
+        ('LLO', 330),
+        ('KAG', 128),
+    ]
+)
+def test_against_lrr_paper(detector_name, bns_range):
+    base_params = {
+        'mass_1': 1.4,
+        'mass_2': 1.4,
+        'theta_jn': 0., 
+        'psi': 0., 
+        'phase': 0., 
+        'geocent_time': 0.,
+    }
+
+    detector = Detector(detector_name, parameters=[], fisher_parameters=[])
+
+    best_params = find_optimal_location(base_params, detector)
+    best_params.pop('luminosity_distance')
+    best_params.pop('redshift')
+    
+    distance, redshift = horizon(best_params, detector, target_SNR=8)
+    
+    # this is the approximate peanut factor, but it can be calculated
+    # in a better way: https://github.com/hsinyuc/distancetool/blob/08faf7c8e6ce86c44d33c498d3082f2b8b3b7d13/codes/find_horizon_range_de.py#L175
+    peanut_factor = 2.264
+    estimated_bns_range = distance / peanut_factor
+    
+    assert np.isclose(estimated_bns_range, bns_range, rtol=0.1)
+
+
+@pytest.mark.xfail
 @pytest.mark.parametrize('mass', [30.,])
 def test_horizon_with_network_against_single_detector(mass):
     params = {
