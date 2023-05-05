@@ -96,6 +96,20 @@ VIR:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000 
+VIR_O2:
+            lat:              43.6 * np.pi / 180.
+            lon:              10.5 * np.pi / 180.
+            opening_angle:    np.pi / 2.
+            azimuth:          71. * np.pi / 180.
+            psd_data:         AdV_O2_psd.txt
+            duty_factor:      0.85
+            detector_class:   earthL
+            plotrange:        10, 1000, 1e-25, 1e-20
+            fmin:             8
+            fmax:             1024
+            spacing:          geometric 
+            df:               1./4.
+            npoints:          5000 
 KAG:
             lat:              36.41 * np.pi / 180.
             lon:              137.3 * np.pi / 180.
