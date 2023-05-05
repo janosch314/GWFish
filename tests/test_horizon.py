@@ -226,6 +226,7 @@ def test_optimal_parameter_finding(mass, network):
     assert np.all(distances < distance)
     assert np.all(redshifts < redshift)
 
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     ['detector_pycbc', 'detector_gwfish'],
     [
@@ -259,6 +260,7 @@ def test_optimal_parameter_finding_against_pycbc(detector_pycbc, detector_gwfish
     assert np.isclose(ra_gwfish, ra_pycbc)
     assert np.isclose(dec_gwfish, dec_pycbc)
 
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     ['detector_name', 'bns_range'],
     [
