@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from pathlib import Path
+from astropy.coordinates import get_moon
+from astropy.time import Time
 
 import GWFish.modules.constants as cst
 
@@ -470,6 +472,10 @@ def projection_moon(parameters, detector, polarizations, timevector):
     # np.save('timevector.npy', timevector)
     # np.save('lmst.npy', lmst)
 
+    kx = -np.sin(theta) * np.cos(phi)
+    ky = -np.sin(theta) * np.sin(phi)
+    kz = -np.cos(theta)
+
     # start_time = time.time()
     # u = np.array([np.cos(theta) * np.cos(phi[:,0]), np.cos(theta) * np.sin(phi[:,0]), -np.sin(theta)*np.ones_like(phi[:,0])])
     ux = np.cos(theta) * np.cos(phi[:, 0])
@@ -504,6 +510,13 @@ def projection_moon(parameters, detector, polarizations, timevector):
     hzz = polarizations[:, 0] * (mz * mz - nz * nz) + polarizations[:, 1] * (mz * nz + nz * mz)
     # print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
 
+    moon = get_moon(Time(timevector, format='gps'))
+    moon.representation = 'cartesian'
+    
+    moon_x = moon.x.si.value
+    moon_y = moon.y.si.value
+    moon_z = moon.z.si.value
+
     # start_time = time.time()
     for k in np.arange(len(components)):
         e1 = components[k].e1
@@ -515,7 +528,18 @@ def projection_moon(parameters, detector, polarizations, timevector):
                      + (e1[0] * e2[1] + e2[0] * e1[1]) * hxy \
                      + (e1[0] * e2[2] + e2[0] * e1[2]) * hxz \
                      + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
+
+        # interferometer position
+        
+        x_det = components[k].position[0] * cst.R_earth
+        y_det = components[k].position[1] * cst.R_earth
+        z_det = components[k].position[2] * cst.R_earth
+
+        phase_shift = np.squeeze(moon_x * kx + moon_y * ky + moon_z * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
+
+        proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
+
 
     max_observation_time = detector.mission_lifetime
     tc = parameters['geocent_time']
