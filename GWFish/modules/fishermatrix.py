@@ -127,13 +127,13 @@ class Derivative:
                 self.pv_set1['geocent_time'] = 0.
                 self.pv_set2['geocent_time'] = 0.
 
-                self.waveform_object.update_gw_params(self.pv_set1)
-                wave1 = self.waveform_object()
-                t_of_f1 = self.waveform_object.t_of_f
+                waveform_obj1 = self.waveform_class(self.waveform, self.pv_set1, self.data_params)
+                wave1 = waveform_obj1()
+                t_of_f1 = waveform_obj1.t_of_f
 
-                self.waveform_object.update_gw_params(self.pv_set2)
-                wave2 = self.waveform_object()
-                t_of_f2 = self.waveform_object.t_of_f                
+                waveform_obj2 = self.waveform_class(self.waveform, self.pv_set2, self.data_params)
+                wave2 = waveform_obj2()
+                t_of_f2 = waveform_obj2.t_of_f                
 
                 self.pv_set1['geocent_time'] = self.tc
                 self.pv_set2['geocent_time'] = self.tc
