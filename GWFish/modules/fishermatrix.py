@@ -50,7 +50,7 @@ class Derivative:
         self.detector = detector
         self.eps = eps
         self.waveform_class = waveform_class
-        self.data_params = {'frequencyvector': detector.frequencyvector}
+        self.data_params = {'frequencyvector': detector.frequencyvector, 'f_ref': 50.}
         self.waveform_object = waveform_class(waveform, parameters, self.data_params)
         self.waveform_at_parameters = None
         self.projection_at_parameters = None
