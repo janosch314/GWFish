@@ -212,6 +212,7 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
     for n in np.arange(N):
         network_names.append('_'.join([network.detectors[k].name for k in networks_ids[n]]))
 
+    sky_localizations = []
     for n in np.arange(N):
         parameter_errors = np.zeros((ns, npar))
         sky_localization = np.zeros((ns,))
@@ -272,3 +273,6 @@ def analyzeFisherErrors(network, parameter_values, fisher_parameters, population
             np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
                        save_data, delimiter=' ', fmt='%s' + " %.3E" * (len(save_data[0, :]) - 1), header=header, comments='')
 
+        sky_localizations.append(sky_localization)
+        
+    return sky_localizations
