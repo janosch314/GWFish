@@ -205,6 +205,26 @@ def LunarMeanSiderealTime(gps):
     # calculate the Lunar mean sidereal time
     return np.mod((gps - 1126260000.) / (3600. * cst.lunar_sidereal_period), 1) * 2. * np.pi
 
+def get_moon_coordinates_ephemeris(times):
+    moon = get_moon(Time(times, format='gps'), ephemeris='jpl')
+    moon.representation_type = 'cartesian'
+    moon_x = moon.x.si.value
+    moon_y = moon.y.si.value
+    moon_z = moon.z.si.value
+    return moon_x, moon_y, moon_z
+
+def get_moon_coordinates(times):
+    
+    # a simple approximation of the correct get_moon_coordinates_ephemeris
+    # function above; orders of magnitude faster
+    
+    lmst = LunarMeanSiderealTime(times)
+    moon_x = 3.82969727e+08 * np.sin(lmst-1.50728156e+00)
+    moon_y = 3.59331733e+08 * np.sin(lmst-3.07286943e+00)
+    moon_z = -1.33617998e+08 * np.sin(lmst+8.17157004e+01)
+    
+    return moon_x, moon_y, moon_z
+
 
 def solarorbit(tt, R, eps, a0, b0):
     w0 = np.sqrt(cst.G * cst.Msol / R ** 3)  # w0 has a 1% error when using this equation for Earth orbit
@@ -511,13 +531,8 @@ def projection_moon(parameters, detector, polarizations, timevector):
     hzz = polarizations[:, 0] * (mz * mz - nz * nz) + polarizations[:, 1] * (mz * nz + nz * mz)
     # print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
 
-    moon = get_moon(Time(timevector, format='gps'))
-    moon.representation = 'cartesian'
+    moon_x, moon_y, moon_z = get_moon_coordinates(np.squeeze(timevector))
     
-    moon_x = moon.x.si.value
-    moon_y = moon.y.si.value
-    moon_z = moon.z.si.value
-
     # start_time = time.time()
     for k in np.arange(len(components)):
         e1 = components[k].e1
@@ -530,14 +545,11 @@ def projection_moon(parameters, detector, polarizations, timevector):
                      + (e1[0] * e2[2] + e2[0] * e1[2]) * hxz \
                      + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
 
-        # interferometer position
-        
-        x_det = components[k].position[0] * cst.R_earth
-        y_det = components[k].position[1] * cst.R_earth
-        z_det = components[k].position[2] * cst.R_earth
-
-        phase_shift = np.squeeze(moon_x * kx + moon_y * ky + moon_z * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
-
+        phase_shift = (
+            moon_x * np.squeeze(kx) +
+            moon_y * np.squeeze(ky) +
+            moon_z * np.squeeze(kz) 
+            ) * 2 * np.pi / cst.c * np.squeeze(detector.frequencyvector)
         proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
@@ -723,5 +735,8 @@ def time_of_fmax(timevector, frequencyvector, fmax):
     try:
         return timevector[np.searchsorted(frequencyvector[:, 0], fmax)]
     except IndexError as e:
-        raise ValueError("The max_frequency given was not found in the frequency vector - "
+        if np.all(frequencyvector[:, 0] < fmax):
+            return -1
+        else:
+            raise ValueError("The max_frequency given was not found in the frequency vector - "
                          "it might be outside the detector band.") from e
