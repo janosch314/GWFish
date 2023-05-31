@@ -13,11 +13,12 @@ PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
 
 class DetectorComponent:
 
-    def __init__(self, name, component, detector_def, plot):
+    def __init__(self, name, component, detector_def, plot, psd_path):
         self.plot = plot
         self.id = component
         self.name = name
         self.detector_def = detector_def
+        self.psd_path = psd_path
         self.setProperties()
 
     def setProperties(self):
@@ -45,7 +46,7 @@ class DetectorComponent:
             self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * self.e_long + np.sin(
                 self.arm_azimuth + self.opening_angle) * self.e_lat
 
-            self.psd_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
+            self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
 
         elif detector_def['detector_class'] == 'lunararray':
 
@@ -60,7 +61,7 @@ class DetectorComponent:
             self.e1 = np.array([np.cos(self.lat) * np.cos(self.lon), np.cos(self.lat) * np.sin(self.lon), np.sin(self.lat)])
             self.e2 = np.cos(self.azimuth) * self.e_long + np.sin(self.azimuth) * self.e_lat
 
-            self.psd_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
+            self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
             self.psd_data[:, 1] = self.psd_data[:, 1]/eval(str(detector_def['number_stations']))
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             # see LISA 2017 mission document
@@ -77,7 +78,7 @@ class DetectorComponent:
             # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
             # S_opt = (2 / self.L) ** 2 * 2.5e-23 * (1 + (2e-3 / ff) ** 4)
             # S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
-            raw_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
+            raw_data = np.loadtxt(psd_path / detector_def['psd_data'])
             ff = raw_data[:,0]
             self.psd_data = np.zeros((len(ff), 2))
             S_pm = (2/self.L)**2 * raw_data[:,1]
@@ -111,7 +112,7 @@ class DetectorComponent:
 
 class Detector:
 
-    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG, plot=False):
+    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG, plot=False, psd_path=PSD_PATH):
         self.components = []
         if fisher_parameters is not None:
             nd = len(fisher_parameters)
@@ -161,17 +162,17 @@ class Detector:
 
         if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'satellitesolarorbit'):
             for k in np.arange(3):
-                self.components.append(DetectorComponent(name=name, component=k, detector_def=detector_def, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=k, detector_def=detector_def, plot=plot, psd_path=psd_path))
         elif detector_def['detector_class'] == 'lunararray':
             if detector_def['azimuth']==None:
                 detector_def['azimuth'] = '0'
-                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot, psd_path=psd_path))
                 detector_def['azimuth'] = 'np.pi/2.'
-                self.components.append(DetectorComponent(name=name, component=1, detector_def=detector_def, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=1, detector_def=detector_def, plot=plot, psd_path=psd_path))
             else:
-                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot, psd_path=psd_path))
         else:
-            self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
+            self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot, psd_path=psd_path))
 
 
 class Network:
