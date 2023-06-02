@@ -237,7 +237,11 @@ def get_moon_coordinates(times):
         print('Finished computing interpolating object')
         
     interp_x, interp_y, interp_z = INTERP_MOON_POSIION
-    return interp_x(times), interp_y(times), interp_z(times)
+    return (
+        interp_x(times, bounds_error=False, fill_value=np.nan), 
+        interp_y(times, bounds_error=False, fill_value=np.nan), 
+        interp_z(times, bounds_error=False, fill_value=np.nan),
+    )
 
 def solarorbit(tt, R, eps, a0, b0):
     w0 = np.sqrt(cst.G * cst.Msol / R ** 3)  # w0 has a 1% error when using this equation for Earth orbit
