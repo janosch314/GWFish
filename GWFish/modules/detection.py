@@ -221,9 +221,9 @@ def create_interp_object():
     moon_x, moon_y, moon_z = get_moon_coordinates_ephemeris(times)
     
     return (
-        interp1d(times, moon_x),
-        interp1d(times, moon_y),
-        interp1d(times, moon_z),
+        interp1d(times, moon_x, bounds_error=False, fill_value=np.nan),
+        interp1d(times, moon_y, bounds_error=False, fill_value=np.nan),
+        interp1d(times, moon_z, bounds_error=False, fill_value=np.nan),
     )
 
 
@@ -238,9 +238,9 @@ def get_moon_coordinates(times):
         
     interp_x, interp_y, interp_z = INTERP_MOON_POSIION
     return (
-        interp_x(times, bounds_error=False, fill_value=np.nan), 
-        interp_y(times, bounds_error=False, fill_value=np.nan), 
-        interp_z(times, bounds_error=False, fill_value=np.nan),
+        interp_x(times), 
+        interp_y(times), 
+        interp_z(times),
     )
 
 def solarorbit(tt, R, eps, a0, b0):
