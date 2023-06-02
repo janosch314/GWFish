@@ -213,18 +213,31 @@ def get_moon_coordinates_ephemeris(times):
     moon_z = moon.z.si.value
     return moon_x, moon_y, moon_z
 
+def create_interp_object():
+
+    # 1980 to 2100, sampled more than once a day
+    times = np.linspace(0, 3786480018., num=50_000)
+    
+    moon_x, moon_y, moon_z = get_moon_coordinates_ephemeris(times)
+    
+    return (
+        interp1d(times, moon_x),
+        interp1d(times, moon_y),
+        interp1d(times, moon_z),
+    )
+
+
+INTERP_MOON_POSIION = None
 def get_moon_coordinates(times):
     
-    # a simple approximation of the correct get_moon_coordinates_ephemeris
-    # function above; orders of magnitude faster
-    
-    lmst = LunarMeanSiderealTime(times)
-    moon_x = 3.82969727e+08 * np.sin(lmst-1.50728156e+00)
-    moon_y = 3.59331733e+08 * np.sin(lmst-3.07286943e+00)
-    moon_z = -1.33617998e+08 * np.sin(lmst+8.17157004e+01)
-    
-    return moon_x, moon_y, moon_z
-
+    global INTERP_MOON_POSIION
+    if INTERP_MOON_POSIION is None:
+        print('Computing interpolating object')
+        INTERP_MOON_POSIION = create_interp_object()
+        print('Finished computing interpolating object')
+        
+    interp_x, interp_y, interp_z = INTERP_MOON_POSIION
+    return interp_x(times), interp_y(times), interp_z(times)
 
 def solarorbit(tt, R, eps, a0, b0):
     w0 = np.sqrt(cst.G * cst.Msol / R ** 3)  # w0 has a 1% error when using this equation for Earth orbit
