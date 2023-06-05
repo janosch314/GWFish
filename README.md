@@ -36,9 +36,7 @@ Please cite [GWFish publication](https://doi.org/10.1016/j.ascom.2022.100671) if
 
 ## Open GWFish tutorial in Google Colab
 
-The tutorial notebook can be opend in Google Colab without the need to download locally any package. Here is the link:
-
-* ``gwfish``: [Notebook GWFish](<https://colab.research.google.com/https://github.com/janosch314/GWFish/blob/main/gwfish_tutorial.ipynb>)
+The tutorial notebook can be opend in Google Colab without the need to download locally any package. Here is the link: [notebook GWFish](<https://colab.research.google.com/github/janosch314/GWFish/blob/main/gwfish_tutorial.ipynb>)
 
 
 This work is licensed under a [Creative Commons Attribution 4.0 International
