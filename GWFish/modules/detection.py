@@ -489,36 +489,8 @@ def projection_earth(parameters, detector, polarizations, timevector):
 
     return proj
 
-
-def projection_moon(parameters, detector, polarizations, timevector):
-    """
-    See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
-    [u, v, w] represent the Earth-frame
-    [m, n, omega] represent the wave-frame
-    Note1: there is a typo in the definition of the wave-frame in Nishizawa et al.
-    Note2: it is computationally more expensive to use numpy.einsum instead of working with several vector quantities
-    """
-
-    # timevector = parameters['geocent_time'] * np.ones_like(timevector)  # switch off Earth's rotation
-
-    nt = len(polarizations[:, 0])
-
-    components = detector.components
-    proj = np.zeros((nt, len(components)), dtype=complex)
-
-    if timevector.ndim == 1:
-        timevector = timevector[:, np.newaxis]
-
-    # note that RA/DEC are not translated into lunar-centered coordinates! TO BE FIXED
-    ra = parameters['ra']
-    dec = parameters['dec']
-    psi = parameters['psi']
-
-    theta = np.pi / 2. - dec
-    lmst = LunarMeanSiderealTime(timevector)
-    phi = ra - lmst
-
-    # saving timevector and lmst for plotting
+def compute_h_tensor(polarizations, theta, phi, psi):
+        # saving timevector and lmst for plotting
     # np.save('timevector.npy', timevector)
     # np.save('lmst.npy', lmst)
 
@@ -564,6 +536,38 @@ def projection_moon(parameters, detector, polarizations, timevector):
     hzz = polarizations[:, 0] * (mz * mz - nz * nz) + polarizations[:, 1] * (mz * nz + nz * mz)
     # print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
 
+    return hxx, hxy, hxz, hyy, hyz, hzz
+
+def projection_moon(parameters, detector, polarizations, timevector):
+    """
+    See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
+    [u, v, w] represent the Earth-frame
+    [m, n, omega] represent the wave-frame
+    Note1: there is a typo in the definition of the wave-frame in Nishizawa et al.
+    Note2: it is computationally more expensive to use numpy.einsum instead of working with several vector quantities
+    """
+
+    # timevector = parameters['geocent_time'] * np.ones_like(timevector)  # switch off Earth's rotation
+
+    nt = len(polarizations[:, 0])
+
+    components = detector.components
+    proj = np.zeros((nt, len(components)), dtype=complex)
+
+    if timevector.ndim == 1:
+        timevector = timevector[:, np.newaxis]
+
+    # note that RA/DEC are not translated into lunar-centered coordinates! TO BE FIXED
+    ra = parameters['ra']
+    dec = parameters['dec']
+    psi = parameters['psi']
+
+    theta = np.pi / 2. - dec
+    lmst = LunarMeanSiderealTime(timevector)
+    phi = ra - lmst
+    
+    hxx, hxy, hxz, hyy, hyz, hzz = compute_h_tensor(polarizations, theta, phi, psi)
+
     moon_x, moon_y, moon_z = get_moon_coordinates(np.squeeze(timevector))
     
     # start_time = time.time()
@@ -586,6 +590,77 @@ def projection_moon(parameters, detector, polarizations, timevector):
         proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
+    max_observation_time = detector.mission_lifetime
+    tc = parameters['geocent_time']
+
+    if fmax := parameters.get('max_frequency_cutoff', None):
+        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
+        
+    proj[np.where(timevector < tc - max_observation_time), :] = 0.j
+
+    return proj
+
+def projection_moon_interferometer(parameters, detector, polarizations, timevector):
+    """
+    See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
+    [u, v, w] represent the Earth-frame
+    [m, n, omega] represent the wave-frame
+    Note1: there is a typo in the definition of the wave-frame in Nishizawa et al.
+    Note2: it is computationally more expensive to use numpy.einsum instead of working with several vector quantities
+    
+    This version of the function implements the projection onto a Moon-based interferometer.
+    """
+
+    # timevector = parameters['geocent_time'] * np.ones_like(timevector)  # switch off Earth's rotation
+
+    nt = len(polarizations[:, 0])
+
+    components = detector.components
+    proj = np.zeros((nt, len(components)), dtype=complex)
+
+    if timevector.ndim == 1:
+        timevector = timevector[:, np.newaxis]
+
+    # note that RA/DEC are not translated into lunar-centered coordinates! TO BE FIXED
+    ra = parameters['ra']
+    dec = parameters['dec']
+    psi = parameters['psi']
+
+    theta = np.pi / 2. - dec
+    lmst = LunarMeanSiderealTime(timevector)
+    phi = ra - lmst
+    
+    hxx, hxy, hxz, hyy, hyz, hzz = compute_h_tensor(polarizations, theta, phi, psi)
+
+    moon_x, moon_y, moon_z = get_moon_coordinates(np.squeeze(timevector))
+    
+    # start_time = time.time()
+    for k in np.arange(len(components)):
+        e1 = components[k].e1
+        e2 = components[k].e2
+        # proj[:, k] = np.einsum('i,jik,k->j', e1, hij, e2)
+        # proj[:, k] = e1[0] * e2[0] * hxx \
+        #              + e1[1] * e2[1] * hyy \
+        #              + e1[2] * e2[2] * hzz \
+        #              + (e1[0] * e2[1] + e2[0] * e1[1]) * hxy \
+        #              + (e1[0] * e2[2] + e2[0] * e1[2]) * hxz \
+        #              + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
+
+        proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
+                     + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
+                     + 0.5 * (e1[2] ** 2 - e2[2] ** 2) * hzz \
+                     + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
+                     + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
+                     + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
+
+
+        phase_shift = (
+            moon_x * np.squeeze(kx) +
+            moon_y * np.squeeze(ky) +
+            moon_z * np.squeeze(kz) 
+            ) * 2 * np.pi / cst.c * np.squeeze(detector.frequencyvector)
+        proj[:, k] *= np.exp(-1.j * phase_shift)
+    # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     max_observation_time = detector.mission_lifetime
     tc = parameters['geocent_time']
