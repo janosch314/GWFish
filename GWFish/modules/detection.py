@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from pathlib import Path
-from astropy.coordinates import get_moon, ICRS
+from astropy.coordinates import get_body, ICRS, GCRS
 from astropy.time import Time
 
 import GWFish.modules.constants as cst
@@ -206,7 +206,7 @@ def LunarMeanSiderealTime(gps):
     return np.mod((gps - 1126260000.) / (3600. * cst.lunar_sidereal_period), 1) * 2. * np.pi
 
 def get_moon_coordinates_ephemeris(times):
-    moon = get_moon(Time(times, format='gps'), ephemeris='jpl').transform_to(ICRS())
+    moon = get_body("moon", Time(times, format='gps'), ephemeris='jpl').transform_to(ICRS())
     moon.representation_type = 'cartesian'
     moon_x = moon.x.si.value
     moon_y = moon.y.si.value
@@ -525,6 +525,10 @@ def projection_moon(parameters, detector, polarizations, timevector):
     kx = -np.sin(theta) * np.cos(phi)
     ky = -np.sin(theta) * np.sin(phi)
     kz = -np.cos(theta)
+    
+    kx_icrs = -np.sin(theta) * np.cos(ra)
+    ky_icrs = -np.sin(theta) * np.sin(ra)
+    kz_icrs = -np.cos(theta)
 
     # start_time = time.time()
     # u = np.array([np.cos(theta) * np.cos(phi[:,0]), np.cos(theta) * np.sin(phi[:,0]), -np.sin(theta)*np.ones_like(phi[:,0])])
@@ -575,9 +579,9 @@ def projection_moon(parameters, detector, polarizations, timevector):
                      + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
 
         phase_shift = (
-            moon_x * np.squeeze(kx) +
-            moon_y * np.squeeze(ky) +
-            moon_z * np.squeeze(kz) 
+            moon_x * np.squeeze(kx_icrs) +
+            moon_y * np.squeeze(ky_icrs) +
+            moon_z * np.squeeze(kz_icrs)
             ) * 2 * np.pi / cst.c * np.squeeze(detector.frequencyvector)
         proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
