@@ -765,7 +765,7 @@ def time_of_fmax(timevector, frequencyvector, fmax):
         return timevector[np.searchsorted(frequencyvector[:, 0], fmax)]
     except IndexError as e:
         if np.all(frequencyvector[:, 0] < fmax):
-            return -1
+            return timevector[-1]
         else:
             raise ValueError("The max_frequency given was not found in the frequency vector - "
                          "it might be outside the detector band.") from e
