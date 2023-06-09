@@ -225,6 +225,7 @@ def create_moon_position_interp(times):
 
 INTERP_MOON_RANGE = (0,0)
 INTERP_MOON_POSIION = None
+EARLIEST_POSSIBLE_TIME = 0. # gps time for ~1980
 def get_moon_coordinates(times):
     
     global INTERP_MOON_POSIION
@@ -232,13 +233,17 @@ def get_moon_coordinates(times):
     interp_invalid = False
     if INTERP_MOON_POSIION is None:
         interp_invalid = True
-    if times[0] < INTERP_MOON_RANGE[0] or times[-1] > INTERP_MOON_RANGE[1]:
+    if times[0] < INTERP_MOON_RANGE[0]:
+        if INTERP_MOON_RANGE[0] > EARLIEST_POSSIBLE_TIME:
+            interp_invalid = True
+    if times[-1] > INTERP_MOON_RANGE[1]:
         interp_invalid = True
     
     if interp_invalid:
         print('Computing interpolating object')
-        time_interval = times[-1] - times[0]
-        INTERP_MOON_RANGE = times[0] - time_interval / 10, times[-1] + time_interval / 10
+        t0, t1 = max(times[0], EARLIEST_POSSIBLE_TIME), times[-1]
+        time_interval = t1 - t0
+        INTERP_MOON_RANGE = t0 - time_interval / 10, t1 + time_interval / 10
         new_times = np.arange(*INTERP_MOON_RANGE, step=3600*12)
         INTERP_MOON_POSIION = create_moon_position_interp(new_times)
         print('Finished computing interpolating object')
