@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from pathlib import Path
-from astropy.coordinates import get_moon
+from astropy.coordinates import get_moon, ICRS
 from astropy.time import Time
 
 import GWFish.modules.constants as cst
@@ -206,17 +206,14 @@ def LunarMeanSiderealTime(gps):
     return np.mod((gps - 1126260000.) / (3600. * cst.lunar_sidereal_period), 1) * 2. * np.pi
 
 def get_moon_coordinates_ephemeris(times):
-    moon = get_moon(Time(times, format='gps'), ephemeris='jpl')
+    moon = get_moon(Time(times, format='gps'), ephemeris='jpl').transform_to(ICRS())
     moon.representation_type = 'cartesian'
     moon_x = moon.x.si.value
     moon_y = moon.y.si.value
     moon_z = moon.z.si.value
     return moon_x, moon_y, moon_z
 
-def create_interp_object():
-
-    # 1980 to 2100, sampled more than once a day
-    times = np.linspace(0, 3786480018., num=50_000)
+def create_moon_position_interp(times):
     
     moon_x, moon_y, moon_z = get_moon_coordinates_ephemeris(times)
     
@@ -226,14 +223,24 @@ def create_interp_object():
         interp1d(times, moon_z, bounds_error=False, fill_value=np.nan),
     )
 
-
+INTERP_MOON_RANGE = (0,0)
 INTERP_MOON_POSIION = None
 def get_moon_coordinates(times):
     
     global INTERP_MOON_POSIION
+    global INTERP_MOON_RANGE
+    interp_invalid = False
     if INTERP_MOON_POSIION is None:
+        interp_invalid = True
+    if times[0] < INTERP_MOON_RANGE[0] or times[-1] > INTERP_MOON_RANGE[1]:
+        interp_invalid = True
+    
+    if interp_invalid:
         print('Computing interpolating object')
-        INTERP_MOON_POSIION = create_interp_object()
+        time_interval = times[-1] - times[0]
+        INTERP_MOON_RANGE = times[0] - time_interval / 10, times[-1] + time_interval / 10
+        new_times = np.arange(*INTERP_MOON_RANGE, step=3600*12)
+        INTERP_MOON_POSIION = create_moon_position_interp(new_times)
         print('Finished computing interpolating object')
         
     interp_x, interp_y, interp_z = INTERP_MOON_POSIION
