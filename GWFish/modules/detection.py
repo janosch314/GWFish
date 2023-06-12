@@ -63,6 +63,25 @@ class DetectorComponent:
 
             self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
             self.psd_data[:, 1] = self.psd_data[:, 1]/eval(str(detector_def['number_stations']))
+        
+        elif detector_def['detector_class'] == 'lunarinterferometer':
+            self.lat = eval(str(detector_def['lat']))
+            self.lon = eval(str(detector_def['lon']))
+
+            self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
+            self.arm_azimuth = eval(str(detector_def['azimuth']))
+
+            self.opening_angle = eval(str(detector_def['opening_angle']))
+            self.e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
+            self.e_lat = np.array(
+                [-np.sin(self.lat) * np.cos(self.lon), -np.sin(self.lat) * np.sin(self.lon), np.cos(self.lat)])
+            self.position = np.array(
+                [np.cos(self.lat) * np.cos(self.lon), np.cos(self.lat) * np.sin(self.lon), np.sin(self.lat)])
+            self.e1 = np.cos(self.arm_azimuth) * self.e_long + np.sin(self.arm_azimuth) * self.e_lat
+            self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * self.e_long + np.sin(
+                self.arm_azimuth + self.opening_angle) * self.e_lat
+
+        
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             # see LISA 2017 mission document
             # ff = np.logspace(-4, 0, 1000)   # later interpolated onto frequencyvector
@@ -159,7 +178,10 @@ class Detector:
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             self.location = 'solarorbit'
             self.mission_lifetime = eval(str(detector_def['mission_lifetime']))
-
+        elif detector_def['detector_class'] == 'lunarinterferometer':
+            self.location = 'moon_interferometer'
+            self.mission_lifetime = eval(str(detector_def['mission_lifetime']))
+        
         if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'satellitesolarorbit'):
             for k in np.arange(3):
                 self.components.append(DetectorComponent(name=name, component=k, detector_def=detector_def, plot=plot, psd_path=psd_path))
@@ -336,16 +358,15 @@ def AET(polarizations, eij, theta, ra, psi, L, ff):
 
 
 def projection(parameters, detector, polarizations, timevector):
-    # rudimentary:
-    # coords = SkyCoord(ra=ra, dec=dec, frame='icrs', unit='rad')
-    # angles = coords.transform_to('barycentricmeanecliptic')
-
+    
     if detector.location == 'earth':
         proj = projection_earth(parameters, detector, polarizations, timevector)
     elif detector.location == 'moon':
         proj = projection_moon(parameters, detector, polarizations, timevector)
     elif detector.location == 'solarorbit':
         proj = projection_solarorbit(parameters, detector, polarizations, timevector)
+    elif detector.location == 'moon_interferometer':
+        proj = projection_moon_interferometer(parameters, detector, polarizations, timevector)
     else:
         print('Unknown detector location')
         exit(0)
@@ -497,10 +518,6 @@ def compute_h_tensor(polarizations, theta, phi, psi):
     kx = -np.sin(theta) * np.cos(phi)
     ky = -np.sin(theta) * np.sin(phi)
     kz = -np.cos(theta)
-    
-    kx_icrs = -np.sin(theta) * np.cos(ra)
-    ky_icrs = -np.sin(theta) * np.sin(ra)
-    kz_icrs = -np.cos(theta)
 
     # start_time = time.time()
     # u = np.array([np.cos(theta) * np.cos(phi[:,0]), np.cos(theta) * np.sin(phi[:,0]), -np.sin(theta)*np.ones_like(phi[:,0])])
@@ -561,10 +578,13 @@ def projection_moon(parameters, detector, polarizations, timevector):
     ra = parameters['ra']
     dec = parameters['dec']
     psi = parameters['psi']
-
     theta = np.pi / 2. - dec
     lmst = LunarMeanSiderealTime(timevector)
     phi = ra - lmst
+    
+    kx_icrs = -np.sin(theta) * np.cos(ra)
+    ky_icrs = -np.sin(theta) * np.sin(ra)
+    kz_icrs = -np.cos(theta)
     
     hxx, hxy, hxz, hyy, hyz, hzz = compute_h_tensor(polarizations, theta, phi, psi)
 
@@ -630,6 +650,10 @@ def projection_moon_interferometer(parameters, detector, polarizations, timevect
     lmst = LunarMeanSiderealTime(timevector)
     phi = ra - lmst
     
+    kx_icrs = -np.sin(theta) * np.cos(ra)
+    ky_icrs = -np.sin(theta) * np.sin(ra)
+    kz_icrs = -np.cos(theta)
+
     hxx, hxy, hxz, hyy, hyz, hzz = compute_h_tensor(polarizations, theta, phi, psi)
 
     moon_x, moon_y, moon_z = get_moon_coordinates(np.squeeze(timevector))
@@ -655,9 +679,9 @@ def projection_moon_interferometer(parameters, detector, polarizations, timevect
 
 
         phase_shift = (
-            moon_x * np.squeeze(kx) +
-            moon_y * np.squeeze(ky) +
-            moon_z * np.squeeze(kz) 
+            moon_x * np.squeeze(kx_icrs) +
+            moon_y * np.squeeze(ky_icrs) +
+            moon_z * np.squeeze(kz_icrs) 
             ) * 2 * np.pi / cst.c * np.squeeze(detector.frequencyvector)
         proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))

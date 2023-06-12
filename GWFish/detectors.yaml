@@ -191,3 +191,35 @@ LGWA_Soundcheck:
             fmax:             4
             spacing:          linear
             df:               1./4096.
+LBI-GND:
+            lat:              -85 * np.pi / 180.
+            lon:              0
+            opening_angle:    np.pi/2
+            azimuth:          0.
+            psd_data:         lsga_psd.txt
+            duty_factor:      1
+            detector_class:   lunarinterferometer
+            number_stations:  1
+            mission_lifetime: 10 * 3.16e7
+            plotrange:        1e-3, 4, 1e-23, 1e-19
+            fmin:             1e-3
+            fmax:             1e2
+            spacing:          geometric
+            npoints:          5000
+            df:               1./4096.
+LBI-SUS:
+            lat:              -85 * np.pi / 180.
+            lon:              0
+            opening_angle:    np.pi/2
+            azimuth:          0.
+            psd_data:         lunarsus_psd.txt
+            duty_factor:      1
+            detector_class:   lunarinterferometer
+            number_stations:  1
+            mission_lifetime: 10 * 3.16e7
+            plotrange:        1e-3, 4, 1e-23, 1e-19
+            fmin:             1e-3
+            fmax:             1e2
+            spacing:          geometric
+            npoints:          5000
+            df:               1./4096.

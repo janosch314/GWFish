@@ -2,6 +2,7 @@ import numpy as np
 from GWFish.modules.waveforms import TaylorF2
 from GWFish.modules.detection import Detector, projection, create_moon_position_interp
 from unittest.mock import Mock
+import pytest
 
 BNS_PARAMS = {
     'mass_1': 1.4957673, 
@@ -20,10 +21,12 @@ BNS_PARAMS = {
     'lambda_2':586.5487031450857
 }
 
-def test_moon_projection():
+@pytest.mark.parametrize('detector', [
+    Detector('LGWA', parameters = [None], fisher_parameters = [None]),
+    Detector('LBI-SUS', parameters = [None], fisher_parameters = [None]),
+])
+def test_moon_projection(detector):
     # mock = Mock(create_moon_position_interp)
-    detector = Detector('LGWA', parameters = [None], fisher_parameters = [None])
-    
     data_params = {
         'frequencyvector': detector.frequencyvector,
         'f_ref': 50.
