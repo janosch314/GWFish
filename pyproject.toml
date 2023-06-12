@@ -41,6 +41,8 @@ pytest-sugar = "^0.9.6"
 healpy = "^1.16.2"
 pycbc = "^2.2.0"
 hypothesis = "^6.75.2"
+scalene = "^1.5.21.2"
+jplephem = "^2.18"
 
 [tool.poetry.extras]
 waveforms = ["lalsuite"]
