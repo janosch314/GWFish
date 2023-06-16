@@ -61,7 +61,8 @@ def horizon(
     detector: Union[Detector, Network],
     target_SNR: int = 9, 
     waveform_model: str = WAVEFORM_MODEL,
-    cosmology_model: cosmology.Cosmology = Planck18
+    cosmology_model: cosmology.Cosmology = Planck18,
+    source_frame_masses: bool = True,
     ):
     """
     Given the parameters for a GW signal and a detector, this function 
@@ -84,10 +85,11 @@ def horizon(
     
     def SNR_error(redshift):
         distance = cosmology_model.luminosity_distance(redshift).value
-        mod_params = params | {'redshift': redshift, 'luminosity_distance': distance}
+        mod_params = params | {'luminosity_distance': distance}
+        if source_frame_masses:
+            mod_params['redshift'] = redshift
         with np.errstate(divide='ignore'):
             return np.log(snr_computer(mod_params, detector, waveform_model)/target_SNR)
-
     
     if not SNR_error(MIN_REDSHIFT) > 0:
         warnings.warn('The source is completely out of band')
