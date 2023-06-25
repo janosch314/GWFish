@@ -97,7 +97,7 @@ class DetectorComponent:
             # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
             # S_opt = (2 / self.L) ** 2 * 2.5e-23 * (1 + (2e-3 / ff) ** 4)
             # S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
-            raw_data = np.loadtxt(psd_path / detector_def['psd_data'])
+            raw_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
             ff = raw_data[:,0]
             self.psd_data = np.zeros((len(ff), 2))
             S_pm = (2/self.L)**2 * raw_data[:,1]
