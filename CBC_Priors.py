@@ -39,10 +39,11 @@ def main():
 	npar = len(var_in_cov_matrix)
 	new_cov = np.zeros((ns, npar, npar))
 	new_parameter_errors = np.zeros((ns, npar))
-	sky_localization = np.zeros((ns,))
 
-	idx_ra = var_in_cov_matrix.index('ra')
-	idx_dec = var_in_cov_matrix.index('dec')
+	if ('ra' in var_in_cov_matrix) and ('dec' in var_in_cov_matrix):
+		sky_localization = np.zeros((ns,))
+		idx_ra = var_in_cov_matrix.index('ra')
+		idx_dec = var_in_cov_matrix.index('dec')
 
 
 	number_of_samples = 1e6
