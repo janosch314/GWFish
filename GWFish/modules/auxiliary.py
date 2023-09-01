@@ -87,9 +87,13 @@ def scalar_product(deriv1, deriv2, detector):
 
     df = ff[1, 0] - ff[0, 0]
 
+    integrands = []
     scalar_prods = np.zeros(len(components))
     for k in np.arange(len(components)):
         scalar_prods[k] = 4 * np.trapz(
                 np.real(deriv1[:, k] * np.conjugate(deriv2[:, k])) / components[k].Sn(ff[:, 0]), ff[:, 0], axis=0)
+        integrands.append(np.real(deriv1[:, k] * np.conjugate(deriv2[:, k])))
+        # np.save(f'integrand_{k}.npy', np.real(deriv1[:, k] * np.conjugate(deriv2[:, k])))
+        # np.save(f'normalized_integrand_{k}.npy', np.real(deriv1[:, k] * np.conjugate(deriv2[:, k])/ components[k].Sn(ff[:, 0])))
 
-    return scalar_prods
+    return scalar_prods, integrands

@@ -164,11 +164,18 @@ class FisherMatrix:
         for p1 in np.arange(self.nd):
             deriv1_p = self.fisher_parameters[p1]
             deriv1 = self.derivative(deriv1_p)
-            self._fm[p1, p1] = np.sum(aux.scalar_product(deriv1, deriv1, self.detector), axis=0)
+            sp, integrands = aux.scalar_product(deriv1, deriv1, self.detector)
+            for k, i in enumerate(integrands):
+                if deriv1_p == 'dec':
+                    np.save(f'integrand_{k}.npy', i)
+            self._fm[p1, p1] = np.sum(sp, axis=0)
             for p2 in np.arange(p1+1, self.nd):
                 deriv2_p = self.fisher_parameters[p2]
                 deriv2 = self.derivative(deriv2_p)
-                self._fm[p1, p2] = np.sum(aux.scalar_product(deriv1, deriv2, self.detector), axis=0)
+                sp, integrands = aux.scalar_product(deriv1, deriv2, self.detector)
+                for k, i in enumerate(integrands):
+                    np.save(f'integrand_corr_{k}.npy', i)
+                self._fm[p1, p2] = np.sum(sp, axis=0)
                 self._fm[p2, p1] = self._fm[p1, p2]
 
     @property

@@ -160,9 +160,10 @@ LGWA:
             mission_lifetime: 10 * 3.16e7
             plotrange:        1e-3, 4, 1e-23, 1e-19
             fmin:             1e-3
-            fmax:             4
-            spacing:          linear
+            fmax:             3.
+            spacing:          geometric
             df:               1./4096.
+            npoints:          10000
 LGWA_Nb:
             lat:              -85 * np.pi / 180.
             lon:              0

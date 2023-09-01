@@ -240,9 +240,9 @@ def create_moon_position_interp(times):
     moon_x, moon_y, moon_z = get_moon_coordinates_ephemeris(times)
     
     return (
-        interp1d(times, moon_x, bounds_error=False, fill_value=np.nan),
-        interp1d(times, moon_y, bounds_error=False, fill_value=np.nan),
-        interp1d(times, moon_z, bounds_error=False, fill_value=np.nan),
+        interp1d(times, moon_x, bounds_error=False, fill_value=np.nan, kind='cubic'),
+        interp1d(times, moon_y, bounds_error=False, fill_value=np.nan, kind='cubic'),
+        interp1d(times, moon_z, bounds_error=False, fill_value=np.nan, kind='cubic'),
     )
 
 INTERP_MOON_RANGE = (0,0)
@@ -266,7 +266,7 @@ def get_moon_coordinates(times):
         t0, t1 = max(times[0], EARLIEST_POSSIBLE_TIME), times[-1]
         time_interval = t1 - t0
         INTERP_MOON_RANGE = t0 - time_interval / 10, t1 + time_interval / 10
-        new_times = np.arange(*INTERP_MOON_RANGE, step=3600*12)
+        new_times = np.arange(*INTERP_MOON_RANGE, step=3600*24)
         INTERP_MOON_POSIION = create_moon_position_interp(new_times)
         print('Finished computing interpolating object')
         
@@ -607,6 +607,7 @@ def projection_moon(parameters, detector, polarizations, timevector):
             moon_y * np.squeeze(ky_icrs) +
             moon_z * np.squeeze(kz_icrs)
             ) * 2 * np.pi / cst.c * np.squeeze(detector.frequencyvector)
+        phase_shift -= phase_shift[-1]
         proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
@@ -683,6 +684,8 @@ def projection_moon_interferometer(parameters, detector, polarizations, timevect
             moon_y * np.squeeze(ky_icrs) +
             moon_z * np.squeeze(kz_icrs) 
             ) * 2 * np.pi / cst.c * np.squeeze(detector.frequencyvector)
+
+        phase_shift -= phase_shift[-1]
         proj[:, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
