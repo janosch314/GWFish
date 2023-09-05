@@ -41,6 +41,7 @@ pytest-sugar = "^0.9.6"
 healpy = "^1.16.2"
 pycbc = "^2.2.0"
 hypothesis = "^6.75.2"
+pytest-mock = "^3.11.1"
 
 [tool.poetry.extras]
 waveforms = ["lalsuite"]

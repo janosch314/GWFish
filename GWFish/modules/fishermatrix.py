@@ -5,6 +5,8 @@ import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
 
 import copy
+import pandas as pd
+from typing import Optional
 
 def invertSVD(matrix):
     thresh = 1e-10
@@ -183,6 +185,150 @@ class FisherMatrix:
 
     def __call__(self):
         return self.fm
+
+def sky_localization_area(
+    network_fisher_inverse: np.ndarray,
+    declination_angle: np.ndarray,
+    right_ascension_index: int,
+    declination_index: int,
+) -> float:
+    """
+    Compute the 1-sigma sky localization ellipse area starting
+    from the full network Fisher matrix inverse and the inclination.
+    """
+    return (
+        np.pi
+        * np.abs(np.cos(declination_angle))
+        * np.sqrt(
+            network_fisher_inverse[right_ascension_index, right_ascension_index]
+            * network_fisher_inverse[declination_index, declination_index]
+            - network_fisher_inverse[right_ascension_index, declination_index] ** 2
+        )
+    )
+
+
+def compute_fisher_errors(
+    network: det.Network,
+    parameter_values: pd.DataFrame,
+    fisher_parameters: list[str],
+    sub_network_ids: list[int],
+) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
+    """
+    Compute Fisher matrix errors for a network whose
+    SNR and Fisher matrices have already been calculated.
+
+    Will only return output for the signals n_above_thr
+    for which the network SNR is above network.detection_SNR[1].
+
+    Returns:
+    network_snr: array with shape (n_above_thr,)
+        Network SNR for the detected signals.
+    parameter_errors: array with shape (n_above_thr, n_parameters)
+        One-sigma Fisher errors for the parameters.
+    sky_localization: array with shape (n_above_thr,) or None
+        One-sigma sky localization area in steradians,
+        returned if the signals have both right ascension and declination,
+        None otherwise.
+    """
+
+    n_params = len(fisher_parameters)
+    n_signals = len(parameter_values)
+
+    assert n_params > 0
+    assert n_signals > 0
+
+    signals_havesky = False
+    if ("ra" in fisher_parameters) and ("dec" in fisher_parameters):
+        signals_havesky = True
+        i_ra = fisher_parameters.index("ra")
+        i_dec = fisher_parameters.index("dec")
+
+    detector_snr_thr, network_snr_thr = network.detection_SNR
+
+    parameter_errors = np.zeros((n_signals, n_params))
+    if signals_havesky:
+        sky_localization = np.zeros((n_signals,))
+    network_snr = np.zeros((n_signals,))
+
+    detectors = [network.detectors[d] for d in sub_network_ids]
+
+    network_snr = np.sqrt(sum((detector.SNR**2 for detector in detectors)))
+
+    for k in range(n_signals):
+        network_fisher_matrix = np.zeros((n_params, n_params))
+
+        for detector in detectors:
+            if detector.SNR[k] > detector_snr_thr:
+                network_fisher_matrix += detector.fisher_matrix[k, :, :]
+
+        network_fisher_inverse = invertSVD(network_fisher_matrix)
+        parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
+
+        if signals_havesky:
+            sky_localization[k] = sky_localization_area(
+                network_fisher_inverse, parameter_values["dec"].iloc[k], i_ra, i_dec
+            )
+
+    detected = np.where(network_snr > network_snr_thr)[0]
+
+    if signals_havesky:
+        return (
+            network_snr[detected],
+            parameter_errors[detected, :],
+            sky_localization[detected],
+        )
+
+    return network_snr[detected], parameter_errors[detected, :], None
+
+
+def errors_file_name(
+    network: det.Network, sub_network_ids: list[int], population_name: str
+) -> str:
+
+    sub_network = "_".join([network.detectors[k].name for k in sub_network_ids])
+
+    return (
+        "Errors_"
+        + sub_network
+        + "_"
+        + population_name
+        + "_SNR"
+        + str(network.detection_SNR[1])
+    )
+
+
+def analyze_and_save_to_txt(
+    network: det.Network,
+    parameter_values: pd.DataFrame,
+    fisher_parameters: list[str],
+    sub_network_ids_list: list[list[int]],
+    population_name: str,
+) -> None:
+
+    for sub_network_ids in sub_network_ids_list:
+
+        network_snr, errors, sky_localization = compute_fisher_errors(
+            network=network,
+            parameter_values=parameter_values,
+            fisher_parameters=fisher_parameters,
+            sub_network_ids=sub_network_ids,
+        )
+
+        filename = errors_file_name(
+            network=network,
+            sub_network_ids=sub_network_ids,
+            population_name=population_name,
+        )
+
+        output_to_txt_file(
+            parameter_values=parameter_values,
+            network_snr=network_snr,
+            parameter_errors=errors,
+            sky_localization=sky_localization,
+            fisher_parameters=fisher_parameters,
+            filename=filename,
+        )
+        
 
 def analyzeFisherErrors(network, parameter_values, fisher_parameters, population, networks_ids):
     """
