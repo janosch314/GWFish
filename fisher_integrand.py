@@ -1,10 +1,10 @@
 import numpy as np
 from GWFish.modules.waveforms import TaylorF2, LALFD_Waveform
 from GWFish.modules.detection import Detector, projection, create_moon_position_interp, get_moon_coordinates
-from GWFish.modules.fishermatrix import FisherMatrix
+from GWFish.modules.fishermatrix import FisherMatrix, invertSVD
 import matplotlib.pyplot as plt
 
-detector = Detector('LBI-SUS', parameters = [None], fisher_parameters = [None])
+detector = Detector('LGWA', parameters = [None], fisher_parameters = [None])
 plt.rcParams.update({
     "text.usetex": True,
     "font.family": "Serif"
@@ -58,10 +58,42 @@ channels = {
 
 fm = FisherMatrix('IMRPhenomD_NRTidalv2', BNS_PARAMS, [
     'dec', 
+    'ra',
     'geocent_time',
-    # 'phase',
+    'phase',
+    'psi',
+    'mass_1',
+    'mass_2',
+    'luminosity_distance',
+    'theta_jn',
+    'a_1',
+    'a_2',
     ], detector, waveform_class=LALFD_Waveform)
-fm.fm
+inverse, _ = invertSVD(fm.fm)
+
+def sky_localization_area(
+    network_fisher_inverse: np.ndarray,
+    declination_angle: np.ndarray,
+    right_ascension_index: int,
+    declination_index: int,
+) -> float:
+    """
+    Compute the 1-sigma sky localization ellipse area starting
+    from the full network Fisher matrix inverse and the inclination.
+    """
+    return (
+        np.pi
+        * np.abs(np.cos(declination_angle))
+        * np.sqrt(
+            network_fisher_inverse[right_ascension_index, right_ascension_index]
+            * network_fisher_inverse[declination_index, declination_index]
+            - network_fisher_inverse[right_ascension_index, declination_index] ** 2
+        )
+    )
+
+print(np.sqrt(inverse[0, 0]) * (180/np.pi) * 60)
+print(np.sqrt(inverse[1, 1]) * (180/np.pi) * 60)
+print(sky_localization_area(inverse, BNS_PARAMS['dec'], 1, 0) * 2 * (-np.log(0.1) ) * (180/np.pi)**2 * 3600)
 
 cmap = plt.get_cmap('Paired')
 colors = [cmap(index) for index in np.linspace(0, 1, num=8)]
@@ -81,7 +113,7 @@ f = np.squeeze(detector.frequencyvector)
 x, y, z = get_moon_coordinates(np.squeeze(timevector))
 phase = (x*kx_icrs + y*ky_icrs + z*kz_icrs) * 2 * np.pi / 299792458. * f
 
-for k in (0,):
+for k in (0, 1):
     # integrand_corr = np.load(f'integrand_corr_{k}.npy')
     integrand = np.load(f'integrand_{k}.npy')
     # normalized_integrand = np.load(f'normalized_integrand_{k}.npy')
