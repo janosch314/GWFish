@@ -11,8 +11,7 @@ PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
 
 class DetectorComponent:
 
-    def __init__(self, name, component, detector_def, plot):
-        self.plot = plot
+    def __init__(self, name, component, detector_def):
         self.id = component
         self.name = name
         self.detector_def = detector_def
@@ -92,19 +91,19 @@ class DetectorComponent:
 
         self.Sn = interp1d(self.psd_data[:, 0], self.psd_data[:, 1], bounds_error=False, fill_value=1.)
 
-        if self.plot:
-            plt.figure()
-            plt.loglog(self.psd_data[:, 0], np.sqrt(self.psd_data[:, 1]))
-            plt.xlabel('Frequency [Hz]')
-            plt.ylabel('Strain noise')
-            plt.grid(True)
-            plt.tight_layout()
-            plt.savefig('Sensitivity_' + self.name + '.png')
-            plt.close()
+    def plot_psd(self):
+        plt.figure()
+        plt.loglog(self.psd_data[:, 0], np.sqrt(self.psd_data[:, 1]))
+        plt.xlabel('Frequency [Hz]')
+        plt.ylabel('Strain noise [Hz$^{1/2}$]')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('Sensitivity_' + self.name + '.png')
+        plt.close()
 
 class Detector:
 
-    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG, plot=False):
+    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG):
         self.components = []
         if fisher_parameters is not None:
             nd = len(fisher_parameters)
@@ -154,23 +153,22 @@ class Detector:
 
         if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'satellitesolarorbit'):
             for k in np.arange(3):
-                self.components.append(DetectorComponent(name=name, component=k, detector_def=detector_def, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=k, detector_def=detector_def))
         elif detector_def['detector_class'] == 'lunararray':
             if detector_def['azimuth']==None:
                 detector_def['azimuth'] = '0'
-                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def))
                 detector_def['azimuth'] = 'np.pi/2.'
-                self.components.append(DetectorComponent(name=name, component=1, detector_def=detector_def, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=1, detector_def=detector_def))
             else:
-                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
+                self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def))
         else:
-            self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def, plot=plot))
+            self.components.append(DetectorComponent(name=name, component=0, detector_def=detector_def))
 
 
 class Network:
 
-    def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, fisher_parameters=None,
-                 config=DEFAULT_CONFIG, plot=False):
+    def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG):
         if detector_ids is None:
             detector_ids = ['ET']
         self.name = detector_ids[0]
@@ -184,7 +182,7 @@ class Network:
         self.detectors = []
         for d in np.arange(len(detector_ids)):
             detectors = Detector(name=detector_ids[d], parameters=parameters, fisher_parameters=fisher_parameters,
-                                 config=config, plot=plot)
+                                 config=config)
             self.detectors.append(detectors)
 
 
