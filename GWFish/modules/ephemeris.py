@@ -94,7 +94,7 @@ class EphemerisInterpolate:
         phase_shift = (
             x * kx_icrs +
             y * ky_icrs +
-            z * kz_icrss
+            z * kz_icrs
         ) * 2 * np.pi / cst.c * frequencyvector
 
 class MoonEphemeris(EphemerisInterpolate):
@@ -106,3 +106,11 @@ class MoonEphemeris(EphemerisInterpolate):
             ephemeris='jpl'
         ).transform_to(ICRS())
 
+class EarthEphemeris(EphemerisInterpolate):
+    
+    def get_icrs_from_times(self, times):
+        return get_body(
+            "earth", 
+            Time(times, format='gps'), 
+            ephemeris='jpl'
+        ).transform_to(ICRS())
