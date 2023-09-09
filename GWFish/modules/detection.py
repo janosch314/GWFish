@@ -507,7 +507,7 @@ def projection_moon(parameters, detector, polarizations, timevector):
         e1 = components[k].e1
         e2 = components[k].e2
         
-        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector), np.squeeze(ff))
+        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector), np.squeeze(detector.frequencyvector))
 
         # proj[:, k] = np.einsum('i,jik,k->j', e1, hij, e2)
         proj[:, k] = e1[0] * e2[0] * hxx \
