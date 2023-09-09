@@ -5,6 +5,8 @@ import yaml
 from pathlib import Path
 
 import GWFish.modules.constants as cst
+import GWFish.modules.ephemeris as ephem
+from astropy.coordinates import EarthLocation
 
 DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
 PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
@@ -26,6 +28,13 @@ class DetectorComponent:
 
             self.lat = eval(str(detector_def['lat']))
             self.lon = eval(str(detector_def['lon']))
+            
+            self.ephem = ephem.EarthLocationEphemeris(
+                EarthLocation.from_geodetic(
+                    np.rad2deg(self.lon), 
+                    np.rad2deg(self.lat)
+            ))
+            
             self.arm_azimuth = eval(str(detector_def['azimuth']))
 
             self.opening_angle = eval(str(detector_def['opening_angle']))
@@ -48,6 +57,8 @@ class DetectorComponent:
 
             self.lat = eval(str(detector_def['lat']))
             self.lon = eval(str(detector_def['lon']))
+            self.ephem = ephem.MoonEphemeris()
+            
             self.azimuth = eval(str(detector_def['azimuth']))
 
             self.e_long = np.array([-np.sin(self.lon), np.cos(self.lon), 0])
@@ -411,11 +422,13 @@ def projection_earth(parameters, detector, polarizations, timevector):
         e2 = components[k].e2
 
         # interferometer position
-        x_det = components[k].position[0] * cst.R_earth
-        y_det = components[k].position[1] * cst.R_earth
-        z_det = components[k].position[2] * cst.R_earth
+        # x_det = components[k].position[0] * cst.R_earth
+        # y_det = components[k].position[1] * cst.R_earth
+        # z_det = components[k].position[2] * cst.R_earth
+        # phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
+        
+        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector), np.squeeze(ff))
 
-        phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
 
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
         proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
@@ -501,6 +514,9 @@ def projection_moon(parameters, detector, polarizations, timevector):
     for k in np.arange(len(components)):
         e1 = components[k].e1
         e2 = components[k].e2
+        
+        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector), np.squeeze(ff))
+
         # proj[:, k] = np.einsum('i,jik,k->j', e1, hij, e2)
         proj[:, k] = e1[0] * e2[0] * hxx \
                      + e1[1] * e2[1] * hyy \
@@ -508,6 +524,9 @@ def projection_moon(parameters, detector, polarizations, timevector):
                      + (e1[0] * e2[1] + e2[0] * e1[1]) * hxy \
                      + (e1[0] * e2[2] + e2[0] * e1[2]) * hxz \
                      + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
+                     
+        proj[:, k] *= np.exp(-1.j * phase_shift)
+
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     max_observation_time = detector.mission_lifetime
@@ -515,7 +534,7 @@ def projection_moon(parameters, detector, polarizations, timevector):
 
     if fmax := parameters.get('max_frequency_cutoff', None):
         tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
-        
+
     proj[np.where(timevector < tc - max_observation_time), :] = 0.j
 
     return proj
