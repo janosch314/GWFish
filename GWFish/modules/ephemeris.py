@@ -12,7 +12,7 @@ class EphemerisInterpolate:
     """
 
     earliest_possible_time = 0. # gps time for ~1980
-    interp_kind = 'linear'
+    interp_kind = 3
     
     def __init__(self):
         self.interp_gps_time_range = (0,0)
@@ -74,8 +74,8 @@ class EphemerisInterpolate:
             time_interval = t1 - t0
             self.interp_gps_time_range = t0 - time_interval / 10, t1 + time_interval / 10
             
-            # ensure at least two points
-            n_points = int(np.ceil(time_interval / self.time_step_seconds)) + 1
+            # ensure at least two points for linear interpolation, four for cubic
+            n_points = int(np.ceil(time_interval / self.time_step_seconds)) + self.interp_kind
 
             new_times = np.linspace(*self.interp_gps_time_range, num=n_points)
             self.interp_gps_position = self.create_position_interp(new_times)

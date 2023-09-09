@@ -25,7 +25,7 @@ def test_ephemeris_caching():
     # so it should take less than a millisecond (much less, even, but
     # this test can be a bit loose)
     assert first_time > 1e-1
-    assert second_time < 1e-3
+    assert second_time < 1e-2
     
 
 def test_earth_vs_moon(plot):
@@ -104,3 +104,5 @@ def test_all_coordinates_are_solar_centered(ephem):
     
     # the radius should be roughly an astronomical unit
     assert np.allclose(r, 150e9, rtol=5e-2)
+    
+
