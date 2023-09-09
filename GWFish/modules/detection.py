@@ -114,17 +114,11 @@ class DetectorComponent:
 
 class Detector:
 
-    def __init__(self, name='ET', parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG):
+    def __init__(self, name: str, config=DEFAULT_CONFIG):
         self.components = []
-        if fisher_parameters is not None:
-            nd = len(fisher_parameters)
-        else:
-            nd = 1
 
-        self.fisher_matrix = np.zeros((len(parameters), nd, nd))
         self.name = name
         self.config = config
-        self.SNR = np.zeros(len(parameters))
 
         with open(config) as f:
             doc = yaml.load(f, Loader=yaml.FullLoader)
@@ -179,22 +173,20 @@ class Detector:
 
 class Network:
 
-    def __init__(self, detector_ids = None, detection_SNR=8., parameters=None, fisher_parameters=None, config=DEFAULT_CONFIG):
+    def __init__(self, detector_ids = None, detection_SNR=(0., 10.), config=DEFAULT_CONFIG):
         if detector_ids is None:
-            detector_ids = ['ET']
+            raise ValueError('Detector ids must be specified')
         self.name = detector_ids[0]
         for id in detector_ids[1:]:
             self.name += '_' + id
 
         self.detection_SNR = detection_SNR
-        self.SNR = np.zeros(len(parameters))
-        self.config=config
+        self.config = config
 
-        self.detectors = []
-        for d in np.arange(len(detector_ids)):
-            detectors = Detector(name=detector_ids[d], parameters=parameters, fisher_parameters=fisher_parameters,
-                                 config=config)
-            self.detectors.append(detectors)
+        self.detectors = [
+            Detector(name=identifier, config=config)
+            for identifier in detector_ids
+        ]
 
 
 def GreenwichMeanSiderealTime(gps):
