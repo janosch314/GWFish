@@ -99,7 +99,7 @@ class EphemerisInterpolate:
 
         x, y, z = self.get_coordinates(timevector)
 
-        phase_shift = (
+        return (
             x * kx_icrs +
             y * ky_icrs +
             z * kz_icrs
