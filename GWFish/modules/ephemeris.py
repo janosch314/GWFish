@@ -1,4 +1,4 @@
-from astropy.coordinates import get_body, ICRS, GCRS
+from astropy.coordinates import get_body_barycentric, ICRS, GCRS, EarthLocation
 from astropy.time import Time
 from scipy.interpolate import interp1d
 import numpy as np
@@ -7,8 +7,12 @@ import logging
 import GWFish.modules.constants as cst
 
 class EphemerisInterpolate:
+    """This class provides a way to efficiently compute the xyz coordinates 
+    of a body in the Solar System, as a function of time, by caching the ephemeris.
+    """
 
     earliest_possible_time = 0. # gps time for ~1980
+    interp_kind = 'linear'
     
     def __init__(self):
         self.interp_gps_time_range = (0,0)
@@ -36,9 +40,9 @@ class EphemerisInterpolate:
         x, y, z = self.compute_xyz_cordinates(times)
         
         return (
-            interp1d(times, x, bounds_error=False, fill_value=np.nan),
-            interp1d(times, y, bounds_error=False, fill_value=np.nan),
-            interp1d(times, z, bounds_error=False, fill_value=np.nan),
+            interp1d(times, x, bounds_error=False, fill_value=np.nan, kind=self.interp_kind),
+            interp1d(times, y, bounds_error=False, fill_value=np.nan, kind=self.interp_kind),
+            interp1d(times, z, bounds_error=False, fill_value=np.nan, kind=self.interp_kind),
         )
 
     def interpolation_not_computed(self, times):
@@ -69,7 +73,11 @@ class EphemerisInterpolate:
             t0, t1 = max(times[0], self.earliest_possible_time), times[-1]
             time_interval = t1 - t0
             self.interp_gps_time_range = t0 - time_interval / 10, t1 + time_interval / 10
-            new_times = np.arange(*self.interp_gps_time_range, step=self.time_step_seconds)
+            
+            # ensure at least two points
+            n_points = int(np.ceil(time_interval / self.time_step_seconds)) + 1
+
+            new_times = np.linspace(*self.interp_gps_time_range, num=n_points)
             self.interp_gps_position = self.create_position_interp(new_times)
 
             logging.info('Finished computing interpolating object')
@@ -100,17 +108,47 @@ class EphemerisInterpolate:
 class MoonEphemeris(EphemerisInterpolate):
     
     def get_icrs_from_times(self, times):
-        return get_body(
+        return get_body_barycentric(
             "moon", 
             Time(times, format='gps'), 
             ephemeris='jpl'
-        ).transform_to(ICRS())
+        )
 
 class EarthEphemeris(EphemerisInterpolate):
     
+    @property
+    def time_step_seconds(self):
+        return 3600
+
     def get_icrs_from_times(self, times):
-        return get_body(
+        return get_body_barycentric(
             "earth", 
             Time(times, format='gps'), 
             ephemeris='jpl'
-        ).transform_to(ICRS())
+        )
+
+class EarthLocationEphemeris(EphemerisInterpolate):
+    
+    def __init__(self, location: EarthLocation):
+        super().__init__()
+        
+        self.location = location
+    
+    @property
+    def time_step_seconds(self):
+        return 1800.
+
+    def get_icrs_from_times(self, times):
+        
+        time = Time(times, format='gps')
+        
+        obslocation = self.location.get_gcrs(time)
+        # obslocation.representation_type = 'cartesian'
+        
+        earth = get_body_barycentric(
+            "earth", 
+            time, 
+            ephemeris='jpl'
+        )
+    
+        return earth + obslocation.data
