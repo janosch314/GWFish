@@ -14,7 +14,7 @@ from astropy.cosmology import Planck18
 import astropy.cosmology as cosmology
 import astropy.units as u
 
-from scipy.optimize import brentq, minimize
+from scipy.optimize import brentq, minimize, dual_annealing
 
 from .detection import SNR, Detector, projection, Network
 from .waveforms import LALFD_Waveform
@@ -166,13 +166,14 @@ def find_optimal_location(
     if 'dec' in params:
         x0[1] = params['dec']
     
-    res = minimize(
-        fun=to_minimize, 
-        x0=x0,
+    res = dual_annealing(
+        func=to_minimize, 
         bounds=[
             (0, 2*np.pi), 
-            (0, np.pi),
-        ]
+            (-np.pi, np.pi),
+        ],
+        x0=x0,
+        maxiter=100,
     )
 
     return make_params(res.x)
