@@ -154,19 +154,24 @@ def find_optimal_location(
         ra, dec = x
         params['ra'] = ra
         params['dec'] = dec
-        # params['psi'] = psi
         return params
 
     def to_minimize(x):
         return - snr_computer(make_params(x), detector, waveform_model)
     
+    x0 = [0., 1.]
+    if 'ra' in params:
+        x0[0] = params['ra']
+    
+    if 'dec' in params:
+        x0[1] = params['dec']
+    
     res = minimize(
         fun=to_minimize, 
-        x0=[0.,1.],
+        x0=x0,
         bounds=[
             (0, 2*np.pi), 
             (0, np.pi),
-            # (0, 2*np.pi),
         ]
     )
 
