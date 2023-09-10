@@ -71,6 +71,8 @@ class EphemerisInterpolate:
             logging.info('Computing interpolating object')
 
             t0, t1 = max(times[0], self.earliest_possible_time), times[-1]
+            if t1 <= self.earliest_possible_time:
+                raise ValueError('Signal must end after 1980 (gps time=0)')
             time_interval = t1 - t0
             self.interp_gps_time_range = t0 - time_interval / 10, t1 + time_interval / 10
             
@@ -78,6 +80,7 @@ class EphemerisInterpolate:
             n_points = int(np.ceil(time_interval / self.time_step_seconds)) + self.interp_kind
 
             new_times = np.linspace(*self.interp_gps_time_range, num=n_points)
+
             self.interp_gps_position = self.create_position_interp(new_times)
 
             logging.info('Finished computing interpolating object')
