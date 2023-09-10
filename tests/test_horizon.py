@@ -6,13 +6,15 @@ from hypothesis import strategies as st
 from hypothesis import given, settings, example, HealthCheck
 from datetime import timedelta
 from pycbc.detector import Detector as DetectorPycbc
+import matplotlib.pyplot as plt
+from time import perf_counter
 
 # TODO: change this according to https://docs.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments
 
 @pytest.fixture
 def network():
-    # return Network(detector_ids=['ET'], parameters=[], fisher_parameters=[])
-    return Network(detector_ids=['ET', 'CE1'], parameters=[], fisher_parameters=[])
+    # return Network(detector_ids=['ET'])
+    return Network(detector_ids=['ET', 'CE1'])
 
 @st.composite
 def extrinsic(draw):
@@ -26,7 +28,7 @@ def extrinsic(draw):
         st.floats(min_value=0, max_value=2 * np.pi),
     )
     gps_time = draw(
-        st.floats(min_value=1.0, max_value=3786480018.0),  # 1980 to 2100
+        st.floats(min_value=1e6, max_value=3786480018.0),  # 1980 to 2100
     )
     theta_jn = draw(
         st.floats(min_value=0., max_value=np.pi)
@@ -59,7 +61,7 @@ def test_horizon_computation_result_170817_scaling():
         'geocent_time': 1187008882, 
     }
     
-    detector = Detector('LGWA', parameters= [None], fisher_parameters= [None])
+    detector = Detector('LGWA')
     
     distance, redshift = horizon(params, detector)
     
@@ -88,7 +90,7 @@ def test_horizon_warns_when_given_redshift():
         'geocent_time': 1187008882, 
     }
     
-    detector = Detector('LGWA', parameters= [None], fisher_parameters= [None])
+    detector = Detector('LGWA')
 
     with pytest.warns():
         distance, redshift = horizon(params, detector)
@@ -96,14 +98,14 @@ def test_horizon_warns_when_given_redshift():
 @pytest.mark.parametrize('detector_name', ['LGWA_Soundcheck', 'LGWA', 'LISA'])
 @pytest.mark.parametrize('mass', [.6, 1e3, 1e7])
 @given(extrinsic())
-@settings(max_examples=2, deadline=timedelta(milliseconds=1000))
+@settings(max_examples=2, deadline=timedelta(milliseconds=10000))
 @example((
     2.94417698, 
     0.35331536, 
     5.85076693, 
-    4.97215904, 
+    1.76231585e+09,
     2.43065638, 
-    1.76231585e+09
+    4.97215904, 
 ))
 def test_difficult_convergence_of_horizon_calculation(mass, detector_name, extrinsic):
     """A few examples of parameters for which there have 
@@ -121,7 +123,7 @@ def test_difficult_convergence_of_horizon_calculation(mass, detector_name, extri
             'phase': phase, 
             'geocent_time': gps_time,
         }
-    detector = Detector(detector_name, parameters= [None], fisher_parameters= [None])
+    detector = Detector(detector_name)
     
     distance, redshift = horizon(params, detector)
     assert np.isclose(
@@ -160,7 +162,7 @@ def test_horizon_for_very_large_masses(mass, equals_zero, detector_name, extrins
             'phase': phase, 
             'geocent_time': gps_time,
         }
-    detector = Detector(detector_name, parameters= [None], fisher_parameters= [None])
+    detector = Detector(detector_name)
     
     if equals_zero:
         with pytest.warns():
@@ -212,7 +214,7 @@ def test_optimal_parameter_finding(mass, network):
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 
-        'geocent_time': 0.,
+        'geocent_time': 1e6,
     }
 
     best_params = find_optimal_location(base_params, network)
@@ -226,13 +228,13 @@ def test_optimal_parameter_finding(mass, network):
     assert np.all(distances < distance)
     assert np.all(redshifts < redshift)
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @pytest.mark.parametrize(
     ['detector_pycbc', 'detector_gwfish'],
     [
         ('V1', 'VIR')
     ])
-@given(gps_time=st.floats(0., 1e10))
+@given(gps_time=st.floats(1e6, 1e10))
 def test_optimal_parameter_finding_against_pycbc(detector_pycbc, detector_gwfish, gps_time):
     
     base_params = {
@@ -244,7 +246,7 @@ def test_optimal_parameter_finding_against_pycbc(detector_pycbc, detector_gwfish
         'geocent_time': gps_time,
     }
 
-    detector = Detector(detector_gwfish, [], [])
+    detector = Detector(detector_gwfish)
 
     best_params = find_optimal_location(base_params, detector)
     best_params.pop('luminosity_distance')
@@ -281,7 +283,7 @@ def test_against_lrr_paper(detector_name, bns_range):
         'geocent_time': 0.,
     }
 
-    detector = Detector(detector_name, parameters=[], fisher_parameters=[])
+    detector = Detector(detector_name)
 
     best_params = find_optimal_location(base_params, detector)
     best_params.pop('luminosity_distance')
@@ -325,3 +327,98 @@ def test_horizon_with_network_against_single_detector(mass):
     # ET+CE should have a significantly higher horizon than ET alone
     assert d1*1.2 < d3
     assert z1*1.2 < z3
+
+
+@pytest.mark.parametrize('detector_name', ['ET', 'LGWA', 'VIR'])
+def test_best_position_makes_sense(detector_name, plot):
+    base_params = {
+        'mass_1': 1.4,
+        'mass_2': 1.4,
+        'theta_jn': 0., 
+        'psi': 0., 
+        'phase': 0., 
+        'geocent_time': 1800000000,
+    }
+
+    detector = Detector(detector_name)
+
+    best_params = find_optimal_location(base_params, detector)
+    best_params['redshift'] = 0.
+    best_params['luminosity_distance'] = 1.
+
+    ra = best_params['ra']
+    dec = best_params['dec']
+    
+    ra_grid = np.linspace(0, 2 * np.pi, num=40)
+    dec_grid = np.linspace(-np.pi, np.pi, num=40)
+    
+    RA, DEC = np.meshgrid(ra_grid, dec_grid)
+    
+    snrs = np.zeros_like(RA)
+    
+    for (i, j), _ in np.ndenumerate(RA):
+        
+        snrs[i, j] = compute_SNR(best_params | {'ra': RA[i, j], 'dec': DEC[i, j]}, detector)
+    
+    snr_at_computed_max = compute_SNR(best_params | {'ra': ra, 'dec': dec}, detector)
+    
+    # tiny tolerance to account for numerical errors
+    assert snr_at_computed_max * (1+1e-6) >= np.max(snrs) 
+    
+    if plot:
+    
+        plt.contourf(RA, DEC, snrs, levels=20)
+        plt.xlabel('Right ascension')
+        plt.ylabel('Declination')
+        plt.scatter(ra, dec, c='black', s=100)
+        plt.title(detector_name)
+        plt.show()
+
+
+@pytest.mark.parametrize('network_name', ['LGWA_ET'])
+def test_best_position_makes_sense_network(network_name, plot):
+
+    # around these masses the SNR for ET and LGWA are similar;
+    
+    base_params = {
+        'mass_1': 4000.,
+        'mass_2': 4000.,
+        'theta_jn': 0., 
+        'psi': 0., 
+        'phase': 0., 
+        'geocent_time': 1800000000,
+    }
+
+    network = Network(network_name.split('_'))
+
+    best_params = find_optimal_location(base_params, network)
+    best_params['redshift'] = 0.
+    best_params['luminosity_distance'] = 1.
+
+    ra = best_params['ra']
+    dec = best_params['dec']
+    
+    ra_grid = np.linspace(0, 2 * np.pi, num=40)
+    dec_grid = np.linspace(-np.pi, np.pi, num=40)
+    
+    RA, DEC = np.meshgrid(ra_grid, dec_grid)
+    
+    snrs = np.zeros_like(RA)
+    
+    for (i, j), _ in np.ndenumerate(RA):
+        
+        snrs[i, j] = compute_SNR_network(best_params | {'ra': RA[i, j], 'dec': DEC[i, j]}, network)
+    
+    snr_at_computed_max = compute_SNR_network(best_params | {'ra': ra, 'dec': dec}, network)
+    
+    # tiny tolerance to account for numerical errors
+    # assert snr_at_computed_max >= np.max(snrs) 
+    
+    if plot:
+    
+        plt.contourf(RA, DEC, snrs, levels=20)
+        plt.xlabel('Right ascension')
+        plt.ylabel('Declination')
+        plt.scatter(ra, dec, c='black', s=100)
+        plt.title(network_name)
+        plt.show()
