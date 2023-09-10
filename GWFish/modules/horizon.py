@@ -136,6 +136,7 @@ def find_optimal_location(
     base_params: dict, 
     detector: Union[Detector, Network], 
     waveform_model: str = WAVEFORM_MODEL,
+    **minimizer_kwargs,
     ):
     """Determine optimal source location for a given detector or 
     network by maximizing the SNR.
@@ -166,6 +167,9 @@ def find_optimal_location(
     if 'dec' in params:
         x0[1] = params['dec']
     
+    if 'maxiter' not in minimizer_kwargs:
+        minimizer_kwargs['maxiter'] = 100
+    
     res = dual_annealing(
         func=to_minimize, 
         bounds=[
@@ -173,7 +177,7 @@ def find_optimal_location(
             (-np.pi, np.pi),
         ],
         x0=x0,
-        maxiter=100,
+        **minimizer_kwargs
     )
 
     return make_params(res.x)
