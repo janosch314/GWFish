@@ -47,14 +47,12 @@ def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM
 
 def compute_SNR_network(params: dict, network: Network, waveform_model: str = WAVEFORM_MODEL):
     
-    snrs = [
-        compute_SNR(params, detector, waveform_model)
+    square_snrs = [
+        compute_SNR(params, detector, waveform_model)**2
         for detector in network.detectors
     ]
-    
-    square_snrs = map(lambda snr: snr**2, snrs) 
-    
-    return np.sqrt(sum(square_snrs))
+
+    return np.sqrt(np.sum(square_snrs))
 
 def horizon(
     params: dict,
