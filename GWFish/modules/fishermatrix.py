@@ -211,7 +211,6 @@ def compute_fisher_errors(
     network: det.Network,
     parameter_values: pd.DataFrame,
     fisher_parameters: list[str],
-    sub_network_ids: list[int],
 ) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """
     Compute Fisher matrix errors for a network whose
@@ -250,14 +249,10 @@ def compute_fisher_errors(
         sky_localization = np.zeros((n_signals,))
     network_snr = np.zeros((n_signals,))
 
-    detectors = [network.detectors[d] for d in sub_network_ids]
-
-    network_snr = np.sqrt(sum((detector.SNR**2 for detector in detectors)))
-
     for k in range(n_signals):
         network_fisher_matrix = np.zeros((n_params, n_params))
 
-        for detector in detectors:
+        for detector in network.detectors:
             if detector.SNR[k] > detector_snr_thr:
                 network_fisher_matrix += detector.fisher_matrix[k, :, :]
 
@@ -269,6 +264,7 @@ def compute_fisher_errors(
                 network_fisher_inverse, parameter_values["dec"].iloc[k], i_ra, i_dec
             )
 
+    network_snr = np.sqrt(sum(((det.SNR(detector, signals))**2 for detector in detectors)))
     detected = np.where(network_snr > network_snr_thr)[0]
 
     if signals_havesky:
