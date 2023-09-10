@@ -12,7 +12,7 @@ class EphemerisInterpolate:
     """
 
     earliest_possible_time = 0. # gps time for ~1980
-    interp_kind = 3
+    interp_kind = 1
     
     def __init__(self):
         self.interp_gps_time_range = (0,0)
