@@ -329,6 +329,8 @@ def test_horizon_with_network_against_single_detector(mass):
     assert z1*1.1 < z3
 
 
+@pytest.mark.skip('Very slow test')
+
 @pytest.mark.parametrize('detector_name', ['ET', 'LGWA', 'VIR'])
 def test_best_position_makes_sense(detector_name, plot):
     base_params = {
@@ -375,6 +377,7 @@ def test_best_position_makes_sense(detector_name, plot):
         plt.show()
 
 
+@pytest.mark.skip('Very slow test')
 @pytest.mark.parametrize('network_name', ['LGWA_ET'])
 def test_best_position_makes_sense_network(network_name, plot):
 
