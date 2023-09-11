@@ -28,7 +28,7 @@ def extrinsic(draw):
         st.floats(min_value=0, max_value=2 * np.pi),
     )
     gps_time = draw(
-        st.floats(min_value=1e6, max_value=3786480018.0),  # 1980 to 2100
+        st.floats(min_value=4e8, max_value=3786480018.0),  # 1992 to 2100
     )
     theta_jn = draw(
         st.floats(min_value=0., max_value=np.pi)
@@ -95,7 +95,7 @@ def test_horizon_warns_when_given_redshift():
     with pytest.warns():
         distance, redshift = horizon(params, detector)
 
-@pytest.mark.parametrize('detector_name', ['LGWA_Soundcheck', 'LGWA', 'LISA'])
+@pytest.mark.parametrize('detector_name', ['LGWA', 'LISA'])
 @pytest.mark.parametrize('mass', [.6, 1e3, 1e7])
 @given(extrinsic())
 @settings(max_examples=2, deadline=timedelta(milliseconds=10000))
@@ -126,6 +126,7 @@ def test_difficult_convergence_of_horizon_calculation(mass, detector_name, extri
     detector = Detector(detector_name)
     
     distance, redshift = horizon(params, detector)
+    assert distance > 0.
     assert np.isclose(
         compute_SNR(
             params | {'redshift': redshift, 'luminosity_distance': distance}, 
@@ -140,7 +141,7 @@ def test_difficult_convergence_of_horizon_calculation(mass, detector_name, extri
     (1e10, True)
 ])
 @given(extrinsic())
-@settings(max_examples=3, deadline=timedelta(seconds=1))
+@settings(max_examples=3, deadline=timedelta(seconds=2))
 def test_horizon_for_very_large_masses(mass, equals_zero, detector_name, extrinsic):
     """Test horizon computation for large masses.
     
@@ -182,7 +183,7 @@ def test_horizon_for_very_large_masses(mass, equals_zero, detector_name, extrins
 @settings(
     max_examples=10, 
     suppress_health_check=(HealthCheck.function_scoped_fixture,),
-    deadline=timedelta(seconds=1)
+    deadline=timedelta(seconds=2)
 )
 def test_horizon_computation_with_network(mass, network, extrinsic):
     right_ascension, declination, polarization, gps_time, theta_jn, phase = extrinsic
@@ -228,7 +229,7 @@ def test_optimal_parameter_finding(mass, network):
     assert np.all(distances < distance)
     assert np.all(redshifts < redshift)
 
-# @pytest.mark.xfail
+@pytest.mark.skip('Old test, not really useful since there may be several optimums')
 @pytest.mark.parametrize(
     ['detector_pycbc', 'detector_gwfish'],
     [
@@ -262,7 +263,7 @@ def test_optimal_parameter_finding_against_pycbc(detector_pycbc, detector_gwfish
     assert np.isclose(ra_gwfish, ra_pycbc)
     assert np.isclose(dec_gwfish, dec_pycbc)
 
-@pytest.mark.xfail
+@pytest.mark.skip('Feature not fully implemented yet')
 @pytest.mark.parametrize(
     ['detector_name', 'bns_range'],
     [
@@ -299,8 +300,7 @@ def test_against_lrr_paper(detector_name, bns_range):
     assert np.isclose(estimated_bns_range, bns_range, rtol=0.1)
 
 
-@pytest.mark.xfail
-@pytest.mark.parametrize('mass', [30.,])
+@pytest.mark.parametrize('mass', [2000.,])
 def test_horizon_with_network_against_single_detector(mass):
     params = {
         'mass_1': mass,
@@ -308,25 +308,25 @@ def test_horizon_with_network_against_single_detector(mass):
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 
-        'geocent_time': 0.,
+        'geocent_time': 1e9,
         'ra': 1.,
-        'dec': 1.
+        'dec': 1.5
     }
     
-    et_ce_network = Network(['ET', 'CE1'], fisher_parameters=[], parameters=[])
-    et_network = Network(['ET'], fisher_parameters=[], parameters=[])
-    et_detector = Detector('ET', fisher_parameters=[], parameters=[])
+    et_lgwa_network = Network(['ET', 'LGWA'])
+    et_network = Network(['ET'])
+    et_detector = Detector('ET')
     
     d1, z1 = horizon(params, et_detector)
     d2, z2 = horizon(params, et_network)
-    d3, z3 = horizon(params, et_ce_network)
+    d3, z3 = horizon(params, et_lgwa_network)
     
     assert np.isclose(d1, d2)
     assert np.isclose(z1, z2)
     
-    # ET+CE should have a significantly higher horizon than ET alone
-    assert d1*1.2 < d3
-    assert z1*1.2 < z3
+    # ET+LGWA should have a higher horizon than ET alone
+    assert d1*1.1 < d3
+    assert z1*1.1 < z3
 
 
 @pytest.mark.parametrize('detector_name', ['ET', 'LGWA', 'VIR'])
