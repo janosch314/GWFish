@@ -18,7 +18,7 @@ def test_max_f_cutoff_170817():
         'max_frequency_cutoff': 400,
     }
     
-    detector = Detector('ET', parameters = [None], fisher_parameters = [None])
+    detector = Detector('ET')
 
     data_params = {
         'frequencyvector': detector.frequencyvector,
@@ -64,7 +64,7 @@ def test_max_f_cutoff_signal_duration():
     }
 
     # LGWA mission duration is 10 years
-    detector = Detector('LGWA', parameters = [None], fisher_parameters = [None])
+    detector = Detector('LGWA')
     
     # if the BWD merges at 0.2 Hz (say), then the relevant part of the waveform is 
     # at best the one from 0.13Hz to 0.2Hz, since the BWD will take ~10yr to get
