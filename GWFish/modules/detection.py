@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from pathlib import Path
-
+import copy
 import GWFish.modules.constants as cst
 import GWFish.modules.ephemeris as ephem
 from astropy.coordinates import EarthLocation
@@ -188,6 +188,15 @@ class Network:
             for identifier in detector_ids
         ]
 
+    def partial(self, sub_network_ids: list[int]):
+        
+        new_network = copy.deepcopy(self)
+        
+        new_network.detectors = [
+            self.detectors[i] for i in sub_network_ids
+        ]
+        
+        return new_network
 
 def GreenwichMeanSiderealTime(gps):
     # calculate the Greenwhich mean sidereal time
@@ -603,7 +612,7 @@ def lisaGWresponse(detector):
     plt.close()
 
 
-def SNR(detector, signals, duty_cycle=False, plot=None):
+def SNR(detector, signals, use_duty_cycle: bool = False, plot=None):
     if signals.ndim == 1:
         signals = signals[:, np.newaxis]
 
@@ -612,9 +621,9 @@ def SNR(detector, signals, duty_cycle=False, plot=None):
     components = detector.components
 
     SNRs = np.zeros(len(components))
-    for k in np.arange(len(components)):
+    for k, component in enumerate(components):
 
-        SNRs[k] = np.sqrt(4 * np.trapz(np.abs(signals[:, k]) ** 2 / components[k].Sn(ff[:, 0]), ff[:, 0], axis=0))
+        SNRs[k] = np.sqrt(4 * np.trapz(np.abs(signals[:, k]) ** 2 / component.Sn(ff[:, 0]), ff[:, 0], axis=0))
         #print(components[k].name + ': ' + str(SNRs[k]))
         if plot != None:
             plotrange = components[k].plotrange
@@ -643,7 +652,7 @@ def SNR(detector, signals, duty_cycle=False, plot=None):
             plt.close()
 
         # set SNRs to zero if interferometer is not operating (according to its duty factor [0,1])
-        if duty_cycle:
+        if use_duty_cycle:
             operating = np.random.rand()
             #print('operating = ',operating)
             if components[k].duty_factor < operating:
