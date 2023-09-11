@@ -148,7 +148,8 @@ def find_optimal_location(
         snr_computer = compute_SNR_network
 
     params = base_params.copy()
-    params['redshift'] = MIN_REDSHIFT
+    params['redshift'] = 0.
+    # ensure luminosity distance is very small
     params['luminosity_distance'] = 1e-15
     
     def make_params(x):
