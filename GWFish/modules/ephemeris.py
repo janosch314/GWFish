@@ -5,6 +5,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 import logging
 import GWFish.modules.constants as cst
+import warnings
 
 class EphemerisInterpolate:
     """This class provides a way to efficiently compute the xyz coordinates 
@@ -20,7 +21,7 @@ class EphemerisInterpolate:
 
     @abstractmethod
     def get_icrs_from_times(self, times):
-        ...
+        ...        
 
     @property
     def time_step_seconds(self):
@@ -28,12 +29,15 @@ class EphemerisInterpolate:
         return 3600*12.
 
     def compute_xyz_cordinates(self, times):
-        moon = self.get_icrs_from_times(times)
-        moon.representation_type = 'cartesian'
-        moon_x = moon.x.si.value
-        moon_y = moon.y.si.value
-        moon_z = moon.z.si.value
-        return moon_x, moon_y, moon_z
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=r".*dubious year \(Note \d\)")
+            body = self.get_icrs_from_times(times)
+            
+        body.representation_type = 'cartesian'
+        body_x = body.x.si.value
+        body_y = body.y.si.value
+        body_z = body.z.si.value
+        return body_x, body_y, body_z
 
     def create_position_interp(self, times):
         
