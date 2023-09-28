@@ -208,6 +208,13 @@ def sky_localization_area(
         )
     )
 
+def sky_localization_percentile_factor(percentile=90.):
+    """Conversion factor to go from the sky localization area provided 
+    by GWFish (one sigma, in steradians) to the X% contour, in degrees squared.
+    """
+    
+    return - 2 * np.log(1 - percentile / 100.) * (180 / np.pi)**2
+
 def compute_detector_fisher(
     detector: det.Detector,
     signal_parameter_values: pd.DataFrame,
