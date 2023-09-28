@@ -1,10 +1,62 @@
-from GWFish.modules.fishermatrix import analyze_and_save_to_txt
-import GWFish.modules.fishermatrix as fishermatrix
+from GWFish.modules.fishermatrix import analyze_and_save_to_txt, compute_network_errors, compute_detector_fisher
 import GWFish.modules.waveforms as waveforms
-from GWFish.modules.detection import Network
+from GWFish.modules.detection import Network, Detector
 import pandas as pd
 import numpy as np
 import pytest
+from pathlib import Path
+
+BASE_PATH = Path(__file__).parent.parent
+
+
+def test_gw190521_full_fisher(plot):
+    df = pd.read_hdf(BASE_PATH / 'injections/GWTC3_cosmo_median.hdf5')
+    
+    params = df[df['event_ID']=='GW190521_074359']
+    # do not perform the Fisher analysis over z
+    z = params.pop('redshift')
+    params['mass_1'] *= (1+z)
+    params['mass_2'] *= (1+z)
+    
+    # the first parameter is the event ID
+    fisher_params = params.columns.tolist()[1:]
+    
+    fisher_params = [
+        # 'event_ID', 
+        'mass_1', 
+        'mass_2',
+        'luminosity_distance', 
+        'dec', 
+        'ra',
+        'theta_jn', 
+        'psi', 
+        'geocent_time',
+        'phase', 
+        # 'redshift', 
+        'a_1',
+        'a_2', 
+        # 'tilt_1', 
+        # 'tilt_2',
+        # 'phi_12', 
+        # 'phi_jl'
+    ]
+    
+    network = Network(['LGWA'], detection_SNR=(0., 1.))
+    
+    network_snr, parameter_errors, sky_localization = compute_network_errors(
+        network,
+        params,
+        fisher_parameters=fisher_params, 
+        waveform_model='IMRPhenomXPHM'
+    )
+    
+    fisher, square_snr = compute_detector_fisher(Detector('LGWA'), params.iloc[0], fisher_params, waveform_model='IMRPhenomXPHM')
+    
+    assert np.isclose(np.sqrt(square_snr), network_snr[0])
+
+    if plot:
+        plot_correlations(np.linalg.inv(fisher), fisher_params)
+
 
 @pytest.mark.skip('Analysis results are not matching at the moment')
 def test_fisher_analysis_output(mocker):
