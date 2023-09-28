@@ -1,4 +1,5 @@
 from GWFish.modules import ephemeris
+from GWFish.modules.waveforms import t_of_f_PN
 from time import perf_counter
 import numpy as np
 import matplotlib.pyplot as plt
@@ -106,3 +107,34 @@ def test_all_coordinates_are_solar_centered(ephem):
     assert np.allclose(r, 150e9, rtol=5e-2)
     
 
+@pytest.mark.parametrize('ephem', [
+    ephemeris.EarthEphemeris(),
+    ephemeris.EarthLocationEphemeris(EarthLocation.of_site('V1')),
+    ephemeris.MoonEphemeris(),
+])
+def test_phase_term_differentiated(ephem, plot):
+
+    frequencies = np.geomspace(0.1, 100., num=1000)
+    times = t_of_f_PN({
+            'geocent_time': 1.8e9,
+            'mass_1': 1.4,
+            'mass_2': 1.4,
+            'redshift': 0.}, 
+        frequencies)
+    
+    
+    if plot:
+        
+        for interp_kind in [1, 3]:
+            ephem.interp_kind = interp_kind
+            ephem.__init__()
+            baseline = ephem.phase_term(1., 1., times, frequencies)
+            delta_ra = 1e-5
+            phase_derivative_approx = (
+            ephem.phase_term(1.+delta_ra, 1., times, frequencies) - 
+            baseline) / delta_ra
+            
+            plt.semilogx(frequencies, phase_derivative_approx, label=interp_kind)
+        plt.legend()
+        plt.title(ephem.__class__.__name__)
+        plt.show()
