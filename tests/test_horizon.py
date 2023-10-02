@@ -339,7 +339,7 @@ def test_best_position_makes_sense(detector_name, plot):
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 
-        'geocent_time': 1800000000,
+        'geocent_time': 1_800_000_000,
     }
 
     detector = Detector(detector_name)

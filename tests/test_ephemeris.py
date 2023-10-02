@@ -1,10 +1,13 @@
 from GWFish.modules import ephemeris
 from GWFish.modules.waveforms import t_of_f_PN
+from GWFish.modules.detection import Detector
+from GWFish.modules.fishermatrix import compute_detector_fisher
 from time import perf_counter
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.coordinates import EarthLocation
 import pytest
+from copy import deepcopy
 
 def time_execution(func, *args, **kwargs):
     t1 = perf_counter()
@@ -105,7 +108,25 @@ def test_all_coordinates_are_solar_centered(ephem):
     
     # the radius should be roughly an astronomical unit
     assert np.allclose(r, 150e9, rtol=5e-2)
+
+
+def test_geocentered_coordinates_are():
     
+    ephem = ephemeris.EarthLocationGCRSEphemeris(EarthLocation.of_site('V1'))
+    
+    # a day
+    times = np.linspace(0, 3600*24, num=10_000)
+    
+    x, y, z = ephem.get_coordinates(times)
+    
+    r = np.sqrt(x**2 + y**2 + z**2)
+    
+    
+    assert not np.isnan(r).any()
+    
+    # the radius should be roughly the one of the Earth
+    assert np.allclose(r, 6.378e6, rtol=1e-2)
+
 
 @pytest.mark.parametrize('ephem', [
     ephemeris.EarthEphemeris(),
@@ -114,7 +135,7 @@ def test_all_coordinates_are_solar_centered(ephem):
 ])
 def test_phase_term_differentiated(ephem, plot):
 
-    frequencies = np.geomspace(0.1, 100., num=1000)
+    frequencies = np.geomspace(0.1, 2000., num=1000)
     times = t_of_f_PN({
             'geocent_time': 1.8e9,
             'mass_1': 1.4,
@@ -138,3 +159,54 @@ def test_phase_term_differentiated(ephem, plot):
         plt.legend()
         plt.title(ephem.__class__.__name__)
         plt.show()
+    
+def test_einstein_telescope_localization(plot, gw170817_params):
+    et = Detector('ET')
+    
+    location = et.components[0].ephem.location
+    
+    et_gcrs = Detector('ET')
+    for component in et_gcrs.components:
+        component.ephem = ephemeris.EarthLocationGCRSEphemeris(location)
+    
+    fisher_params = gw170817_params.columns.tolist()
+    
+    fisher_et, snr_et = compute_detector_fisher(
+        et, 
+        gw170817_params.iloc[0], 
+        fisher_parameters=fisher_params,
+        waveform_model='IMRPHenomD_NRTidalv2'
+    )
+    fisher_gcrs, snr_gcrs = compute_detector_fisher(
+        et_gcrs, 
+        gw170817_params.iloc[0], 
+        fisher_parameters=fisher_params,
+        waveform_model='IMRPHenomD_NRTidalv2'
+    )
+    
+    assert np.isclose(snr_et, snr_gcrs)
+    
+    inverse_et = np.linalg.inv(fisher_et)
+    inverse_gcrs = np.linalg.inv(fisher_gcrs)
+    
+
+@pytest.mark.xfail
+@pytest.mark.parametrize('ephem', [
+    ephemeris.EarthEphemeris(),
+    ephemeris.EarthLocationEphemeris(EarthLocation.of_site('V1')),
+    ephemeris.MoonEphemeris(),
+])
+def test_signal_ends_with_stationary_phase(ephem, plot):
+
+    frequencies = np.geomspace(0.1, 2000., num=1000)
+    times = t_of_f_PN({
+            'geocent_time': 1.8e9,
+            'mass_1': 1.4,
+            'mass_2': 1.4,
+            'redshift': 0.}, 
+        frequencies)
+
+    phase = ephem.phase_term(1., 1., times, frequencies)
+    
+    assert np.isclose(phase[-1], 0.)
+    assert np.isclose(np.gradient(phase)[-1], 0.)
