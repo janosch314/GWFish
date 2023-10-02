@@ -24,7 +24,7 @@ class DetectorComponent:
 
         self.duty_factor = eval(str(detector_def['duty_factor']))
         if 'psd_path' in detector_def:
-            self.psd_path = detector_def['psd_path']
+            self.psd_path = eval(detector_def['psd_path'])
         else:
             self.psd_path = PSD_PATH
 
