@@ -23,6 +23,10 @@ class DetectorComponent:
         detector_def = self.detector_def
 
         self.duty_factor = eval(str(detector_def['duty_factor']))
+        if 'psd_path' in detector_def:
+            self.psd_path = detector_def['psd_path']
+        else:
+            self.psd_path = PSD_PATH
 
         if (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'earthL'):
 
@@ -51,7 +55,7 @@ class DetectorComponent:
             self.e2 = np.cos(self.arm_azimuth + self.opening_angle) * self.e_long + np.sin(
                 self.arm_azimuth + self.opening_angle) * self.e_lat
 
-            self.psd_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
+            self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
 
         elif detector_def['detector_class'] == 'lunararray':
 
@@ -68,7 +72,7 @@ class DetectorComponent:
             self.e1 = np.array([np.cos(self.lat) * np.cos(self.lon), np.cos(self.lat) * np.sin(self.lon), np.sin(self.lat)])
             self.e2 = np.cos(self.azimuth) * self.e_long + np.sin(self.azimuth) * self.e_lat
 
-            self.psd_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
+            self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
             self.psd_data[:, 1] = self.psd_data[:, 1]/eval(str(detector_def['number_stations']))
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             # see LISA 2017 mission document
