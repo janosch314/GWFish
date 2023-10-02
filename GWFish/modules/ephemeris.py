@@ -125,7 +125,7 @@ class EarthEphemeris(EphemerisInterpolate):
     
     @property
     def time_step_seconds(self):
-        return 3600
+        return 3600.
 
     def get_icrs_from_times(self, times):
         return get_body_barycentric(
@@ -159,3 +159,23 @@ class EarthLocationEphemeris(EphemerisInterpolate):
         )
     
         return earth + obslocation.data
+    
+class EarthLocationGCRSEphemeris(EphemerisInterpolate):
+    
+    def __init__(self, location: EarthLocation):
+        super().__init__()
+        
+        self.location = location
+    
+    @property
+    def time_step_seconds(self):
+        return 1800.
+
+    def get_icrs_from_times(self, times):
+        
+        time = Time(times, format='gps')
+        
+        obslocation = self.location.get_gcrs(time)
+            
+        return obslocation.data
+
