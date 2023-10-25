@@ -1,13 +1,17 @@
-import pytest
-import numpy as np
-from GWFish.modules.horizon import horizon, compute_SNR, MIN_REDSHIFT, horizon, compute_SNR_network, find_optimal_location, horizon_varying_orientation
-from GWFish.modules.detection import Detector, Network
-from hypothesis import strategies as st
-from hypothesis import given, settings, example, HealthCheck
 from datetime import timedelta
-from pycbc.detector import Detector as DetectorPycbc
-import matplotlib.pyplot as plt
 from time import perf_counter
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pytest
+from hypothesis import HealthCheck, example, given, settings
+from hypothesis import strategies as st
+from pycbc.detector import Detector as DetectorPycbc
+
+from GWFish.modules.detection import Detector, Network
+from GWFish.modules.horizon import (MIN_REDSHIFT, compute_SNR,
+                                    compute_SNR_network, find_optimal_location,
+                                    horizon, horizon_varying_orientation)
 
 # TODO: change this according to https://docs.pytest.org/en/latest/example/parametrize.html#apply-indirect-on-particular-arguments
 

@@ -1,14 +1,16 @@
-from GWFish.modules.fishermatrix import compute_network_errors, compute_detector_fisher, sky_localization_percentile_factor
-from GWFish.modules.detection import Network, Detector
-import pandas as pd
-import numpy as np
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
+import numpy as np
+import pandas as pd
 from matplotlib import ticker
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 
+from GWFish.modules.detection import Detector, Network
+from GWFish.modules.fishermatrix import (compute_detector_fisher,
+                                         compute_network_errors,
+                                         sky_localization_percentile_factor)
 
 BASE_PATH = Path(__file__).parent.parent
 

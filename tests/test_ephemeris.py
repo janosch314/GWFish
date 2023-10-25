@@ -1,13 +1,16 @@
+from copy import deepcopy
+from time import perf_counter
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pytest
+from astropy.coordinates import EarthLocation
+
 from GWFish.modules import ephemeris
-from GWFish.modules.waveforms import t_of_f_PN
 from GWFish.modules.detection import Detector
 from GWFish.modules.fishermatrix import compute_detector_fisher
-from time import perf_counter
-import numpy as np
-import matplotlib.pyplot as plt
-from astropy.coordinates import EarthLocation
-import pytest
-from copy import deepcopy
+from GWFish.modules.waveforms import t_of_f_PN
+
 
 def time_execution(func, *args, **kwargs):
     t1 = perf_counter()

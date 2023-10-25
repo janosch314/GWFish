@@ -1,10 +1,14 @@
-from GWFish.modules.fishermatrix import analyze_and_save_to_txt, compute_network_errors, compute_detector_fisher
-import GWFish.modules.waveforms as waveforms
-from GWFish.modules.detection import Network, Detector
-import pandas as pd
-import numpy as np
-import pytest
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+
+import GWFish.modules.waveforms as waveforms
+from GWFish.modules.detection import Detector, Network
+from GWFish.modules.fishermatrix import (analyze_and_save_to_txt,
+                                         compute_detector_fisher,
+                                         compute_network_errors)
 
 BASE_PATH = Path(__file__).parent.parent
 

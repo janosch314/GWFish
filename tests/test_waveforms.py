@@ -1,6 +1,8 @@
 import numpy as np
-from GWFish.modules.waveforms import TaylorF2
+
 from GWFish.modules.detection import Detector, projection
+from GWFish.modules.waveforms import TaylorF2
+
 
 def test_max_f_cutoff_170817():
     

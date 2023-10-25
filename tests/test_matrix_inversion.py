@@ -5,12 +5,14 @@ The invertSVD function really is computing the _pseudo_ inverse of
 the given matrix
 """
 
-import pytest
 import numpy as np
-from GWFish.modules.fishermatrix import invertSVD
-from hypothesis import given, reject, target, seed
+import pytest
+from hypothesis import given, reject, seed
 from hypothesis import strategies as st
+from hypothesis import target
 from hypothesis.extra.numpy import arrays
+
+from GWFish.modules.fishermatrix import invertSVD
 
 MATRIX_DIMENSION = 4
 ABS_TOLERANCE = 1e-1
