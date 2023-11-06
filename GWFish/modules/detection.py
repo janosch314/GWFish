@@ -7,6 +7,7 @@ import copy
 import GWFish.modules.constants as cst
 import GWFish.modules.ephemeris as ephem
 from astropy.coordinates import EarthLocation
+import warnings
 
 DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
 PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
@@ -293,66 +294,83 @@ def AET(polarizations, eij, theta, ra, psi, L, ff):
 
 
 def projection(parameters, detector, polarizations, timevector):
-    # rudimentary:
-    # coords = SkyCoord(ra=ra, dec=dec, frame='icrs', unit='rad')
-    # angles = coords.transform_to('barycentricmeanecliptic')
 
     f_max = parameters.get('max_frequency_cutoff', None)
-    
-    if f_max is not None:
-        time_of_fmax(timevector, detector.frequencyvector, f_max)
+    detector_lifetime = getattr(detector, 'mission_lifetime', None)
 
+    in_band_slice, new_timevector = in_band_window(timevector, detector.frequencyvector[:, 0], detector_lifetime, f_max)
+    proj = np.zeros_like(new_timevector)
+    if is_null_slice(in_band_slice):
+        return proj
+    
     if detector.location == 'earth':
-        proj = projection_earth(parameters, detector, polarizations, timevector)
+        proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice)
     elif detector.location == 'moon':
-        proj = projection_moon(parameters, detector, polarizations, timevector)
+        proj = projection_moon(parameters, detector, polarizations, new_timevector, in_band_slice)
     elif detector.location == 'solarorbit':
-        proj = projection_solarorbit(parameters, detector, polarizations, timevector)
+        proj = projection_solarorbit(parameters, detector, polarizations, new_timevector, in_band_slice)
     else:
         print('Unknown detector location')
         exit(0)
 
-    return time_truncated_projection(
-        proj, 
-        timevector, 
-        detector.frequencyvector, 
-        detector.mission_lifetime, 
-        f_max
-    )
+    # TODO return new timevector here!
+    return proj
 
-def time_truncated_projection(
-    projection, 
+def in_band_window(
     timevector, 
     frequencyvector, 
     detector_lifetime, 
-    max_frequency_cutoff=None):
+    max_frequency_cutoff):
+    """Truncate the evolution of the source to the detector lifetime.
     
-    # define LISA observation window
-    if fmax := parameters.get('max_frequency_cutoff', None):
-        max_observation_time += time_of_fmax(timevector, detector.frequencyvector, fmax)
+    If there is no maximum frequency cutoff, then 
+    this just amounts to going back in time
+    from the highest frequency available.
+    
+    If there is a maximum frequency cutoff, then 
+    we should:
+    - shift the timevector so that the cutoff is placed at the given gps time
+    - truncate the projection so that the temporal duration of the nonzero section
+        corresponds to the detector lifetime 
+    """
+    
+    final_time = timevector[-1]
+    
+    if max_frequency_cutoff is None:
+        i_final = None
+        new_timevector = timevector
+    else:
+        if max_frequency_cutoff >= frequencyvector[0]:
+            i_final = np.searchsorted(frequencyvector, max_frequency_cutoff)
+        else:
+            warnings.warn("The max_frequency given is lower than the lowest frequency for the detector."
+                          "Returning a zero projection.")
+            return slice(0, 0), timevector
 
-    tc = parameters['geocent_time']
-    # proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
-    # proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
+        fmax_time = timevector[i_final]
 
-    if fmax := parameters.get('max_frequency_cutoff', None):
-        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
+        # potentially dangerous loss of precision here...
+        # shift the timevector so that the cutoff is placed at the given gps time
+        new_timevector = timevector + final_time - fmax_time
 
-    proj[np.where(timevector > tc + max_observation_time), :] = 0.j
+    if detector_lifetime is None:
+        i_initial = 0
+    elif final_time - detector_lifetime < new_timevector[0]:
+        i_initial = 0
+    else:
+        i_initial = np.searchsorted(new_timevector, final_time - detector_lifetime)
 
-    #i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
-    #i1 = np.argmin(np.abs(timevector - (tc - max_time_until_merger + max_observation_time)))
+    return slice(i_initial, i_final), new_timevector
 
-    #if 'id' in parameters:
-    #    print('{} observed between {:.3f}Hz to {:.3f}Hz'.format(parameters['id'], ff[i0, 0], ff[i1, 0]))
-
-    return projection
-
-def projection_solarorbit(parameters, detector, polarizations, timevector):
-    ff = detector.frequencyvector
-
+def projection_solarorbit(parameters, detector, polarizations, timevector, in_band_slice=slice(None)):
+    ff = detector.frequencyvector[in_band_slice]
     components = detector.components
 
+    proj = np.zeros(
+        shape=(len(timevector), len(components)),
+        dtype=complex
+    )
+    
     if timevector.ndim == 1:
         timevector = timevector[:, np.newaxis]
 
@@ -363,18 +381,18 @@ def projection_solarorbit(parameters, detector, polarizations, timevector):
 
     theta = np.pi / 2. - dec
 
-    pp = solarorbit(timevector, cst.AU, components[0].eps, 0., 0.)
+    pp = solarorbit(timevector[in_band_slice], cst.AU, components[0].eps, 0., 0.)
     eij = (pp[:, [1, 2, 0], :] - pp[:, [2, 0, 1], :]) / components[0].L
 
     # start_time = time.time()
     doppler_to_strain = cst.c / (components[0].L * 2 * np.pi * ff)
-    proj = doppler_to_strain * AET(polarizations, eij, theta, ra, psi, components[0].L, ff)
+    proj[in_band_slice, :] = doppler_to_strain * AET(polarizations[in_band_slice, :], eij, theta, ra, psi, components[0].L, ff)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     return proj
 
 
-def projection_earth(parameters, detector, polarizations, timevector):
+def projection_earth(parameters, detector, polarizations, timevector, in_band_slice=slice(None)):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame
@@ -386,7 +404,7 @@ def projection_earth(parameters, detector, polarizations, timevector):
     # timevector = parameters['geocent_time'] * np.ones_like(timevector)  # switch off Earth's rotation
 
     nf = len(polarizations[:, 0])
-    ff = detector.frequencyvector
+    ff = detector.frequencyvector[in_band_slice, :]
 
     components = detector.components
     proj = np.zeros((nf, len(components)), dtype=complex)
@@ -399,7 +417,7 @@ def projection_earth(parameters, detector, polarizations, timevector):
     psi = parameters['psi']
 
     theta = np.pi / 2. - dec
-    gmst = GreenwichMeanSiderealTime(timevector)
+    gmst = GreenwichMeanSiderealTime(timevector[in_band_slice])
     phi = ra - gmst
 
     # wave vector components
@@ -433,12 +451,12 @@ def projection_earth(parameters, detector, polarizations, timevector):
     # hpij = np.einsum('ij,kj->jik', m, m) - np.einsum('ij,kj->jik', n, n)
     # hcij = np.einsum('ij,kj->jik', m, n) + np.einsum('ij,kj->jik', n, m)
     # hij = np.einsum('i,ijk->ijk', polarizations[:, 0], hpij) + np.einsum('i,ijk->ijk', polarizations[:, 1], hcij)
-    hxx = polarizations[:, 0] * (mx * mx - nx * nx) + polarizations[:, 1] * (mx * nx + nx * mx)
-    hxy = polarizations[:, 0] * (mx * my - nx * ny) + polarizations[:, 1] * (mx * ny + nx * my)
-    hxz = polarizations[:, 0] * (mx * mz - nx * nz) + polarizations[:, 1] * (mx * nz + nx * mz)
-    hyy = polarizations[:, 0] * (my * my - ny * ny) + polarizations[:, 1] * (my * ny + ny * my)
-    hyz = polarizations[:, 0] * (my * mz - ny * nz) + polarizations[:, 1] * (my * nz + ny * mz)
-    hzz = polarizations[:, 0] * (mz * mz - nz * nz) + polarizations[:, 1] * (mz * nz + nz * mz)
+    hxx = polarizations[in_band_slice, 0] * (mx * mx - nx * nx) + polarizations[in_band_slice, 1] * (mx * nx + nx * mx)
+    hxy = polarizations[in_band_slice, 0] * (mx * my - nx * ny) + polarizations[in_band_slice, 1] * (mx * ny + nx * my)
+    hxz = polarizations[in_band_slice, 0] * (mx * mz - nx * nz) + polarizations[in_band_slice, 1] * (mx * nz + nx * mz)
+    hyy = polarizations[in_band_slice, 0] * (my * my - ny * ny) + polarizations[in_band_slice, 1] * (my * ny + ny * my)
+    hyz = polarizations[in_band_slice, 0] * (my * mz - ny * nz) + polarizations[in_band_slice, 1] * (my * nz + ny * mz)
+    hzz = polarizations[in_band_slice, 0] * (mz * mz - nz * nz) + polarizations[in_band_slice, 1] * (mz * nz + nz * mz)
     # print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
 
     # start_time = time.time()
@@ -452,24 +470,24 @@ def projection_earth(parameters, detector, polarizations, timevector):
         # z_det = components[k].position[2] * cst.R_earth
         # phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
         
-        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector), np.squeeze(ff))
+        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector)[in_band_slice], np.squeeze(ff))
 
 
         # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
-        proj[:, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
+        proj[in_band_slice, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
                      + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
                      + 0.5 * (e1[2] ** 2 - e2[2] ** 2) * hzz \
                      + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
                      + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
                      + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
 
-        proj[:, k] *= np.exp(-1.j * phase_shift)
+        proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     return proj
 
 
-def projection_moon(parameters, detector, polarizations, timevector):
+def projection_moon(parameters, detector, polarizations, timevector, in_band_slice=slice(None)):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame
@@ -494,7 +512,7 @@ def projection_moon(parameters, detector, polarizations, timevector):
     psi = parameters['psi']
 
     theta = np.pi / 2. - dec
-    lmst = LunarMeanSiderealTime(timevector)
+    lmst = LunarMeanSiderealTime(timevector[in_band_slice])
     phi = ra - lmst
 
     # saving timevector and lmst for plotting
@@ -527,12 +545,12 @@ def projection_moon(parameters, detector, polarizations, timevector):
     # hpij = np.einsum('ij,kj->jik', m, m) - np.einsum('ij,kj->jik', n, n)
     # hcij = np.einsum('ij,kj->jik', m, n) + np.einsum('ij,kj->jik', n, m)
     # hij = np.einsum('i,ijk->ijk', polarizations[:, 0], hpij) + np.einsum('i,ijk->ijk', polarizations[:, 1], hcij)
-    hxx = polarizations[:, 0] * (mx * mx - nx * nx) + polarizations[:, 1] * (mx * nx + nx * mx)
-    hxy = polarizations[:, 0] * (mx * my - nx * ny) + polarizations[:, 1] * (mx * ny + nx * my)
-    hxz = polarizations[:, 0] * (mx * mz - nx * nz) + polarizations[:, 1] * (mx * nz + nx * mz)
-    hyy = polarizations[:, 0] * (my * my - ny * ny) + polarizations[:, 1] * (my * ny + ny * my)
-    hyz = polarizations[:, 0] * (my * mz - ny * nz) + polarizations[:, 1] * (my * nz + ny * mz)
-    hzz = polarizations[:, 0] * (mz * mz - nz * nz) + polarizations[:, 1] * (mz * nz + nz * mz)
+    hxx = polarizations[in_band_slice, 0] * (mx * mx - nx * nx) + polarizations[in_band_slice, 1] * (mx * nx + nx * mx)
+    hxy = polarizations[in_band_slice, 0] * (mx * my - nx * ny) + polarizations[in_band_slice, 1] * (mx * ny + nx * my)
+    hxz = polarizations[in_band_slice, 0] * (mx * mz - nx * nz) + polarizations[in_band_slice, 1] * (mx * nz + nx * mz)
+    hyy = polarizations[in_band_slice, 0] * (my * my - ny * ny) + polarizations[in_band_slice, 1] * (my * ny + ny * my)
+    hyz = polarizations[in_band_slice, 0] * (my * mz - ny * nz) + polarizations[in_band_slice, 1] * (my * nz + ny * mz)
+    hzz = polarizations[in_band_slice, 0] * (mz * mz - nz * nz) + polarizations[in_band_slice, 1] * (mz * nz + nz * mz)
     # print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
 
     # start_time = time.time()
@@ -540,17 +558,17 @@ def projection_moon(parameters, detector, polarizations, timevector):
         e1 = components[k].e1
         e2 = components[k].e2
         
-        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector), np.squeeze(detector.frequencyvector))
+        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector)[in_band_slice], np.squeeze(detector.frequencyvector)[in_band_slice])
 
         # proj[:, k] = np.einsum('i,jik,k->j', e1, hij, e2)
-        proj[:, k] = e1[0] * e2[0] * hxx \
+        proj[in_band_slice, k] = e1[0] * e2[0] * hxx \
                      + e1[1] * e2[1] * hyy \
                      + e1[2] * e2[2] * hzz \
                      + (e1[0] * e2[1] + e2[0] * e1[1]) * hxy \
                      + (e1[0] * e2[2] + e2[0] * e1[2]) * hxz \
                      + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
                      
-        proj[:, k] *= np.exp(-1.j * phase_shift)
+        proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
 
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
@@ -723,9 +741,9 @@ def analyzeDetections(network, parameters, population, networks_ids):
     else:
         np.savetxt('Signals_' + population + '.txt', save_data, delimiter=' ', fmt='%.3f', header=header, comments='')
 
-def time_of_fmax(timevector, frequencyvector, fmax):
-    try:
-        return timevector[np.searchsorted(frequencyvector[:, 0], fmax)]
-    except IndexError as e:
-        raise ValueError("The max_frequency given was not found in the frequency vector - "
-                         "it might be outside the detector band.") from e
+def is_null_slice(s):
+    if s.stop is None:
+        return False
+    if s.start == s.stop == 0:
+        return True
+    return False
