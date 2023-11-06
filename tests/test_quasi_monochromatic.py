@@ -52,13 +52,17 @@ def test_quasi_monochromatic_horizon(low_frequency_detector, extrinsic):
     polarizations = waveform_obj()
     timevector = waveform_obj.t_of_f
     
-    signal = projection(
+    signal, new_t, new_f = projection(
         params,
         low_frequency_detector,
         polarizations,
-        timevector
+        timevector,
+        redefine_tf_vectors=True
     )
     
+    # the minimum gps time is 1992, so with 10-year missions at most we should 
+    # not be able to go below 1980
+    assert np.all(new_t > 0)
     
     assert len(np.nonzero(signal[:, 0])[0]) > 50
 
@@ -74,7 +78,7 @@ def test_in_band_window_no_constraints():
     
     assert np.allclose(t, initial_timevector)
     assert s.start == 0
-    assert s.stop == None
+    assert s.stop == 10
 
 def test_in_band_window_with_lifetime():
     initial_timevector = np.linspace(0, 10, 10)
@@ -87,7 +91,7 @@ def test_in_band_window_with_lifetime():
     
     assert np.allclose(t, initial_timevector)
     assert s.start == 7
-    assert s.stop == None
+    assert s.stop == 10
 
 def test_in_band_window_with_max_frequency():
     initial_timevector = np.linspace(0, 10, 11)
@@ -96,6 +100,7 @@ def test_in_band_window_with_max_frequency():
         frequencyvector=np.linspace(0, 1, 11), 
         detector_lifetime=None,
         max_frequency_cutoff=0.5,
+        redefine_timevector=True,
     )
     
     assert np.allclose(t, initial_timevector + 5.)
@@ -111,6 +116,7 @@ def test_in_band_window_with_max_frequency_and_lifetime():
         frequencyvector=np.linspace(0, 1, 11), 
         detector_lifetime=3., 
         max_frequency_cutoff=0.5,
+        redefine_timevector=True,
     )
     
     assert np.allclose(t, initial_timevector+5.)
@@ -129,7 +135,7 @@ def test_in_band_window_lifetime_under_min_frequency(max_frequency_cutoff):
     
     assert s.start == 0
     if max_frequency_cutoff is None:
-        assert s.stop == None
+        assert s.stop == 10
     else:
         assert s.stop == int(10*max_frequency_cutoff)
 
@@ -144,3 +150,15 @@ def test_in_band_window_does_not_modify_timevector(max_frequency_cutoff):
     )
 
     assert np.allclose(initial_timevector, np.linspace(0, 10, 10)) # should not have been modified
+
+@pytest.mark.parametrize('max_frequency_cutoff', [0.5, 0.45])
+def test_in_band_window_very_short_signal(max_frequency_cutoff):
+    initial_timevector = np.linspace(0, 10, 10)
+    s, t = in_band_window(
+        timevector=initial_timevector, 
+        frequencyvector=np.linspace(0, 1, 10), 
+        detector_lifetime=0.001, 
+        max_frequency_cutoff=max_frequency_cutoff,
+    )
+
+    assert s.start == s.stop

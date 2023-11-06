@@ -8,6 +8,7 @@ import GWFish.modules.constants as cst
 import GWFish.modules.ephemeris as ephem
 from astropy.coordinates import EarthLocation
 import warnings
+from GWFish.modules.waveforms import t_of_f_PN
 
 DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
 PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
@@ -293,12 +294,33 @@ def AET(polarizations, eij, theta, ra, psi, L, ff):
     return np.hstack((A[:, np.newaxis], E[:, np.newaxis], T[:, np.newaxis]))
 
 
-def projection(parameters, detector, polarizations, timevector):
+def projection(parameters, detector, polarizations, timevector, redefine_tf_vectors=False):
 
     f_max = parameters.get('max_frequency_cutoff', None)
     detector_lifetime = getattr(detector, 'mission_lifetime', None)
 
-    in_band_slice, new_timevector = in_band_window(timevector, detector.frequencyvector[:, 0], detector_lifetime, f_max)
+    in_band_slice, new_timevector = in_band_window(
+        np.squeeze(timevector), 
+        np.squeeze(detector.frequencyvector), 
+        detector_lifetime, 
+        f_max, 
+        redefine_timevector=redefine_tf_vectors
+    )
+    
+    if redefine_tf_vectors and in_band_slice.stop - in_band_slice.start < 50:
+        new_fmin = detector.frequencyvector[in_band_slice.start - 1, 0]
+        new_fmax = detector.frequencyvector[in_band_slice.stop + 1, 0]
+        new_frequencyvector = np.linspace(new_fmin, new_fmax, num=1000)[:, None]
+        temp_timevector = t_of_f_PN(parameters, new_frequencyvector)
+        in_band_slice, new_timevector = in_band_window(
+            np.squeeze(temp_timevector), 
+            np.squeeze(new_frequencyvector), 
+            detector_lifetime, 
+            f_max,
+            redefine_timevector=True,
+            final_time=parameters['geocent_time']
+        )
+    
     proj = np.zeros_like(new_timevector)
     if is_null_slice(in_band_slice):
         return proj
@@ -313,14 +335,19 @@ def projection(parameters, detector, polarizations, timevector):
         print('Unknown detector location')
         exit(0)
 
-    # TODO return new timevector here!
+    if redefine_tf_vectors:
+        return proj, new_timevector, new_frequencyvector
     return proj
+
 
 def in_band_window(
     timevector, 
     frequencyvector, 
     detector_lifetime, 
-    max_frequency_cutoff):
+    max_frequency_cutoff,
+    redefine_timevector=False,
+    final_time=None
+    ):
     """Truncate the evolution of the source to the detector lifetime.
     
     If there is no maximum frequency cutoff, then 
@@ -334,10 +361,12 @@ def in_band_window(
         corresponds to the detector lifetime 
     """
     
-    final_time = timevector[-1]
+    if final_time is None:
+        final_time = timevector[-1]
     
     if max_frequency_cutoff is None:
-        i_final = None
+        i_final = len(timevector)
+        fmax_time = final_time
         new_timevector = timevector
     else:
         if max_frequency_cutoff >= frequencyvector[0]:
@@ -349,16 +378,22 @@ def in_band_window(
 
         fmax_time = timevector[i_final]
 
+    if redefine_timevector:
         # potentially dangerous loss of precision here...
         # shift the timevector so that the cutoff is placed at the given gps time
         new_timevector = timevector + final_time - fmax_time
+    else:
+        new_timevector = timevector
 
     if detector_lifetime is None:
         i_initial = 0
     elif final_time - detector_lifetime < new_timevector[0]:
         i_initial = 0
     else:
-        i_initial = np.searchsorted(new_timevector, final_time - detector_lifetime)
+        if redefine_timevector:
+            i_initial = np.searchsorted(new_timevector, final_time - detector_lifetime)
+        else:
+            i_initial = np.searchsorted(new_timevector, fmax_time - detector_lifetime)
 
     return slice(i_initial, i_final), new_timevector
 
