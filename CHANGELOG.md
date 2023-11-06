@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Add Solar-Centered ephemeris computed through astropy/jplephem for Earth and Moon-based detectors: `modules.ephemeris`
     - Phase shift is now computed from there during the projection
+- Refactor temporal truncation with detector lifetime, now shared across detector classes
+    - The `projection` function now has an optional flag, `redefine_tf_vectors`: if enabled, 
+        this will redefine the time and frequency vectors as required to shift the time corresponding to the
+        given `maximum_frequency_cutoff` to the `geocent_time` --- this way, the signal is guaranteed to lie 
+        in the few years before the `geocent_time`, where the ephemeris do not give errors. 
 - Remove old Fisher errors computation
     - Removed `SNR` attribute of the `Detector` object, 
     as well as the practice of dynamically saving Fisher matrices as detector object attributes 
