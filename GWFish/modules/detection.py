@@ -297,6 +297,11 @@ def projection(parameters, detector, polarizations, timevector):
     # coords = SkyCoord(ra=ra, dec=dec, frame='icrs', unit='rad')
     # angles = coords.transform_to('barycentricmeanecliptic')
 
+    f_max = parameters.get('max_frequency_cutoff', None)
+    
+    if f_max is not None:
+        time_of_fmax(timevector, detector.frequencyvector, f_max)
+
     if detector.location == 'earth':
         proj = projection_earth(parameters, detector, polarizations, timevector)
     elif detector.location == 'moon':
@@ -307,7 +312,41 @@ def projection(parameters, detector, polarizations, timevector):
         print('Unknown detector location')
         exit(0)
 
-    return proj
+    return time_truncated_projection(
+        proj, 
+        timevector, 
+        detector.frequencyvector, 
+        detector.mission_lifetime, 
+        f_max
+    )
+
+def time_truncated_projection(
+    projection, 
+    timevector, 
+    frequencyvector, 
+    detector_lifetime, 
+    max_frequency_cutoff=None):
+    
+    # define LISA observation window
+    if fmax := parameters.get('max_frequency_cutoff', None):
+        max_observation_time += time_of_fmax(timevector, detector.frequencyvector, fmax)
+
+    tc = parameters['geocent_time']
+    # proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
+    # proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
+
+    if fmax := parameters.get('max_frequency_cutoff', None):
+        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
+
+    proj[np.where(timevector > tc + max_observation_time), :] = 0.j
+
+    #i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
+    #i1 = np.argmin(np.abs(timevector - (tc - max_time_until_merger + max_observation_time)))
+
+    #if 'id' in parameters:
+    #    print('{} observed between {:.3f}Hz to {:.3f}Hz'.format(parameters['id'], ff[i0, 0], ff[i1, 0]))
+
+    return projection
 
 def projection_solarorbit(parameters, detector, polarizations, timevector):
     ff = detector.frequencyvector
@@ -332,27 +371,8 @@ def projection_solarorbit(parameters, detector, polarizations, timevector):
     proj = doppler_to_strain * AET(polarizations, eij, theta, ra, psi, components[0].L, ff)
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
-    # define LISA observation window
-    max_observation_time = detector.mission_lifetime
-    if fmax := parameters.get('max_frequency_cutoff', None):
-        max_observation_time += time_of_fmax(timevector, detector.frequencyvector, fmax)
-
-    tc = parameters['geocent_time']
-    # proj[np.where(timevector < tc - max_time_until_merger), :] = 0.j
-    # proj[np.where(timevector > tc - max_time_until_merger + max_observation_time), :] = 0.j
-
-    if fmax := parameters.get('max_frequency_cutoff', None):
-        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
-
-    proj[np.where(timevector > tc + max_observation_time), :] = 0.j
-
-    #i0 = np.argmin(np.abs(timevector - (tc - max_time_until_merger)))
-    #i1 = np.argmin(np.abs(timevector - (tc - max_time_until_merger + max_observation_time)))
-
-    #if 'id' in parameters:
-    #    print('{} observed between {:.3f}Hz to {:.3f}Hz'.format(parameters['id'], ff[i0, 0], ff[i1, 0]))
-
     return proj
+
 
 def projection_earth(parameters, detector, polarizations, timevector):
     """
@@ -533,14 +553,6 @@ def projection_moon(parameters, detector, polarizations, timevector):
         proj[:, k] *= np.exp(-1.j * phase_shift)
 
     # print("Calculation of projection: %s seconds" % (time.time() - start_time))
-
-    max_observation_time = detector.mission_lifetime
-    tc = parameters['geocent_time']
-
-    if fmax := parameters.get('max_frequency_cutoff', None):
-        tc = time_of_fmax(timevector, detector.frequencyvector, fmax)
-
-    proj[np.where(timevector < tc - max_observation_time), :] = 0.j
 
     return proj
 
