@@ -32,6 +32,7 @@ sphinx-copybutton = "^0.5.0"
 readthedocs-sphinx-search = "^0.1.2"
 sphinxcontrib-bibtex = "^2.4.2"
 sphinx-toolbox = "^3.1.2"
+sphinx-autodoc2 = "^0.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.1"

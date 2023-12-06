@@ -33,13 +33,27 @@ release = '0.1.0'
 extensions = [
     "myst_parser",
     "sphinx_copybutton",
-    # "sphinx.ext.autodoc",
+    "autodoc2",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
     "sphinx.ext.todo",
     "sphinx_search.extension",
     'sphinx_toolbox.collapse',
+]
+
+autodoc2_packages = [
+    {
+        "path": "../../GWFish",
+        "auto_mode": False,
+    },
+]
+
+autodoc2_docstring_parser_regexes = [
+    # this will render all docstrings as Markdown
+    (r".*", "myst"),
+    # this will render select docstrings as Markdown
+    # (r"mypackage\.mymodule\..*", "myst"),
 ]
 
 # bibtex_bibfiles = ['LGWA.bib']
@@ -68,7 +82,8 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
+html_static_path = []
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
