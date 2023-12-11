@@ -1,5 +1,8 @@
 # Fisher matrix basics
 
+What follows is a simple reference on the mathematics behind the Fisher Matrix approach to error forecasting.
+For more details, see the [`GWFish` paper](https://www.sciencedirect.com/science/article/abs/pii/S2213133722000853?via%3Dihub) or the [`GWFAST paper`](https://iopscience.iop.org/article/10.3847/1538-4357/ac9cd4).
+
 The estimates in GWFish are obtained by considering a quadratic approximation to the likelihood 
 (valid in the high-SNR limit), in the form 
 
@@ -8,7 +11,7 @@ $$
 
 where $\Delta \theta = \theta - \overline{\theta}$ is the vector of the errors in our
 estimates for the parameters, $\overline{\theta}$ being the vector of the true values.
-The matrix $\Gamma$ is computed as 
+The matrix $\mathcal{F}$ is computed as 
 
 $$\mathcal{F}_{ij} = 
 \left( 
