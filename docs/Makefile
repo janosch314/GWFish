@@ -14,7 +14,10 @@ help:
 
 .PHONY: help Makefile
 
+detectors_autogen.inc:
+	./generate_includes.py
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile
+%: Makefile detectors_autogen.inc
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

@@ -1,6 +1,21 @@
-# Detectors
+# Detectors and Networks
 
-## Detector classes
+## Networks
+
+<!-- TODO mention detection_SNR -->
+```{autodoc2-object} GWFish.modules.detection.Network
+render_plugin = "myst"
+no_index = true
+```
+
+## Detectors
+
+```{autodoc2-object} GWFish.modules.detection.Detector
+render_plugin = "myst"
+no_index = true
+```
+
+### Detector classes
 
 The currently supported detector classes are the following:
 
@@ -9,7 +24,7 @@ The currently supported detector classes are the following:
 - `satellitesolarorbit` (e.g. LISA);
 - `lunararray` (e.g. LGWA).
 
-## Detector properties
+### Detector properties
 
 The properties of each detector are specified in the `GWFish/detectors.yaml` file.
 These are strings which will be parsed through an `eval`, so they can include any 
@@ -19,9 +34,9 @@ to be evaluated into (e.g. `'1e-1*np.pi'` evaluates to a floating point number $
 __All detectors__ require:
 
 - __`detector_class`__ (`str`): one of the four aforementioned classes;
-- __`fmin`, `fmax`, `df`__ (`float`): minimum and maximum frequency, and frequency spacing 
-    (all in Hz): 
-    the frequency array is determined by these parameters;
+- parameters defining the frequency vector:
+    - a __`spacing`__ parameter (`str`), either `geometric` or `linear`, and
+    - either __`fmin`, `fmax`, `df`__ (`float`), minimum and maximum frequency, and frequency spacing for the linear spacing option, or __`fmin`, `fmax`__ and __`npoints`__ for the geometric spacing option (all in Hz);
 - __`duty_factor`__ (`float` between 0 and 1): the fraction of time the detector is expected to be on for;
 - __`plotrange`__ (`tuple` of four `float`s, representing `fmin`, `fmax`, `strain_min`, `strain_max`): 
     x and y limits of a plot of the detector's characteristic noise strain.
@@ -29,14 +44,9 @@ __All detectors__ require:
 __Non-space-based__ `earthDelta`, `earthL` and `lunararray`-type detectors all require:
 
 - __`lat`__ and __`lon`__ (`float`): coordinates of the detector on the surface of the body (Earth/Moon), in radians;
-- __`azimuth`__ (`float`): azimuthal angle of the arms, in radians --- for a lunar array, this instead means (???)
+- __`azimuth`__ (`float`): azimuthal angle of the arms, in radians --- for a lunar seismometer array, this instead is the azimuth of the first direction along which the seismometers measure horizontal strain;
 - __`psd_data`__ (`str` which is a valid file path): location of a space-separated text file, typically within 
     the folder `GWFish/psd_data/`, containing two columns: frequency (in Hz) and PSD value (in $\text{Hz}^{-1}$).
-
-```{todo}
-Unclear meaning of azimuth in the lunar array case --- it likely is the angle
-between two of the seismometers, but I'd like to make sure of this.
-```
 
 __Earth-bound__ `earthDelta` and `earthL`-type detectors require:
 
@@ -46,3 +56,11 @@ __Earth-bound__ `earthDelta` and `earthL`-type detectors require:
 __Non-Earth-bound__ `lunararray` and `satellitesolarorbit`-type detectors require:
 
 - __`mission_lifetime`__ (`float`): expected mission duration, in seconds.
+
+### Included detectors
+
+The following list is automatically generated as a human-readable 
+summary of the `GWFish/detectors.yaml` file.
+
+```{include} ../detectors_autogen.inc
+```
