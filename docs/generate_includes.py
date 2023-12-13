@@ -5,8 +5,11 @@
 from pathlib import Path
 import yaml
 import numpy as np
+import matplotlib.pyplot as plt
 
 item_prefix = '    - '
+BASE_PATH = Path(__file__).resolve().parent.parent
+IMG_FOLDER = BASE_PATH / 'docs' / 'source' / 'figures'
 
 def format_number(number):
     if number < 1e-10:
@@ -42,11 +45,35 @@ def dutyfactor_description(detector):
     df = float(eval(str(detector["duty_factor"])))
     return item_prefix + f'duty factor {df:.0%};\n'
 
+def save_psd_plot(detector, psd_path):
+    
+    psd = np.loadtxt(psd_path)
+    freq = psd[:, 0]
+    psd = psd[:, 1]
+    plt.loglog(freq, np.sqrt(psd))
+    plotrange = np.fromstring(detector['plotrange'], dtype=float, sep=',')
+    plt.xlabel('Frequency [Hz]')
+    plt.ylabel('Strain noise [Hz$^{1/2}$]')
+    plt.grid(visible=True, which='both')
+    plt.tight_layout()
+    save_path = IMG_FOLDER / f'psd_{detector["name"]}.png'
+    plt.savefig(save_path)
+    plt.close()
+    return save_path
+
 def psd_description(detector):
-    base_path = Path(__file__).resolve().parent.parent
-    psd_path = base_path / 'GWFish' / 'detector_psd' / detector["psd_data"]
+    psd_path = BASE_PATH / 'GWFish' / 'detector_psd' / detector["psd_data"]
     if psd_path.is_file():
-        return item_prefix + f'power spectral density data file: `{psd_path.relative_to(base_path)}`;\n'
+        image_path = save_psd_plot(detector, psd_path)
+        psd_path_description = item_prefix + f'power spectral density data file: `{psd_path.relative_to(BASE_PATH)}`;\n'
+        img_include = ('\n'
+            f'```{{image}} ../figures/{image_path.relative_to(IMG_FOLDER)}\n'
+            ':width: 30%\n'
+            ':align: right\n'
+            '```\n\n'
+        )
+        
+        return psd_path_description, img_include
     else:
         raise(FileNotFoundError(f'PSD file `{psd_path}` not found!'))
 
@@ -101,8 +128,13 @@ def main():
         with open(yaml_path, 'r') as y:
             yaml_data = yaml.load(y, Loader=yaml.FullLoader)
             for detector_name, detector in yaml_data.items():
-                f.write(f'- {detector_name}\n')
                 
+                detector['name'] = detector_name
+                
+                psd_path_description, img_include = psd_description(detector)
+                if detector_name != 'LISA':
+                    f.write(img_include)
+                f.write(f'- {detector_name}\n')
                 f.write(shape_class_description(detector))
                 
                 if detector['detector_class'] in ['lunararray', 'satellitesolarorbit']:
@@ -112,9 +144,9 @@ def main():
                     f.write(location_description(detector, location='earth'))
                 elif detector['detector_class'] == 'lunararray':
                     f.write(location_description(detector, location='the Moon'))
-                f.write(psd_description(detector))
                 f.write(dutyfactor_description(detector))
                 f.write(frequencyvector_description(detector))
+                f.write(psd_path_description)
 
 if __name__ == '__main__':
     main()
