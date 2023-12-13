@@ -5,7 +5,10 @@ The thing we want to compute is the luminosity distance at which a given
 signal will be detected (with a given SNR).
 """
 
-from typing import Union
+
+from typing import Union, TYPE_CHECKING
+if TYPE_CHECKING:
+    import pandas as pd
 import warnings
 import numpy as np
 from tqdm import tqdm
@@ -17,38 +20,59 @@ import astropy.units as u
 from scipy.optimize import brentq, minimize, dual_annealing
 
 from .detection import SNR, Detector, projection, Network
-from .waveforms import LALFD_Waveform
+from .waveforms import LALFD_Waveform, DEFAULT_WAVEFORM_MODEL, Waveform
 
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
-WAVEFORM_MODEL = 'IMRPhenomD'
 MIN_REDSHIFT = 1e-20
 MAX_REDSHIFT = 2000
 
-def compute_SNR(params: dict, detector: Detector, waveform_model: str = WAVEFORM_MODEL):
+def compute_SNR(
+    params: "Union[dict[str, float], pd.DataFrame]", 
+    detector: Detector, 
+    waveform_model: str = DEFAULT_WAVEFORM_MODEL,
+    waveform_class: type(Waveform) = LALFD_Waveform,
+    redefine_tf_vectors: bool = False) -> float:
+    """Compute the SNR for a single signal, and a single detector.
+    
+    :param params: parameters for the signal
+    :param detector: detector to use
+    :param waveform_model: waveform model to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    :param waveform_class: waveform class to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    :param redefine_tf_vectors: whether to redefine the time and frequency vectors 
+    
+    :return: the SNR
+    """
 
     data_params = {
         'frequencyvector': detector.frequencyvector,
         'f_ref': 50.
     }
-    waveform_obj = LALFD_Waveform(waveform_model, params, data_params)
+    waveform_obj = waveform_class(waveform_model, params, data_params)
     polarizations = waveform_obj()
     timevector = waveform_obj.t_of_f
     
-    signal = projection(
-        params,
-        detector,
-        polarizations,
-        timevector
-    )
+    args = (params, detector, polarizations, timevector)
     
-    component_SNRs = SNR(detector, signal)
+    if redefine_tf_vectors:
+        signal, timevector, frequencyvector = projection(*args, redefine_tf_vectors=True)
+    else:
+        signal = projection(*args)
+        frequencyvector = detector.frequencyvector
+
+    component_SNRs = SNR(detector, signal, frequencyvector=np.squeeze(frequencyvector))
     return np.sqrt(np.sum(component_SNRs**2))
 
-def compute_SNR_network(params: dict, network: Network, waveform_model: str = WAVEFORM_MODEL):
+def compute_SNR_network(
+    params: "Union[dict[str, float], pd.DataFrame]", 
+    network: Network, 
+    waveform_model: str = DEFAULT_WAVEFORM_MODEL,
+    waveform_class: type(Waveform) = LALFD_Waveform,
+    redefine_tf_vectors: bool = False
+    ) -> float:
     
     square_snrs = [
-        compute_SNR(params, detector, waveform_model)**2
+        compute_SNR(params, detector, waveform_model, waveform_class, redefine_tf_vectors)**2
         for detector in network.detectors
     ]
 
@@ -58,19 +82,30 @@ def horizon(
     params: dict,
     detector: Union[Detector, Network],
     target_SNR: int = 9, 
-    waveform_model: str = WAVEFORM_MODEL,
+    waveform_model: str = DEFAULT_WAVEFORM_MODEL,
+    waveform_class: type(Waveform) = LALFD_Waveform,
     cosmology_model: cosmology.Cosmology = Planck18,
     source_frame_masses: bool = True,
+    redefine_tf_vectors: bool = False,
     ):
     """
     Given the parameters for a GW signal and a detector, this function 
     computes the luminosity distance and corresponding redshift 
     (as connected by a given cosmology) which the signal would 
-    need to be at in order to have a given redshift - by default, 9.
+    need to be at in order to have a given SNR - by default, 9.
+    
+    Arguments:
+    - `params`: 
+    - `detector`:
+    - `target_SNR`:
+    - `cosmology_model`:
+    - `source_frame_masses`:
+    - `redefine_tf_vectors`:
     
     Returns:
     
-    distance in Mpc, redshift
+    - luminosity_distance in Mpc, 
+    - corresponding redshift
     """
     
     if 'redshift' in params or 'luminosity_distance' in params:
@@ -87,7 +122,7 @@ def horizon(
         if source_frame_masses:
             mod_params['redshift'] = redshift
         with np.errstate(divide='ignore'):
-            return np.log(snr_computer(mod_params, detector, waveform_model)/target_SNR)
+            return np.log(snr_computer(mod_params, detector, waveform_model, waveform_class, redefine_tf_vectors)/target_SNR)
     
     if not SNR_error(MIN_REDSHIFT) > 0:
         warnings.warn('The source is completely out of band')
@@ -135,7 +170,9 @@ def horizon_varying_orientation(base_params: dict, samples: int, detector: Union
 def find_optimal_location(
     base_params: dict, 
     detector: Union[Detector, Network], 
-    waveform_model: str = WAVEFORM_MODEL,
+    waveform_model: str = DEFAULT_WAVEFORM_MODEL,
+    waveform_class: type(Waveform) = LALFD_Waveform,
+    redefine_tf_vectors: bool = False,
     **minimizer_kwargs,
     ):
     """Determine optimal source location for a given detector or 
@@ -159,8 +196,8 @@ def find_optimal_location(
         return params
 
     def to_minimize(x):
-        return - snr_computer(make_params(x), detector, waveform_model)
-    
+        return - snr_computer(make_params(x), detector, waveform_model, waveform_class, redefine_tf_vectors)
+
     x0 = [0., 1.]
     if 'ra' in params:
         x0[0] = params['ra']
@@ -181,4 +218,7 @@ def find_optimal_location(
         **minimizer_kwargs
     )
 
+    del params['redshift']
+    del params['luminosity_distance']
+    
     return make_params(res.x)

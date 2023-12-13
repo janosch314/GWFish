@@ -6,7 +6,7 @@ import GWFish.modules.fft as fft
 
 import copy
 import pandas as pd
-from typing import Optional
+from typing import Optional, Union
 
 from tqdm import tqdm
 
@@ -208,21 +208,65 @@ def sky_localization_area(
         )
     )
 
-def sky_localization_percentile_factor(percentile=90.):
-    """Conversion factor to go from the sky localization area provided 
+def sky_localization_percentile_factor(
+    percentile: float=90.) -> float:
+    """Conversion factor $C_{X\%}$ to go from the sky localization area provided 
     by GWFish (one sigma, in steradians) to the X% contour, in degrees squared.
+    
+    $$ \Delta \Omega_{X\%} = C_{X\%} \Delta \Omega_{\\text{GWFish output}} $$
+    
+    :param percentile: Percentile of the sky localization area.
+    
+    :return: Conversion factor $C_{X\%}$
     """
     
     return - 2 * np.log(1 - percentile / 100.) * (180 / np.pi)**2
 
 def compute_detector_fisher(
     detector: det.Detector,
-    signal_parameter_values: pd.DataFrame,
-    fisher_parameters: list[str],
-    waveform_model: str = 'IMRPhenomD',
-    waveform_class = wf.LALFD_Waveform,
+    signal_parameter_values: Union[pd.DataFrame, dict[str, float]],
+    fisher_parameters: Optional[list[str]] = None,
+    waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
+    waveform_class: type(wf.Waveform) = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
-):
+    redefine_tf_vectors: bool = False,
+) -> tuple[np.ndarray, float]:
+    """Compute the Fisher matrix and SNR for a single detector.
+    
+    Example usage:
+    
+    ```
+    >>> from GWFish.modules.detection import Detector
+    >>> detector = Detector('ET')
+    >>> params = {
+    ...    'mass_1': 10.,
+    ...    'mass_2': 10.,
+    ...    'luminosity_distance': 1000.,
+    ...    'theta_jn': 0.,
+    ...    'ra': 0.,
+    ...    'dec': 0.,
+    ...    'phase': 0.,
+    ...    'psi': 0.,
+    ...    'geocent_time': 1e9,
+    ...    }
+    >>> fisher, detector_SNR_square = compute_detector_fisher(detector, params)
+    >>> print(fisher.shape)
+    (9, 9)
+    >>> print(f'{np.sqrt(detector_SNR_square):.0f}')
+    260
+    
+    ```
+    
+    :param detector: The detector to compute the Fisher matrix for
+    :param signal_parameter_values: The parameter values for the signal. They can be a dictionary of parameter names and values, or a single-row pandas DataFrame with the parameter names as columns.
+    :param fisher_parameters: The parameters to compute the Fisher matrix for. If None, all parameters are used.
+    :param waveform_model: The waveform model to use (see [choosing an approximant](../how-to/choosing_an_approximant.md));
+    :param waveform_class: The waveform class to use (see [choosing an approximant](../how-to/choosing_an_approximant.md));
+    :param use_duty_cycle: Whether to use the detector duty cycle (i.e. stochastically set the SNR to zero some of the time); defaults to `False`
+    :param redefine_tf_vectors: Whether to redefine the time-frequency vectors in order to correctly model signals with small frequency evolution. Defaults to `False`.
+    
+    :return: The Fisher matrix, and the square of the detector SNR.
+    """
     data_params = {
         'frequencyvector': detector.frequencyvector,
         'f_ref': 50.
@@ -231,10 +275,20 @@ def compute_detector_fisher(
     wave = waveform_obj()
     t_of_f = waveform_obj.t_of_f
 
-    signal = det.projection(signal_parameter_values, detector, wave, t_of_f)
+    if redefine_tf_vectors:
+        signal, timevector, frequencyvector = det.projection(signal_parameter_values, detector, wave, t_of_f, redefine_tf_vectors=True)
+    else:
+        signal = det.projection(signal_parameter_values, detector, wave, t_of_f)
+        frequencyvector = detector.frequencyvector[:, 0]
 
-    component_SNRs = det.SNR(detector, signal, use_duty_cycle)
+    component_SNRs = det.SNR(detector, signal, use_duty_cycle, frequencyvector=frequencyvector)
     detector_SNR_square = np.sum(component_SNRs ** 2)
+
+    if fisher_parameters is None:
+        if isinstance(signal_parameter_values, dict):
+            fisher_parameters = list(signal_parameter_values.keys())
+        else:
+            fisher_parameters = signal_parameter_values.columns
 
     return FisherMatrix(waveform_model, signal_parameter_values, fisher_parameters, detector, waveform_class=waveform_class).fm, detector_SNR_square
 
@@ -242,7 +296,7 @@ def compute_network_errors(
     network: det.Network,
     parameter_values: pd.DataFrame,
     fisher_parameters: list[str],
-    waveform_model: str = 'IMRPhenomD',
+    waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
     waveform_class = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
 ) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
@@ -250,18 +304,18 @@ def compute_network_errors(
     Compute Fisher matrix errors for a network whose
     SNR and Fisher matrices have already been calculated.
 
-    Will only return output for the signals n_above_thr
-    for which the network SNR is above network.detection_SNR[1].
-
-    Returns:
-    network_snr: array with shape (n_above_thr,)
-        Network SNR for the detected signals.
-    parameter_errors: array with shape (n_above_thr, n_parameters)
-        One-sigma Fisher errors for the parameters.
-    sky_localization: array with shape (n_above_thr,) or None
-        One-sigma sky localization area in steradians,
-        returned if the signals have both right ascension and declination,
-        None otherwise.
+    Will only return output for the `n_above_thr` signals 
+    for which the network SNR is above `network.detection_SNR[1]`.
+    
+    :param network: detector network to use
+    :param parameter_values: dataframe with parameters for one or more signals
+    :param fisher_parameters: list of parameters to use for the Fisher matrix analysis
+    :param waveform_model: waveform model to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    
+    :return:
+    - `network_snr`: array with shape `(n_above_thr,)` - Network SNR for the detected    signals.
+    - `parameter_errors`: array with shape `(n_above_thr, n_parameters)` - One-sigma     Fisher errors for the parameters.
+    - `sky_localization`: array with shape `(n_above_thr,)` or `None` - One-sigma sky localization area in steradians, returned if the signals have both right ascension and declination, or `None` otherwise.
     """
 
     n_params = len(fisher_parameters)
@@ -367,22 +421,6 @@ def output_to_txt_file(
         header=header,
         comments="",
         fmt=row_format,
-    )
-
-
-def errors_file_name(
-    network: det.Network, sub_network_ids: list[int], population_name: str
-) -> str:
-
-    sub_network = "_".join([network.detectors[k].name for k in sub_network_ids])
-
-    return (
-        "Errors_"
-        + sub_network
-        + "_"
-        + population_name
-        + "_SNR"
-        + str(network.detection_SNR[1])
     )
 
 def analyze_and_save_to_txt(

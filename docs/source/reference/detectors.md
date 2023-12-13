@@ -2,7 +2,6 @@
 
 ## Networks
 
-<!-- TODO mention detection_SNR -->
 ```{autodoc2-object} GWFish.modules.detection.Network
 render_plugin = "myst"
 no_index = true
@@ -57,6 +56,7 @@ __Non-Earth-bound__ `lunararray` and `satellitesolarorbit`-type detectors requir
 
 - __`mission_lifetime`__ (`float`): expected mission duration, in seconds.
 
+(#included-detectors)=
 ### Included detectors
 
 The following list is automatically generated as a human-readable 

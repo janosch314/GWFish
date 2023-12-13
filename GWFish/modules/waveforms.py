@@ -20,6 +20,8 @@ import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
 
+DEFAULT_WAVEFORM_MODEL = 'IMRPhenomD'
+
 def convert_args_list_to_float(*args_list):
     """
     Converts inputs to floats, returns a list in the same order as the 
@@ -124,11 +126,6 @@ class Waveform:
         else:
             # Set sampling frequency to Nyquist frequency
             self.delta_t = 0.5/self.f_max
-        
-        if 'max_frequency_cutoff' in gw_params:
-            self.max_frequency_cutoff = gw_params['max_frequency_cutoff']
-        else:
-            self.max_frequency_cutoff = None
 
     def __call__(self):
         """ Return frequency-domain polarization modes """
@@ -143,13 +140,6 @@ class Waveform:
         if self._frequency_domain_strain is None:
             self.calculate_frequency_domain_strain()
             
-        if self.max_frequency_cutoff is not None:
-            for i in range(2):
-                self._frequency_domain_strain[:, i] = np.where(
-                    self.frequencyvector <= self.max_frequency_cutoff, 
-                    self._frequency_domain_strain[:, i], 
-                    0j
-                )
         return self._frequency_domain_strain
 
     def calculate_time_domain_strain(self):
@@ -161,12 +151,6 @@ class Waveform:
         if self._time_domain_strain is None:
             self.calculate_time_domain_strain()
         return self._time_domain_strain
-
-    @property
-    def time_domain_strain(self):
-        if self._time_domain_strain is None:
-            self.calculate_time_domain_strain()
-        return self._frequency_domain_strain
 
     def _set_default_gw_params(self):
         self.gw_params = {

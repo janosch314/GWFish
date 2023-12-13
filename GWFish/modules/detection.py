@@ -109,18 +109,16 @@ class DetectorComponent:
         self.Sn = interp1d(self.psd_data[:, 0], self.psd_data[:, 1], bounds_error=False, fill_value=1.)
 
     def plot_psd(self):
-        plt.figure()
-        plt.loglog(self.psd_data[:, 0], np.sqrt(self.psd_data[:, 1]))
+        plt.loglog(self.psd_data[:, 0], np.sqrt(self.psd_data[:, 1]), label=f'Component {self.id}')
         plt.xlabel('Frequency [Hz]')
         plt.ylabel('Strain noise [Hz$^{1/2}$]')
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig('Sensitivity_' + self.name + '.png')
-        plt.close()
 
 class Detector:
-
+    
     def __init__(self, name: str, config=DEFAULT_CONFIG):
+        """"""
         self.components = []
 
         self.name = name
@@ -133,8 +131,7 @@ class Detector:
         for key in doc.keys():
             detectors.append(key)
         if self.name not in detectors:
-            print('Detector ' + self.name + ' invalid!')
-            exit()
+            raise ValueError('Detector ' + self.name + ' invalid!')
 
         detector_def = doc[self.name]
 
@@ -178,10 +175,32 @@ class Detector:
 
 
 class Network:
+    """Class for a network of detectors.
+    
+    Example initialization:
+    
+    ```
+    >>> network = Network(['ET', 'CE1'])
+    >>> print(network.name)
+    ET_CE1
+    
+    ```
+    
+    
+    :attr detectors: list of `Detector` objects 
+    """
 
-    def __init__(self, detector_ids = None, detection_SNR=(0., 10.), config=DEFAULT_CONFIG):
-        if detector_ids is None:
-            raise ValueError('Detector ids must be specified')
+    def __init__(self, detector_ids: list[str], detection_SNR: tuple[float, float]=(0., 10.), config: Path=DEFAULT_CONFIG):
+        """
+        :param detector_ids: list of detector names
+        :param detection_SNR: tuple of single-detector and network detection threshold SNR
+            - the first value is single-detector SNR threshold for that detector
+            to be included in the Fisher matrix analysis
+            - the second value is the network SNR threshold for the signal to be 
+            processed at all
+        :param config: configuration yaml file, defaults to the one described in the [included detectors](#included-detectors) section
+
+        """
         self.name = detector_ids[0]
         for id in detector_ids[1:]:
             self.name += '_' + id
@@ -681,44 +700,18 @@ def lisaGWresponse(detector):
     plt.close()
 
 
-def SNR(detector, signals, use_duty_cycle: bool = False, plot=None):
+def SNR(detector, signals, use_duty_cycle: bool = False, frequencyvector = None):
     if signals.ndim == 1:
         signals = signals[:, np.newaxis]
 
-    ff = detector.frequencyvector
-    df = ff[1, 0] - ff[0, 0]
+    if frequencyvector is None:
+        frequencyvector = detector.frequencyvector[:, 0]
     components = detector.components
 
     SNRs = np.zeros(len(components))
     for k, component in enumerate(components):
-
-        SNRs[k] = np.sqrt(4 * np.trapz(np.abs(signals[:, k]) ** 2 / component.Sn(ff[:, 0]), ff[:, 0], axis=0))
-        #print(components[k].name + ': ' + str(SNRs[k]))
-        if plot != None:
-            plotrange = components[k].plotrange
-            plt.figure()
-            plt.loglog(ff, 2 * np.sqrt(np.abs(signals[:, k]) ** 2 * df))
-            plt.loglog(ff, np.sqrt(components[k].Sn(ff)))
-            plt.xlabel('Frequency [Hz]')
-            plt.ylabel('Strain spectra')
-            plt.xlim((plotrange[0], plotrange[1]))
-            plt.ylim((plotrange[2], plotrange[3]))
-            plt.grid(True)
-            plt.tight_layout()
-            #plt.savefig('SignalNoise_' + str(components[k].name) + '_' + plot + '.png')
-            plt.savefig('SignalNoise_' + str(components[k].name) + '.png')
-            plt.close()
-
-            plt.figure()
-            plt.semilogx(ff, 2 * np.sqrt(np.abs(signals[:, k]) ** 2 / components[k].Sn(ff[:, 0]) * df))
-            plt.xlabel('Frequency [Hz]')
-            plt.ylabel('SNR spectrum')
-            plt.xlim((plotrange[0], plotrange[1]))
-            plt.grid(True)
-            plt.tight_layout()
-            #plt.savefig('SNR_density_' + str(components[k].name) + '_' + plot + '.png')
-            plt.savefig('SNR_density_' + str(components[k].name) + '.png')
-            plt.close()
+        integrand = np.abs(signals[:, k]) ** 2 / component.Sn(frequencyvector)
+        SNRs[k] = np.sqrt(4 * np.trapz(integrand, frequencyvector, axis=0))
 
         # set SNRs to zero if interferometer is not operating (according to its duty factor [0,1])
         if use_duty_cycle:
