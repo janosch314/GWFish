@@ -223,8 +223,6 @@ def test_optimal_parameter_finding(mass, network):
     }
 
     best_params = find_optimal_location(base_params, network)
-    best_params.pop('luminosity_distance')
-    best_params.pop('redshift')
     
     distance, redshift = horizon(best_params, network)
     
