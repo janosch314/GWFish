@@ -39,6 +39,8 @@ Assuming we already know what the values of the parameters should be, we can gen
 
 ```
 
+<!-- TODO remove redshift! -->
+
 where the values are approximately the [best fit estimates for GW170817](https://doi.org/10.1103/PhysRevX.9.011001), except for the distance, which has been decupled.
 
 ```{admonition} Why do we multiply by an array?
@@ -94,7 +96,22 @@ If you want to add a new detector, see {ref}`here <how-to/adding_new_detectors:H
 
 ## Results
 
-The `errors` array contains the one-sigma 
+The `errors` array contains the one-sigma errors for all the parameters included in the analysis in order. 
+
+```python
+>>> for name, error in zip(parameters.keys(), errors[0]):
+...     print(f'{name}: {error:.2e}') 
+mass_1: 5.93e-04
+mass_2: 5.51e-04
+redshift: 3.08e-06
+luminosity_distance: 6.39e+01
+theta_jn: 2.78e-01
+ra: 9.76e-03
+dec: 4.71e-03
+psi: 7.17e-01
+phase: 1.44e+00
+geocent_time: 2.72e-05
+```
 
 So, for example, the second-to-last value is `3.962E-01`, corresponding to the error in the phase:
 the estimated error is $\sigma_\varphi \approx 0.3962 \text{rad}$.
