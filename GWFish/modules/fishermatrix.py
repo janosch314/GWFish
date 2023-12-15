@@ -295,7 +295,7 @@ def compute_detector_fisher(
 def compute_network_errors(
     network: det.Network,
     parameter_values: pd.DataFrame,
-    fisher_parameters: list[str],
+    fisher_parameters: Optional[list[str]] = None,
     waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
     waveform_class = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
@@ -309,7 +309,7 @@ def compute_network_errors(
     
     :param network: detector network to use
     :param parameter_values: dataframe with parameters for one or more signals
-    :param fisher_parameters: list of parameters to use for the Fisher matrix analysis
+    :param fisher_parameters: list of parameters to use for the Fisher matrix analysis - if `None` (default), all waveform parameters are used
     :param waveform_model: waveform model to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
     
     :return:
@@ -317,6 +317,9 @@ def compute_network_errors(
     - `parameter_errors`: array with shape `(n_above_thr, n_parameters)` - One-sigma     Fisher errors for the parameters.
     - `sky_localization`: array with shape `(n_above_thr,)` or `None` - One-sigma sky localization area in steradians, returned if the signals have both right ascension and declination, or `None` otherwise.
     """
+
+    if fisher_parameters is None:
+        fisher_parameters = list(parameter_values.keys())
 
     n_params = len(fisher_parameters)
     n_signals = len(parameter_values)
