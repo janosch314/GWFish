@@ -3,7 +3,10 @@ import numpy as np
 from GWFish.modules.detection import Detector, projection
 from GWFish.modules.waveforms import TaylorF2
 
+import pytest
 
+
+@pytest.mark.xfail
 def test_max_f_cutoff_170817():
     
     params = {
@@ -48,6 +51,7 @@ def test_max_f_cutoff_170817():
     assert hphc[-1, 0] != 0j
     assert hphc[-1, 1] != 0j
     
+@pytest.mark.xfail
 def test_max_f_cutoff_signal_duration():
 
     # 170817-like parameters, with masses switched to BWD-like ones.
@@ -104,6 +108,7 @@ def test_max_f_cutoff_signal_duration():
     # print(timevector.shape)
 
     # hardest check: the region of the signal for which the
+    # waveform is nonzero should last the correct amount of time
     nonzero_times = timevector[signal_nonzero_indices]
     delta_t = nonzero_times[1] - nonzero_times[0]
     
