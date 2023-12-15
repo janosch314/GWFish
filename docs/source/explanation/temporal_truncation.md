@@ -2,6 +2,8 @@
 
 ## Mission lifetime constraints
 
+<!-- TODO add a figure -->
+
 In the detector projection computation for space- and Moon-based detectors,
 a truncation is applied at low frequencies: specifically, if the coalescence
 happens at time $t_c$, the waveform is set to zero for all times $t$ such that 
