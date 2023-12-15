@@ -12,5 +12,4 @@ Refer to the {ref}`detector documentation <reference/detectors:Detector properti
 conventions on how to format these parameters.
 
 Remember to give the new detector a unique identifier.
-Now, it will be possible to refer to this detector when calling the 
-{ref}`simulation script <tutorials/tutorial_170817:Simulation>`.
+Now, it will be possible to refer to this detector when generating a [`Detector` of `Network` object](../reference/detectors.md).
