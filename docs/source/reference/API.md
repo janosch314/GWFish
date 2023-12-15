@@ -1,5 +1,6 @@
-# Detailed reference
+# Detailed API reference
 
+(#fisher-matrix-computation)=
 ## Fisher matrix computation
 
 ```{autodoc2-object} GWFish.modules.fishermatrix.compute_network_errors

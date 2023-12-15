@@ -1,5 +1,6 @@
 # Detectors and Networks
 
+(#networks)=
 ## Networks
 
 ```{autodoc2-object} GWFish.modules.detection.Network
