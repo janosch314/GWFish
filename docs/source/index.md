@@ -19,8 +19,7 @@ detectors to be sensitive in the low-frequency regime, for which the motion of t
 Earth / Moon / satellites is significant across the signal duration.
 
 For more information about the theory than what is discussed here, refer to 
-the __[`GWFish` paper](https://arxiv.org/abs/2205.02499)__ (preprint, submitted to 
-[Astronomy and Computing](https://www.journals.elsevier.com/astronomy-and-computing)).
+the __[`GWFish` paper](https://www.sciencedirect.com/science/article/abs/pii/S2213133722000853?via%3Dihub)__.
 
 This software is developed by the [gravitation group](https://wikiet.gssi.it/index.php/Main_Page) 
 at the [Gran Sasso Science Institute](https://www.gssi.it/).
