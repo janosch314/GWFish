@@ -6,51 +6,56 @@ from GWFish.modules.waveforms import TaylorF2
 
 import matplotlib.pyplot as plt
 
-redshifts = np.linspace(1e-3, 40, num=200)
+def main():
 
-params = {
-    'mass_1': 1000.0,
-    'mass_2': 1000.0,
-    'theta_jn': 0.06243186,
-    'dec': 0.49576695,
-    'ra': 5.33470406,
-    'psi': 3.80561946,
-    'phase': 5.06447171,
-    'geocent_time': 1.75513532e+09,
-}
+    redshifts = np.linspace(1e-3, 40, num=200)
 
-detector = Detector('LGWA', parameters= [None], fisher_parameters= [None])
-
-SNRs = []
-
-for redshift in redshifts:
-
-    distance = Planck18.luminosity_distance(redshift)
-    params = params | {'redshift': redshift, 'luminosity_distance': distance}
-
-    data_params = {
-        'frequencyvector': detector.frequencyvector,
-        'f_ref': 50.
+    params = {
+        'mass_1': 1000.0,
+        'mass_2': 1000.0,
+        'theta_jn': 0.06243186,
+        'dec': 0.49576695,
+        'ra': 5.33470406,
+        'psi': 3.80561946,
+        'phase': 5.06447171,
+        'geocent_time': 1.75513532e+09,
     }
-    waveform_obj = TaylorF2('TaylorF2', params, data_params)
-    polarizations = waveform_obj()
-    timevector = waveform_obj.t_of_f
 
-    signal = projection(
-        params,
-        detector,
-        polarizations,
-        timevector
-    )
+    detector = Detector('LGWA')
 
-    component_SNRs = SNR(detector, signal)
-    this_SNR = np.sqrt(np.sum(component_SNRs**2))
-    SNRs.append(this_SNR)
-    
-distances = Planck18.luminosity_distance(redshifts)
-plt.loglog(distances, SNRs, c='black', label='True SNR')
-plt.loglog(distances, SNRs[0]*distances[0]/distances, c='black', ls='--', label='1 / distance scaling')
-plt.xlabel('Luminosity distance [Mpc]')
-plt.ylabel('SNR [dimensionless]')
-plt.legend()
-plt.savefig('SNR_against_distance.png')
+    SNRs = []
+
+    for redshift in redshifts:
+
+        distance = Planck18.luminosity_distance(redshift)
+        params = params | {'redshift': redshift, 'luminosity_distance': distance}
+
+        data_params = {
+            'frequencyvector': detector.frequencyvector,
+            'f_ref': 50.
+        }
+        waveform_obj = TaylorF2('TaylorF2', params, data_params)
+        polarizations = waveform_obj()
+        timevector = waveform_obj.t_of_f
+
+        signal = projection(
+            params,
+            detector,
+            polarizations,
+            timevector
+        )
+
+        component_SNRs = SNR(detector, signal)
+        this_SNR = np.sqrt(np.sum(component_SNRs**2))
+        SNRs.append(this_SNR)
+        
+    distances = Planck18.luminosity_distance(redshifts)
+    plt.loglog(distances, SNRs, c='black', label='True SNR')
+    plt.loglog(distances, SNRs[0]*distances[0]/distances, c='black', ls='--', label='1 / distance scaling')
+    plt.xlabel('Luminosity distance [Mpc]')
+    plt.ylabel('SNR [dimensionless]')
+    plt.legend()
+    plt.savefig('SNR_against_distance.png')
+
+if __name__ == '__main__':
+    main()
