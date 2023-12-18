@@ -7,8 +7,8 @@ For more details on the mathematics of how the errors are obtained, see the
 
 ## What we want to do
 
-We will study a GW170817-like signal, as would be seen by LGWA plus Einstein Telescope.
-The Fisher matrix approach can give us estimates of the overall SNR it would have, 
+We will study a GW170817-like signal, as would be seen by a network of Einstein Telescope and two Cosmic Explorers.
+GWFish can give us estimates of the overall SNR it would have, 
 as well as the errors in the estimates of the signal parameters.
 
 ## Population file
@@ -114,6 +114,7 @@ dec: 4.74e-03
 psi: 7.22e-01
 phase: 1.45e+00
 geocent_time: 2.72e-05
+
 ```
 
 So, for example, the error in distance is `64.4`, in the same units as the distance parameter: the estimated error is $\sigma_{d_L} \approx 64.4 \text{Mpc}$.
@@ -123,9 +124,10 @@ The sky localization error is given separately:
 ```python
 >>> from GWFish.modules.fishermatrix import sky_localization_percentile_factor
 >>> print(f'{sky_localization[0]:.2e}')
-6.75e-05
+6.76e-05
 >>> print(f'{sky_localization[0] * sky_localization_percentile_factor():.2e}')
 1.02e+00
+
 ```
 
 The default output from GWFish is a one-sigma error expressed in square radians, 
@@ -133,6 +135,9 @@ which is the natural result of the Fisher matrix analysis.
 The convention in astronomy, instead, is to measure these in square degrees (which means we need a conversion factor of $( 180 \text{deg} / \pi \text{rad})^2$) and in 
 terms of the $90\%$ sky area. 
 This computation is common enough for these analysis that GWFish includes a [convenience function](#utility-functions) for it, labelled `sky_localization_percentile_factor`.
+
+With the conversion done, we can say that the $90\%$ sky area for this (very loud
+signal) is expected to be about $\Delta \Omega _{90\%} \approx 1.02 \text{deg}^2$.
 
 
 ```{note}
@@ -152,6 +157,7 @@ for example, the following `scipy` code, or the analytical expression:
 >>> from scipy.stats import chi2
 >>> print(f'{chi2.isf(1 - 0.90, df=2):.3f}')
 4.605
->>> print(f'{-2*np.log(1 - 0.90)}:.3f')
+>>> print(f'{-2*np.log(1 - 0.90):.3f}')
 4.605
+
 ```

@@ -25,16 +25,16 @@ $$
 therefore we can generate a number $x \sim \mathcal{U}(-1, 1)$ and take its arccosine
 to get a sine-distributed variable.
 
-We will generate 100 such samples - not really enough to get good statistics, but 
+We will generate 10 such samples - not enough to get good statistics, but 
 it will suffice for this tutorial, and it will allow us to run quickly.
 
 ```python
 >>> import pandas as pd
 >>> import numpy as np
 
->>> rng = np.random.default_rng()
+>>> rng = np.random.default_rng(seed=1)
 
->>> ns = 100
+>>> ns = 10
 >>> one = np.ones((ns,))
 >>> parameters = pd.DataFrame.from_dict({
 ...    'mass_1': 1.4*one, 
@@ -83,20 +83,20 @@ The following code snippets are all __self-contained__, and can each be copy-pas
 into a `python` script and executed.
 
 ```python
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib import rc
-from GWFish.modules.fishermatrix import sky_localization_percentile_factor
-rc('text', usetex=True)
+>>> import pandas as pd
+>>> import matplotlib.pyplot as plt
+>>> import numpy as np
+>>> from matplotlib import rc
+>>> from GWFish.modules.fishermatrix import sky_localization_percentile_factor
+>>> rc('text', usetex=True)
 
-skyloc_ninety = sky_localization_error * sky_localization_percentile_factor()
-plt.hist(np.log(skyloc_ninety), bins=20, density=True)
+>>> skyloc_ninety = sky_localization * sky_localization_percentile_factor()
+>>> _ = plt.hist(np.log(skyloc_ninety), bins=10)
 
-plt.xlabel('90% Sky localization error, square degrees')
-plt.ylabel('Probability density per e-fold')
-plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
-plt.savefig('sky_localization_histogram.png', dpi=250)
+>>> plt.xlabel('90% Sky localization error, square degrees')
+>>> plt.ylabel('Counts')
+>>> plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
+
 ```
 
 ```{figure} ../figures/sky_localization_histogram.png
@@ -107,24 +107,23 @@ Histogram of the sky-localization of a GW170817-like signal, with randomized ori
 or scatter plots:
 
 ```python
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib import rc
-from GWFish.modules.fishermatrix import sky_localization_percentile_factor
+>>> import pandas as pd
+>>> import matplotlib.pyplot as plt
+>>> import numpy as np
+>>> from matplotlib import rc
+>>> from GWFish.modules.fishermatrix import sky_localization_percentile_factor
 
-rc('text', usetex=True)
+>>> rc('text', usetex=True)
 
-skyloc_ninety = sky_localization_error * sky_localization_percentile_factor()
+>>> skyloc_ninety = sky_localization * sky_localization_percentile_factor()
+>>> plt.scatter(np.log(skyloc_ninety), np.log(snr))
 
-plt.scatter(np.log(skyloc_ninety), np.log(snr))
+>>> plt.xlabel('Sky localization error, square degrees')
+>>> plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
 
-plt.xlabel('Sky localization error, square degrees')
-plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
+>>> plt.ylabel('Network SNR')
+>>> plt.gca().yaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.0f}$')
 
-plt.ylabel('Network SNR')
-plt.gca().yaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.0f}$')
-plt.savefig('snr_skyloc_scatter.png', dpi=250)
 ```
 
 ```{figure} ../figures/snr_skyloc_scatter.png
