@@ -29,31 +29,45 @@ We will generate 100 such samples - not really enough to get good statistics, bu
 it will suffice for this tutorial, and it will allow us to run quickly.
 
 ```python
-import pandas as pd
-import numpy as np
+>>> import pandas as pd
+>>> import numpy as np
 
-rng = np.random.default_rng()
+>>> rng = np.random.default_rng()
 
-ns = 100
-one = np.ones((ns,))
-parameters = pd.DataFrame.from_dict({
-    'mass_1': 1.4*one, 
-    'mass_2': 1.4*one, 
-    'redshift': 0.01*one,
-    'luminosity_distance': 40*one,
-    'theta_jn': np.arccos(rng.uniform(-1., 1., size=(ns,))),
-    'dec': np.arccos(rng.uniform(-1., 1., size=(ns,))) - np.pi / 2.,
-    'ra': rng.uniform(0, 2. * np.pi, size=(ns,)),
-    'psi': rng.uniform(0, 2. * np.pi, size=(ns,)),
-    'phase': rng.uniform(0, 2. * np.pi, size=(ns,)),
-    'geocent_time': rng.uniform(1735257618, 1766793618, size=(ns,)) # full year 2035
-})
-parameters.to_hdf('170817_like_population.hdf5', mode='w', key='root')
+>>> ns = 100
+>>> one = np.ones((ns,))
+>>> parameters = pd.DataFrame.from_dict({
+...    'mass_1': 1.4*one, 
+...    'mass_2': 1.4*one, 
+...    'redshift': 0.01*one,
+...    'luminosity_distance': 400*one,
+...    'theta_jn': np.arccos(rng.uniform(-1., 1., size=(ns,))),
+...    'dec': np.arccos(rng.uniform(-1., 1., size=(ns,))) - np.pi / 2.,
+...    'ra': rng.uniform(0, 2. * np.pi, size=(ns,)),
+...    'psi': rng.uniform(0, 2. * np.pi, size=(ns,)),
+...    'phase': rng.uniform(0, 2. * np.pi, size=(ns,)),
+...    'geocent_time': rng.uniform(1735257618, 1766793618, size=(ns,)) # full year 2035
+... })
+
 ```
 
 This will generate a population file for which we can generate the 
 Fisher matrix errors just like discussed in the 
-{ref}`simulation section of the previous tutorial <tutorials/tutorial_170817:Simulation>`.
+{ref}`simulation section of the previous tutorial <tutorials/tutorial_170817:Simulation>`:
+
+```python
+>>> from GWFish.modules.detection import Network
+>>> from GWFish.modules.fishermatrix import compute_network_errors
+    
+>>> network = Network(['ET', 'CE1', 'CE2'])
+
+>>> snr, errors, sky_localization = compute_network_errors(
+...    network, 
+...    parameters, 
+...    waveform_model='IMRPhenomD_NRTidalv2'
+... )
+
+```
 
 ```{note}
 This time, it will take on the order of a couple minutes on a typical laptop.
@@ -62,26 +76,7 @@ You should see a progressbar on your terminal screen.
 
 ## Interpreting the results
 
-The results, as before, will be saved in a file named `'Errors_ET_LGWA_170817like_SNR9.0.txt'`.
-This is simple to work with if we use `pandas`:
-we can open it with 
 
-```python
-import pandas as pd
-df = pd.read_csv('Errors_ET_LGWA_170817like_SNR9.0.txt', sep=' ')
-print(df.keys())
-```
-
-which should output:
-
-```
-Index(['network_SNR', 'mass_1', 'mass_2', 'redshift', 'luminosity_distance',
-       'theta_jn', 'dec', 'ra', 'psi', 'phase', 'geocent_time', 'err_ra',
-       'err_dec', 'err_psi', 'err_theta_jn', 'err_luminosity_distance',
-       'err_mass_1', 'err_mass_2', 'err_geocent_time', 'err_phase',
-       'err_sky_location'],
-      dtype='object')
-```
 
 These are all columns we have access to, so we can easily make plots. 
 The following code snippets are all __self-contained__, and can each be copy-pasted
@@ -92,14 +87,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import rc
+from GWFish.modules.fishermatrix import sky_localization_percentile_factor
 rc('text', usetex=True)
 
-df = pd.read_csv('Errors_ET_LGWA_170817like_SNR9.0.txt', sep=' ')
+skyloc_ninety = sky_localization_error * sky_localization_percentile_factor()
+plt.hist(np.log(skyloc_ninety), bins=20, density=True)
 
-skyloc_error = df['err_sky_location'] * (180/np.pi)**2
-plt.hist(np.log(skyloc_error), bins=20, density=True)
-
-plt.xlabel('Sky localization error, square degrees')
+plt.xlabel('90% Sky localization error, square degrees')
 plt.ylabel('Probability density per e-fold')
 plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
 plt.savefig('sky_localization_histogram.png', dpi=250)
@@ -117,14 +111,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import rc
+from GWFish.modules.fishermatrix import sky_localization_percentile_factor
+
 rc('text', usetex=True)
 
-df = pd.read_csv('Errors_ET_LGWA_170817like_SNR9.0.txt', sep=' ')
+skyloc_ninety = sky_localization_error * sky_localization_percentile_factor()
 
-skyloc_error = df['err_sky_location'] * (180/np.pi)**2
-snr = df['network_SNR']
-
-plt.scatter(np.log(skyloc_error), np.log(snr))
+plt.scatter(np.log(skyloc_ninety), np.log(snr))
 
 plt.xlabel('Sky localization error, square degrees')
 plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')

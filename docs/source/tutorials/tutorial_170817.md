@@ -26,7 +26,6 @@ Assuming we already know what the values of the parameters should be, we can gen
 >>> param_dict = {
 ...     'mass_1': 1.4, 
 ...     'mass_2': 1.3, 
-...     'redshift': 0.01,
 ...     'luminosity_distance': 400,
 ...     'theta_jn': 5/6 * np.pi,
 ...     'ra': 3.45,
@@ -41,7 +40,7 @@ Assuming we already know what the values of the parameters should be, we can gen
 
 <!-- TODO remove redshift! -->
 
-where the values are approximately the [best fit estimates for GW170817](https://doi.org/10.1103/PhysRevX.9.011001), except for the distance, which has been decupled.
+where the values are approximately the [best fit estimates for GW170817](https://doi.org/10.1103/PhysRevX.9.011001), except for the distance, which has been decupled in order to make it a more plausible estimate for a typical neutron star binary.
 
 ```{admonition} Why do we multiply by an array?
 
@@ -59,7 +58,7 @@ Once we have this population dictionary, we can compute the required errors by d
 >>> from GWFish.modules.detection import Network
 >>> from GWFish.modules.fishermatrix import compute_network_errors
     
->>> network = Network(['ET', 'CE1', 'CE2'], detection_SNR=(0., 1.))
+>>> network = Network(['ET', 'CE1', 'CE2'])
 
 >>> snr, errors, sky_localization = compute_network_errors(
 ...    network, 
@@ -68,68 +67,84 @@ Once we have this population dictionary, we can compute the required errors by d
 ... )
 
 >>> print(f'{snr[0]:.0f}')
-284
+282
 
->>> print(f'{errors.shape}')
-(10,)
+>>> print(f'{errors[0].shape}')
+(9,)
 
 ```
 
-We are using the `compute_network_errors` function in its simplest form, 
+We are using the `compute_network_errors` function in its simplest form:
 
-<!-- the value used to be 742 - which is correct? -->
-<!-- TODO do not use equal mass as an example -->
-<!-- TODO mention duty factor -->
-<!-- TODO link to waveform approximant section -->
-<!-- TODO explain detection_SNR -->
+- we are omitting to explicitly list the `fisher_parameters`, therefore the function
+    is defaulting to including all of the ones which characterize the signal 
+    in the Fisher matrix analysis --- which is fine in this case, but may create problems
+    in case of perfect degeneracies, such as between redshift and source frame mass;
+- we are not simulating the **duty factor** of the detector, since that would mean that 
+    our SNR is stochastically set to zero (which wouldn't make sense for this example);
 
-{ref}`reference page <reference/API:Fisher Matrix Computation>`.
+We are choosing a waveform approximant that can model the basic features of a neutron
+star merger, namely tidal effects. For more details on waveform modelling, see the 
+[waveform approximant reference](../how-to/choosing_an_approximant.md).
 
-```{admonition} Which detectors are available?
-:class: seealso
-
+We are assuming the signal is observed by a network of Einstein Telescope
+and two Cosmic Explorers.
 The full list of available options, as well as more details on these detectors,
 can be found in the [detectors reference](../reference/detectors.md).
 If you want to add a new detector, see {ref}`here <how-to/adding_new_detectors:How to add a new detector to GWFish>`.
-```
-
+Finally, our signal is way above the detection threshold for all detectors
+involved, but if this was not the case it would not be analyzed. This
+is also discussed in the [networks reference](#networks).
 
 ## Results
+
+The main result from the computation in the previous section are the Fisher matrix error estimates. For some mathematical details on how those are defined, see the [explanation](../explanation/fisher_matrix.md).
 
 The `errors` array contains the one-sigma errors for all the parameters included in the analysis in order. 
 
 ```python
 >>> for name, error in zip(parameters.keys(), errors[0]):
 ...     print(f'{name}: {error:.2e}') 
-mass_1: 5.93e-04
-mass_2: 5.51e-04
-redshift: 3.08e-06
-luminosity_distance: 6.39e+01
-theta_jn: 2.78e-01
-ra: 9.76e-03
-dec: 4.71e-03
-psi: 7.17e-01
-phase: 1.44e+00
+mass_1: 1.25e-04
+mass_2: 1.15e-04
+luminosity_distance: 6.44e+01
+theta_jn: 2.80e-01
+ra: 9.83e-03
+dec: 4.74e-03
+psi: 7.22e-01
+phase: 1.45e+00
 geocent_time: 2.72e-05
 ```
 
-So, for example, the second-to-last value is `3.962E-01`, corresponding to the error in the phase:
-the estimated error is $\sigma_\varphi \approx 0.3962 \text{rad}$.
+So, for example, the error in distance is `64.4`, in the same units as the distance parameter: the estimated error is $\sigma_{d_L} \approx 64.4 \text{Mpc}$.
 
-The last value is `2.264E-05` for the sky localization: 
-$\Delta \Omega \approx 2.264 \times 10^{-5} \text{sr} \approx 0.07 \text{deg}^2$ 
-(the conversion factor is $(180 / \pi)^2$).
+The sky localization error is given separately: 
 
-```{caution}
+```python
+>>> from GWFish.modules.fishermatrix import sky_localization_percentile_factor
+>>> print(f'{sky_localization[0]:.2e}')
+6.75e-05
+>>> print(f'{sky_localization[0] * sky_localization_percentile_factor():.2e}')
+1.02e+00
+```
+
+The default output from GWFish is a one-sigma error expressed in square radians, 
+which is the natural result of the Fisher matrix analysis. 
+The convention in astronomy, instead, is to measure these in square degrees (which means we need a conversion factor of $( 180 \text{deg} / \pi \text{rad})^2$) and in 
+terms of the $90\%$ sky area. 
+This computation is common enough for these analysis that GWFish includes a [convenience function](#utility-functions) for it, labelled `sky_localization_percentile_factor`.
+
+
+```{note}
 All errors are given at $1 \sigma$; for any single parameter
 this means roughly $68\%$ of the probability mass is expeced to be contained within the 
 $1\sigma$ interval, but this number is only $39\%$ for the sky localization, since it 
 corresponds to a bivariate distribution
 (see, for example, [wikipedia](https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Geometric_interpretation) on this).
-In order to convert this figure to a 90% interval the conversion factor
+In order to convert this figure to a 90% interval, the scaling factor
 is given by the inverse survival function of the  
 $\chi^2$ distribution with two degrees of freedom evaluated at 10%:
-4.605, so in this case the 90% area would be roughly $0.07 \text{deg}^2\times 4.6 \approx 0.3 \text{deg}^2$.
+4.605.
 This conversion factor (and others like it) can be computed with, 
 for example, the following `scipy` code, or the analytical expression:
 
@@ -139,7 +154,4 @@ for example, the following `scipy` code, or the analytical expression:
 4.605
 >>> print(f'{-2*np.log(1 - 0.90)}:.3f')
 4.605
-```
-
-This computation is common enough for these analysis that GWFish includes a [convenience function](#utility-functions) for it, labelled `sky_localization_percentile_factor`.
 ```
