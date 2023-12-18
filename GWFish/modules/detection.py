@@ -9,6 +9,7 @@ import GWFish.modules.ephemeris as ephem
 from astropy.coordinates import EarthLocation
 import warnings
 from GWFish.modules.waveforms import t_of_f_PN
+from astropy.utils.exceptions import AstropyWarning
 
 DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
 PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
@@ -344,15 +345,17 @@ def projection(parameters, detector, polarizations, timevector, redefine_tf_vect
     if is_null_slice(in_band_slice):
         return proj
     
-    if detector.location == 'earth':
-        proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice)
-    elif detector.location == 'moon':
-        proj = projection_moon(parameters, detector, polarizations, new_timevector, in_band_slice)
-    elif detector.location == 'solarorbit':
-        proj = projection_solarorbit(parameters, detector, polarizations, new_timevector, in_band_slice)
-    else:
-        print('Unknown detector location')
-        exit(0)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', AstropyWarning)
+        if detector.location == 'earth':
+            proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice)
+        elif detector.location == 'moon':
+            proj = projection_moon(parameters, detector, polarizations, new_timevector, in_band_slice)
+        elif detector.location == 'solarorbit':
+            proj = projection_solarorbit(parameters, detector, polarizations, new_timevector, in_band_slice)
+        else:
+            print('Unknown detector location')
+            exit(0)
 
     if redefine_tf_vectors:
         return proj, new_timevector, new_frequencyvector
