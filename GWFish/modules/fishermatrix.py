@@ -10,6 +10,9 @@ from typing import Optional, Union
 
 from tqdm import tqdm
 
+import logging
+from pathlib import Path
+
 def invertSVD(matrix):
     thresh = 1e-10
 
@@ -20,6 +23,9 @@ def invertSVD(matrix):
     [U, S, Vh] = np.linalg.svd(matrix_norm)
 
     kVal = sum(S > thresh)
+    
+    logging.debug(f'Inverting a matrix keeping {kVal}/{len(S)} singular values')
+    
     matrix_inverse_norm = U[:, 0:kVal] @ np.diag(1. / S[0:kVal]) @ Vh[0:kVal, :]
 
     # print(matrix @ (matrix_inverse_norm / normalizer))
@@ -299,6 +305,8 @@ def compute_network_errors(
     waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
     waveform_class = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
+    redefine_tf_vectors: bool = False,
+    save_matrices_path: Optional[Path] = None,
 ) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """
     Compute Fisher matrix errors for a network whose
@@ -311,6 +319,10 @@ def compute_network_errors(
     :param parameter_values: dataframe with parameters for one or more signals
     :param fisher_parameters: list of parameters to use for the Fisher matrix analysis - if `None` (default), all waveform parameters are used
     :param waveform_model: waveform model to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    :param waveform_model: waveform class to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    :param redefine_tf_vectors: Whether to redefine the time-frequency vectors in order to correctly model signals with small frequency evolution. Defaults to `False`.
+    :param use_duty_cycle: Whether to use the detector duty cycle (i.e. stochastically set the SNR to zero some of the time); defaults to `False`
+    :param save_matrices_path: Path where to to save the Fisher matrices and their inverses to disk; defaults to `None` (do not save the matrices)
     
     :return:
     - `network_snr`: array with shape `(n_above_thr,)` - Network SNR for the detected    signals.
@@ -326,6 +338,11 @@ def compute_network_errors(
 
     assert n_params > 0
     assert n_signals > 0
+    
+    if save_matrices_path is not None:
+        save_matrices_path.mkdir(parents=True, exist_ok=True)
+        fisher_matrices = np.zeros((n_signals, n_params, n_params))
+        inv_fisher_matrices = np.zeros((n_signals, n_params, n_params))
 
     signals_havesky = False
     if ("ra" in fisher_parameters) and ("dec" in fisher_parameters):
@@ -357,6 +374,11 @@ def compute_network_errors(
                 network_fisher_matrix += detector_fisher
 
         network_fisher_inverse, _ = invertSVD(network_fisher_matrix)
+        
+        if save_matrices_path is not None:
+            fisher_matrices[k, :, :] = network_fisher_matrix
+            inv_fisher_matrices[k, :, :] = network_fisher_inverse
+        
         parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
 
         network_snr[k] = np.sqrt(network_snr_square)
@@ -367,6 +389,13 @@ def compute_network_errors(
             )
 
     detected, = np.where(network_snr > network_snr_thr)
+
+    if save_matrices_path is not None:
+        fisher_matrices = fisher_matrices[detected, :, :]
+        inv_fisher_matrices = inv_fisher_matrices[detected, :, :]
+        
+        np.save(save_matrices_path / "fisher_matrices.npy", fisher_matrices)
+        np.save(save_matrices_path / "inv_fisher_matrices.npy", inv_fisher_matrices)
 
     if signals_havesky:
         return (
