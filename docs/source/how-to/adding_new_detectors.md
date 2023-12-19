@@ -3,7 +3,7 @@
 Adding a new detector to GWFish is relatively straightforward, as long as it
 is in the same class as an existing one. 
 Let us suppose the detector you want to add falls into one of the 
-{ref}`existing categories <reference/detectors:Detector properties>`.
+{ref}`existing categories <reference/detectors:Detector classes>`.
 
 Modify the `GWFish/detectors.yaml` file, adding an entry 
 for the new detector's parameters, and if needed add its PSD to 
