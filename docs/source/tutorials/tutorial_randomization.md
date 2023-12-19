@@ -8,12 +8,18 @@ This is still not a realistic scenario --- for that, we'd need to look at the
 mass distribution of neutron star mergers in redshift at the very least ---
 but it illustrates several points which are relevant for more advanced usage.
 
-## Randomized population file
+## Randomized population
+
+We aim to randomize:
+
+- the position of the source in the sky (`ra`, `dec`)
+- its orientation with respect to the detector (`theta_jn`, `psi`)
+- the time and phase of arrival of the signal (`geocent_time`, `phase`)
 
 We will need to generate some random points on a sphere for the angular distribution
 both of the source in the sky, and its orientation with respect to the observation axis.
 
-The point $(\theta, \varphi)$ is uniformly distributed on the sphere if 
+A point $(\theta, \varphi)$ (the usual spherical coordinates) is uniformly distributed on the sphere if 
 $\varphi \sim \mathcal{U}(0, 2 \pi )$ while $\theta \sim \sin \theta $.
 Generating both angles with a uniform distribution would bias our points towards the poles.
 
@@ -23,7 +29,7 @@ $$ p(\theta ) = \sin \theta \mathrm{d} \theta = \mathrm{d}\cos \theta
 $$
 
 therefore we can generate a number $x \sim \mathcal{U}(-1, 1)$ and take its arccosine
-to get a sine-distributed variable.
+to get a sine-distributed variable. We need to do this both for `theta_jn` and `dec`.
 
 We will generate 10 such samples - not enough to get good statistics, but 
 it will suffice for this tutorial, and it will allow us to run quickly.
@@ -70,17 +76,13 @@ Fisher matrix errors just like discussed in the
 ```
 
 ```{note}
-This time, it will take on the order of a couple minutes on a typical laptop.
+This will take on the order of a few seconds on a typical laptop.
 You should see a progressbar on your terminal screen.
 ```
 
 ## Interpreting the results
 
-
-
-These are all columns we have access to, so we can easily make plots. 
-The following code snippets are all __self-contained__, and can each be copy-pasted
-into a `python` script and executed.
+Now that we have access to the results, we can make plots, such as histograms:
 
 ```python
 >>> import pandas as pd
@@ -93,7 +95,7 @@ into a `python` script and executed.
 >>> skyloc_ninety = sky_localization * sky_localization_percentile_factor()
 >>> _ = plt.hist(np.log(skyloc_ninety), bins=10)
 
->>> plt.xlabel('90% Sky localization error, square degrees')
+>>> plt.xlabel('90\% sky localization error, square degrees')
 >>> plt.ylabel('Counts')
 >>> plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
 
@@ -118,7 +120,7 @@ or scatter plots:
 >>> skyloc_ninety = sky_localization * sky_localization_percentile_factor()
 >>> plt.scatter(np.log(skyloc_ninety), np.log(snr))
 
->>> plt.xlabel('Sky localization error, square degrees')
+>>> plt.xlabel('90\% sky localization error, square degrees')
 >>> plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
 
 >>> plt.ylabel('Network SNR')
