@@ -81,7 +81,7 @@ def compute_SNR_network(
 def horizon(
     params: dict,
     detector: Union[Detector, Network],
-    target_SNR: int = 9, 
+    target_SNR: float = 9., 
     waveform_model: str = DEFAULT_WAVEFORM_MODEL,
     waveform_class: type(Waveform) = LALFD_Waveform,
     cosmology_model: cosmology.Cosmology = Planck18,
@@ -94,15 +94,16 @@ def horizon(
     (as connected by a given cosmology) which the signal would 
     need to be at in order to have a given SNR - by default, 9.
     
-    Arguments:
-    - `params`: 
-    - `detector`:
-    - `target_SNR`:
-    - `cosmology_model`:
-    - `source_frame_masses`:
-    - `redefine_tf_vectors`:
+    :param params: fixed parameters for the signal (should not include redshift or luminosity distance)
+    :param detector: `Detector` or `Network` object to compute the horizon for
+    :param target_SNR: the function will compute the distance such the signal will have this SNR in the given detector
+    :param waveform_model: waveform model to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    :param waveform_model: waveform class to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    :param cosmology_model: (astropy) cosmology model to use to relate the redshift to the luminosity distance
+    :param source_frame_masses: whether to assume the given mass is in the source frame, therefore it needs to be redshifted in order to compute the detected one. Default is True. 
+    :param redefine_tf_vectors: whether to redefine the time and frequency vectors (useful when computing horizons for sources with very small frequency variation). Default is False.
     
-    Returns:
+    :return:
     
     - luminosity_distance in Mpc, 
     - corresponding redshift
