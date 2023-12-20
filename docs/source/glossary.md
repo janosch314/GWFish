@@ -1,7 +1,7 @@
 # Glossary
 
 A glossary of common terms and abbreviations used in gravitational wave data analysis.
-Also checkout the one from the [emfollow](https://emfollow.docs.ligo.org/userguide/glossary.html) documentation from the LIGO-Virgo-Kagra collaboration.
+Also check out the one from the [emfollow](https://emfollow.docs.ligo.org/userguide/glossary.html) documentation from the LIGO-Virgo-Kagra collaboration.
 
 ```{glossary}
 BBH
