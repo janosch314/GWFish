@@ -32,7 +32,15 @@ is adapted to be the time for which the given frequency is reached.
 ## The `redefine_tf_vectors` parameter
 
 Certain GWFish functions (see [here](#api-reference)) offer the boolean parameter `redefine_tf_vectors`.
+
 In the default configuration this is `False`, which means that in the computation of all relevant 
 integrals the frequency grid is fixed to be the one from the detector definition (for examples see [the list of included detectors](#included-detectors)).
+For the typical {term}`CBC` sources seen by ground-based detectors, this is a good approximation, since they span a wide range of frequencies.
 
-For the typical {term}`CBC` sources seen by ground-based detectors,
+Some low-frequency sources, on the other hand, evolve very slowly in frequency, meaning that 
+performing the integrals on a fixed grid with bounds corresponding to the mission lifetime would
+result in few or even no grid points in the integration region. 
+
+If this can happen, one should activate `redefine_tf_vectors`: this option will compute the frequency
+region in which the given signal evolves, and define custom time and frequency vectors to specifically
+cover that region. This slows down evaluation, but it is necessary in some cases.
