@@ -23,7 +23,7 @@ is much shorter than any sensible mission duration.
 Non-CBC sources do not respect these considerations, but at the moment `GWFish` 
 does not offer strong support for them.
 
-## `max_frequency` details
+## `max_frequency_cutoff` details
 
 This [parameter](parameter-definitions-units) allows one to truncate the waveform at a specific upper frequency.
 It is integrated with the mission lifetime constraint, i.e. the "coalescence time"
