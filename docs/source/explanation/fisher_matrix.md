@@ -4,7 +4,7 @@ What follows is a simple reference on the mathematics behind the Fisher Matrix a
 For more details, see the [`GWFish` paper](https://www.sciencedirect.com/science/article/abs/pii/S2213133722000853?via%3Dihub) or the [`GWFAST paper`](https://iopscience.iop.org/article/10.3847/1538-4357/ac9cd4).
 
 The error estimates in GWFish are obtained by considering a quadratic approximation to the likelihood 
-(valid in the high-SNR limit), in the form 
+(valid in the high-{term}`SNR` limit), in the form 
 
 $$ \mathcal{L} \propto \exp \left( - \frac{1}{2} \Delta \theta ^i \mathcal{F}_{ij} \Delta \theta ^j \right)
 $$

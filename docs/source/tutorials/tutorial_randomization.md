@@ -130,7 +130,7 @@ or scatter plots:
 
 ```{figure} ../figures/snr_skyloc_scatter.png
 
-Scatter plot of the sky localization against the signal SNR.
+Scatter plot of the sky localization against the signal {term}`SNR`.
 ```
 
 ```{note}

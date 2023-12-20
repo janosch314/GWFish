@@ -1,6 +1,6 @@
-# Estimating SNR and errors for a single signal
+# Estimating {term}`SNR` and errors for a single signal
 
-This tutorial will show how to compute the SNR and Fisher matrix errors for a 
+This tutorial will show how to compute the {term}`SNR` and Fisher matrix errors for a 
 compact object signal with known parameters.
 For more details on the mathematics of how the errors are obtained, see the 
 [Fisher matrix reference](../explanation/fisher_matrix.md).
@@ -8,13 +8,13 @@ For more details on the mathematics of how the errors are obtained, see the
 ## What we want to do
 
 We will study a GW170817-like signal, as would be seen by a network of Einstein Telescope and two Cosmic Explorers.
-GWFish can give us estimates of the overall SNR it would have, 
+GWFish can give us estimates of the overall {term}`SNR` it would have, 
 as well as the errors in the estimates of the signal parameters.
 
 ## Population file
 
 The outcome of this section is a [Pandas `DataFrame`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html) containing several columns, each corresponding
-to one of the parameters characterizing a CBC signal.
+to one of the parameters characterizing a {term}`CBC` signal.
 The units and conventions for these parameters are outlined in the [reference](../reference/parameters_units.md).
 
 Assuming we already know what the values of the parameters should be, we can generate this dataframe as follows:
@@ -81,7 +81,7 @@ We are using the `compute_network_errors` function in its simplest form:
     in the Fisher matrix analysis --- which is fine in this case, but may create problems
     in case of perfect degeneracies, such as between redshift and source frame mass;
 - we are not simulating the **duty factor** of the detector, since that would mean that 
-    our SNR is stochastically set to zero (which wouldn't make sense for this example);
+    our {term}`SNR` is stochastically set to zero (which wouldn't make sense for this example);
 
 We are choosing a waveform approximant that can model the basic features of a neutron
 star merger, namely tidal effects. For more details on waveform modelling, see the 

@@ -1,3 +1,4 @@
+(#api-reference)=
 # Detailed API reference
 
 (#fisher-matrix-computation)=

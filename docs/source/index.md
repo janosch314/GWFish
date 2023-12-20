@@ -35,6 +35,7 @@ This documentation is written according to the [diátaxis framework](https://dia
 :caption: Introduction
 
 installation.md
+glossary.md
 ```
 
 
