@@ -14,6 +14,9 @@ from astropy.utils.exceptions import AstropyWarning
 DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
 PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
 
+# used when redefining the time and frequency vectors
+N_FREQUENCY_POINTS = 1000
+
 class DetectorComponent:
 
     def __init__(self, name, component, detector_def):
@@ -327,10 +330,10 @@ def projection(parameters, detector, polarizations, timevector, redefine_tf_vect
         redefine_timevector=redefine_tf_vectors
     )
     
-    if redefine_tf_vectors and in_band_slice.stop - in_band_slice.start < 50:
+    if redefine_tf_vectors:
         new_fmin = detector.frequencyvector[in_band_slice.start - 1, 0]
         new_fmax = detector.frequencyvector[in_band_slice.stop + 1, 0]
-        new_frequencyvector = np.linspace(new_fmin, new_fmax, num=1000)[:, None]
+        new_frequencyvector = np.geomspace(new_fmin, new_fmax, num=N_FREQUENCY_POINTS)[:, None]
         temp_timevector = t_of_f_PN(parameters, new_frequencyvector)
         in_band_slice, new_timevector = in_band_window(
             np.squeeze(temp_timevector), 
