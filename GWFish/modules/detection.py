@@ -69,17 +69,12 @@ class DetectorComponent:
             self.eps = self.L / cst.AU / (2 * np.sqrt(3))
 
             
-            # noises in units of GW strain
-            # P_rec = 700e-12
-            # f0 = cst.c / 1064e-9
-            # S_opt = (c/(2*np.pi*f0*self.L))**2*h*f0/P_rec #pure quantum noise
-            # S_opt = (2 / self.L) ** 2 * 2.5e-23 * (1 + (2e-3 / ff) ** 4)
-            # S_pm = (2 / self.L) ** 2 * S_acc / (2 * np.pi * ff) ** 4
+            # psd_data contains proof-mass (PM) and optical-metrology-subsystem (OMS) noise as Doppler noise (y)
             raw_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
             ff = raw_data[:,0]
             self.psd_data = np.zeros((len(ff), 2))
-            S_pm = (2/self.L)**2 * raw_data[:,1]
-            S_opt = (2/self.L)**2 * raw_data[:,2]
+            S_pm = raw_data[:,1]
+            S_oms = raw_data[:,2]
 
             self.psd_data[:, 0] = ff
 
@@ -89,11 +84,11 @@ class DetectorComponent:
                         3 + 2 * np.cos(2 * np.pi * ff * self.L / cst.c) + np.cos(
                     4 * np.pi * ff * self.L / cst.c)) * S_pm \
                                       + 8 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * (
-                                              2 + np.cos(2 * np.pi * ff * self.L / cst.c)) * S_opt
+                                              2 + np.cos(2 * np.pi * ff * self.L / cst.c)) * S_oms
             else:
                 # instrument noise of T channel
                 self.psd_data[:, 1] = (2 + 4 * np.cos(2 * np.pi * ff * self.L / cst.c)**2) * (
-                        4 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * S_pm + S_opt)
+                        4 * np.sin(np.pi * ff * self.L / cst.c) ** 2 * S_pm + S_oms)
 
         self.Sn = interp1d(self.psd_data[:, 0], self.psd_data[:, 1], bounds_error=False, fill_value=1.)
 
