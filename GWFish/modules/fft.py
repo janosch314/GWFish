@@ -1,7 +1,13 @@
 """
 Functions for LAL FFD of derivatives of time-domain waveforms
 """
-import lal
+try:
+    import lal
+except ModuleNotFoundError:
+    uselal = err
+    logging.warning('LAL package is not installed.'+\
+                    'Only GWFish waveforms available.')
+
 
 def fft_lal_timeseries(lal_timeseries, delta_f, f_start=0.):
     """
