@@ -95,7 +95,7 @@ Now that we have access to the results, we can make plots, such as histograms:
 >>> skyloc_ninety = sky_localization * sky_localization_percentile_factor()
 >>> _ = plt.hist(np.log(skyloc_ninety), bins=10)
 
->>> _ = plt.xlabel('90\% sky localization error, square degrees')
+>>> _ = plt.xlabel(r'90% sky localization error, square degrees')
 >>> _ = plt.ylabel('Counts')
 >>> plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
 
@@ -120,7 +120,7 @@ or scatter plots:
 >>> skyloc_ninety = sky_localization * sky_localization_percentile_factor()
 >>> _ = plt.scatter(np.log(skyloc_ninety), np.log(snr))
 
->>> _ = plt.xlabel('90\% sky localization error, square degrees')
+>>> _ = plt.xlabel(r'90% sky localization error, square degrees')
 >>> plt.gca().xaxis.set_major_formatter(lambda x, pos: f'${np.exp(x):.2g}$')
 
 >>> _ = plt.ylabel('Network SNR')

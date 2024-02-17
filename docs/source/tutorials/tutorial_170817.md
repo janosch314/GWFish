@@ -109,11 +109,11 @@ mass_1: 1.25e-04
 mass_2: 1.15e-04
 luminosity_distance: 6.44e+01
 theta_jn: 2.80e-01
-ra: 9.83e-03
-dec: 4.74e-03
+ra: 9.82e-03
+dec: 4.75e-03
 psi: 7.22e-01
 phase: 1.45e+00
-geocent_time: 2.72e-05
+geocent_time: 2.71e-05
 
 ```
 
@@ -124,7 +124,7 @@ The sky localization error is given separately:
 ```python
 >>> from GWFish.modules.fishermatrix import sky_localization_percentile_factor
 >>> print(f'{sky_localization[0]:.2e}')
-6.76e-05
+6.74e-05
 >>> print(f'{sky_localization[0] * sky_localization_percentile_factor():.2e}')
 1.02e+00
 
