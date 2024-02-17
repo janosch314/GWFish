@@ -169,7 +169,7 @@ class EarthLocationGCRSEphemeris(EphemerisInterpolate):
     
     @property
     def time_step_seconds(self):
-        return 1800.
+        return 180.
 
     def get_icrs_from_times(self, times):
         
