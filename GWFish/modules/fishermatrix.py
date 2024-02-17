@@ -174,6 +174,7 @@ class FisherMatrix:
         for p1 in np.arange(self.nd):
             deriv1_p = self.fisher_parameters[p1]
             deriv1 = self.derivative(deriv1_p)
+            
             self._fm[p1, p1] = np.sum(aux.scalar_product(deriv1, deriv1, self.detector), axis=0)
             for p2 in np.arange(p1+1, self.nd):
                 deriv2_p = self.fisher_parameters[p2]
@@ -306,7 +307,9 @@ def compute_network_errors(
     waveform_class = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
     redefine_tf_vectors: bool = False,
-    save_matrices_path: Optional[Path] = None,
+    save_matrices: bool = False,
+    save_matrices_path: Union[Path, str] = Path('.'),
+    matrix_naming_postfix: str = '',
 ) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """
     Compute Fisher matrix errors for a network whose
@@ -322,7 +325,9 @@ def compute_network_errors(
     :param waveform_model: waveform class to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
     :param redefine_tf_vectors: Whether to redefine the time-frequency vectors in order to correctly model signals with small frequency evolution. Defaults to `False`.
     :param use_duty_cycle: Whether to use the detector duty cycle (i.e. stochastically set the SNR to zero some of the time); defaults to `False`
-    :param save_matrices_path: Path where to to save the Fisher matrices and their inverses to disk; defaults to `None` (do not save the matrices)
+    :param save_matrices: Whether to save the Fisher matrices and their inverses to disk; defaults to `False`
+    :param save_matrices_path: Path (expressed with Pathlib or through a string) where  to save the Fisher matrices and their inverses to disk; defaults to `Path('.')` (the current folder)
+    :param matrix_naming_postfix: string to be prepended to the names of the Fisher matrices and their inverses: they will look like `fisher_matrix_postfix.npy` and `inverse_fisher_matrix_postfix.npy`
     
     :return:
     - `network_snr`: array with shape `(n_above_thr,)` - Network SNR for the detected    signals.
@@ -339,7 +344,10 @@ def compute_network_errors(
     assert n_params > 0
     assert n_signals > 0
     
-    if save_matrices_path is not None:
+    if isinstance(save_matrices_path, str):
+        save_matrices_path = Path(save_matrices_path)
+    
+    if save_matrices:
         save_matrices_path.mkdir(parents=True, exist_ok=True)
         fisher_matrices = np.zeros((n_signals, n_params, n_params))
         inv_fisher_matrices = np.zeros((n_signals, n_params, n_params))
@@ -375,7 +383,7 @@ def compute_network_errors(
 
         network_fisher_inverse, _ = invertSVD(network_fisher_matrix)
         
-        if save_matrices_path is not None:
+        if save_matrices:
             fisher_matrices[k, :, :] = network_fisher_matrix
             inv_fisher_matrices[k, :, :] = network_fisher_inverse
         
@@ -390,12 +398,17 @@ def compute_network_errors(
 
     detected, = np.where(network_snr > network_snr_thr)
 
-    if save_matrices_path is not None:
+    if save_matrices:
+        
+        if matrix_naming_postfix is not '':
+            if not matrix_naming_postfix.startswith('_'):
+                matrix_naming_postfix = f'_{matrix_naming_postfix}'
+        
         fisher_matrices = fisher_matrices[detected, :, :]
         inv_fisher_matrices = inv_fisher_matrices[detected, :, :]
         
-        np.save(save_matrices_path / "fisher_matrices.npy", fisher_matrices)
-        np.save(save_matrices_path / "inv_fisher_matrices.npy", inv_fisher_matrices)
+        np.save(save_matrices_path /  f"fisher_matrices{matrix_naming_postfix}.npy", fisher_matrices)
+        np.save(save_matrices_path /  f"inv_fisher_matrices{matrix_naming_postfix}.npy", inv_fisher_matrices)
 
     if signals_havesky:
         return (
@@ -414,13 +427,7 @@ def errors_file_name(
     sub_network = "_".join([network.detectors[k].name for k in sub_network_ids])
 
     return (
-        "Errors_"
-        + sub_network
-        + "_"
-        + population_name
-        + "_SNR"
-        + str(network.detection_SNR[1])
-    )
+        f"Errors_{sub_network}_{population_name}_SNR{network.detection_SNR[1]:.0f}")
 
 
 def output_to_txt_file(
@@ -429,9 +436,12 @@ def output_to_txt_file(
     parameter_errors: np.ndarray,
     sky_localization: Optional[np.ndarray],
     fisher_parameters: list[str],
-    filename: str,
+    filename: Union[str, Path],
 ) -> None:
 
+    if isinstance(filename, str):
+        filename = Path(filename)
+    
     delim = " "
     header = (
         "network_SNR "
@@ -447,7 +457,7 @@ def output_to_txt_file(
     row_format = "%s " + " ".join(["%.3E" for _ in range(save_data.shape[1] - 1)])
 
     np.savetxt(
-        filename + ".txt",
+        filename.with_suffix(".txt"),
         save_data,
         delimiter=" ",
         header=header,
@@ -461,24 +471,34 @@ def analyze_and_save_to_txt(
     fisher_parameters: list[str],
     sub_network_ids_list: list[list[int]],
     population_name: str,
+    save_path: Optional[Union[Path, str]] = None,
+    save_matrices: bool = False,
     **kwargs
 ) -> None:
+    
+    if save_path is None:
+        save_path = Path().resolve()
+    if isinstance(save_path, str):
+        save_path = Path(save_path)
 
     for sub_network_ids in sub_network_ids_list:
 
         partial_network = network.partial(sub_network_ids)
 
-        network_snr, errors, sky_localization = compute_network_errors(
-            network=network,
-            parameter_values=parameter_values,
-            fisher_parameters=fisher_parameters,
-            **kwargs,
-        )
-
         filename = errors_file_name(
             network=network,
             sub_network_ids=sub_network_ids,
             population_name=population_name,
+        )
+        
+        network_snr, errors, sky_localization = compute_network_errors(
+            network=network,
+            parameter_values=parameter_values,
+            fisher_parameters=fisher_parameters,
+            save_matrices=save_matrices,
+            save_matrices_path=save_path,
+            matrix_naming_postfix='_'.join(filename.split('_')[1:]),
+            **kwargs,
         )
 
         output_to_txt_file(
@@ -487,6 +507,6 @@ def analyze_and_save_to_txt(
             parameter_errors=errors,
             sky_localization=sky_localization,
             fisher_parameters=fisher_parameters,
-            filename=filename,
+            filename=save_path/filename,
         )
         

@@ -164,7 +164,7 @@ def test_fisher_analysis_output(mocker):
         2.42285325663e-05,
     ]
 
-    assert np.savetxt.call_args.args[0] == "Errors_ET_test_SNR10.0.txt"
+    assert np.savetxt.call_args.args[0].name == "Errors_ET_test_SNR10.txt"
     assert np.allclose(np.savetxt.call_args.args[1], data, rtol=0.15)
 
     assert np.savetxt.call_args.kwargs == {
@@ -245,7 +245,7 @@ def test_fisher_analysis_output_nosky(mocker):
         2.251E-05,
     ]
 
-    assert np.savetxt.call_args.args[0] == "Errors_ET_test_SNR10.0.txt"
+    assert np.savetxt.call_args.args[0].name == "Errors_ET_test_SNR10.txt"
     assert np.allclose(np.savetxt.call_args.args[1], data, rtol=2e-1)
 
     assert np.savetxt.call_args.kwargs == {
