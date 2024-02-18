@@ -11,7 +11,6 @@ try:
     import lal
     from lal import CreateREAL8Vector
 except ModuleNotFoundError as err:
-    uselal = err
     logging.warning('LAL package is not installed.'+\
                     'Only GWFish waveforms available.')
 
