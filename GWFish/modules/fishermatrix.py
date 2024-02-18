@@ -327,7 +327,7 @@ def compute_network_errors(
     :param use_duty_cycle: Whether to use the detector duty cycle (i.e. stochastically set the SNR to zero some of the time); defaults to `False`
     :param save_matrices: Whether to save the Fisher matrices and their inverses to disk; defaults to `False`
     :param save_matrices_path: Path (expressed with Pathlib or through a string) where  to save the Fisher matrices and their inverses to disk; defaults to `Path('.')` (the current folder)
-    :param matrix_naming_postfix: string to be prepended to the names of the Fisher matrices and their inverses: they will look like `fisher_matrix_postfix.npy` and `inverse_fisher_matrix_postfix.npy`
+    :param matrix_naming_postfix: string to be appended to the names of the Fisher matrices and their inverses: they will look like `fisher_matrices_postfix.npy` and `inv_fisher_matrices_postfix.npy`
     
     :return:
     - `network_snr`: array with shape `(n_above_thr,)` - Network SNR for the detected    signals.
