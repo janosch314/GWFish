@@ -23,5 +23,5 @@ jobs:
         pip install .[waveforms]
     - name: Test with pytest
       run: |
-        pip install pytest pytest-sugar hypothesis pytest-mock pytest-profiling
+        pip install pytest pytest-sugar hypothesis pytest-mock pytest-profiling pycbc
         pytest 
