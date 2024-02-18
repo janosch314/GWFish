@@ -439,7 +439,7 @@ files = [
 name = "cffi"
 version = "1.16.0"
 description = "Foreign Function Interface for Python calling C code."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -718,7 +718,7 @@ test = ["arviz (>=0.9)", "pytest", "scipy"]
 name = "cryptography"
 version = "42.0.3"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1606,6 +1606,21 @@ MarkupSafe = ">=2.0"
 i18n = ["Babel (>=2.7)"]
 
 [[package]]
+name = "jplephem"
+version = "2.21"
+description = "Use a JPL ephemeris to predict planet positions."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "jplephem-2.21-py3-none-any.whl", hash = "sha256:487fd8c94c458bba74f43bcf332702bbcb2b8e5a4e3fb15c36159fc92e69e6a1"},
+    {file = "jplephem-2.21.tar.gz", hash = "sha256:34194b610695f21b89217b9852b8dabadbce80848cb369d9567ef12dc4828d55"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "json5"
 version = "0.9.14"
 description = "A Python implementation of the JSON5 data format."
@@ -2070,7 +2085,7 @@ files = [
 name = "lalsuite"
 version = "7.21"
 description = "LIGO Scientific Collaboration Algorithm Library - minimal Python package"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -2125,7 +2140,7 @@ six = ">=1.4.1"
 name = "ligo-segments"
 version = "1.4.0"
 description = "Representations of semi-open intervals"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -2139,7 +2154,7 @@ six = "*"
 name = "lscsoft-glue"
 version = "3.0.2"
 description = "Grid LSC User Engine"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -3222,7 +3237,7 @@ igwn = ["ciecplib (>=0.4.4)"]
 name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
@@ -3313,7 +3328,7 @@ scipy = "*"
 name = "pyopenssl"
 version = "24.0.0"
 description = "Python wrapper module around the OpenSSL library"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -3347,7 +3362,7 @@ diagrams = ["jinja2", "railroad-diagrams"]
 name = "pyrxp"
 version = "3.0.1"
 description = "Python RXP interface - fast validating XML parser"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6, <4"
 files = [
@@ -4952,9 +4967,9 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 
 [extras]
 docs = []
-waveforms = []
+waveforms = ["lalsuite"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.12"
-content-hash = "c04f221e7f6f842b0f7f476af0bee0d5f645bc0fb73b97c17f2001818db2bbd8"
+content-hash = "470978720f2b1ebbb53b8a57af4b0460dc496c1650dcb4c9258867050ec96b55"

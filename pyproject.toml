@@ -19,6 +19,7 @@ matplotlib = "^3.5.1"
 tqdm = "^4.64.0"
 sympy = "^1.10.1"
 lalsuite = {version=">=7.8", optional=true}
+jplephem = "^2.21"
 
 [tool.poetry.group.docs]
 optional = true
