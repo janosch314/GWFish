@@ -257,3 +257,43 @@ def test_fisher_analysis_output_nosky(mocker):
             "%.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E"
         ),
     }
+
+def test_saving_matrices(mocker):
+    params = {
+        "mass_1": 1.4,
+        "mass_2": 1.4,
+        "redshift": 0.01,
+        "luminosity_distance": 40,
+        "theta_jn": 5 / 6 * np.pi,
+        "ra": 3.45,
+        "dec": -0.41,
+        "psi": 1.6,
+        "phase": 0,
+        "geocent_time": 1187008882,
+    }
+
+    parameter_values = pd.DataFrame()
+    for key, item in params.items():
+        parameter_values[key] = np.full((1,), item)
+
+    fisher_parameters = list(params.keys())
+
+    network = Network(
+        detector_ids=["ET"],
+    )
+
+    mocker.patch("numpy.save")
+
+    analyze_and_save_to_txt(
+        network=network,
+        parameter_values=parameter_values,
+        fisher_parameters=fisher_parameters,
+        sub_network_ids_list=[[0]],
+        population_name="test",
+        waveform_class=waveforms.TaylorF2,
+        waveform_model='TaylorF2',
+        save_matrices=True
+    )
+    
+    assert np.save.call_args_list[0].args[0].name == "fisher_matrices_ET_test_SNR10.npy"
+    assert np.save.call_args_list[1].args[0].name == "inv_fisher_matrices_ET_test_SNR10.npy"
