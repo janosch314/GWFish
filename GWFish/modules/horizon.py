@@ -25,7 +25,7 @@ from .waveforms import LALFD_Waveform, DEFAULT_WAVEFORM_MODEL, Waveform
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
 MIN_REDSHIFT = 1e-20
-MAX_REDSHIFT = 2000
+MAX_REDSHIFT = 10_000
 
 def compute_SNR(
     params: "Union[dict[str, float], pd.DataFrame]", 
