@@ -161,8 +161,8 @@ LGWA:
             plotrange:        1e-3, 4, 1e-23, 1e-19
             fmin:             1e-3
             fmax:             4
-            spacing:          linear
-            df:               1./4096.
+            spacing:          geometric
+            npoints:          2000
 LGWA_Nb:
             lat:              -85 * np.pi / 180.
             lon:              0

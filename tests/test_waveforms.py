@@ -1,7 +1,13 @@
 import numpy as np
-from GWFish.modules.waveforms import TaylorF2
-from GWFish.modules.detection import Detector, projection
 
+from GWFish.modules.detection import Detector, projection
+from GWFish.modules.waveforms import TaylorF2
+
+import pytest
+
+ATOL = 1e-30
+
+# @pytest.mark.xfail
 def test_max_f_cutoff_170817():
     
     params = {
@@ -18,7 +24,7 @@ def test_max_f_cutoff_170817():
         'max_frequency_cutoff': 400,
     }
     
-    detector = Detector('ET', parameters = [None], fisher_parameters = [None])
+    detector = Detector('ET')
 
     data_params = {
         'frequencyvector': detector.frequencyvector,
@@ -28,10 +34,13 @@ def test_max_f_cutoff_170817():
     hphc = waveform_obj()
     t_of_f = waveform_obj.t_of_f
     
-    assert hphc[-1, 0] == 0j
-    assert hphc[-1, 1] == 0j
-    assert hphc[0, 0] != 0j
-    assert hphc[0, 1] != 0j
+    proj_with_cutoff = projection(params, detector, hphc, t_of_f)
+    
+    # the signal should be cut off at high frequency, therefore 
+    # the last element should be zero, while at low frequency it should
+    # be nonzero.
+    assert np.allclose(proj_with_cutoff[-1, :], 0j, atol=ATOL)
+    assert not np.allclose(proj_with_cutoff[0, :], 0j, atol=ATOL)
     
     params.pop('max_frequency_cutoff')
     
@@ -43,10 +52,12 @@ def test_max_f_cutoff_170817():
     hphc = waveform_obj()
     t_of_f = waveform_obj.t_of_f
     
-    assert hphc[-1, 0] != 0j
-    assert hphc[-1, 1] != 0j
+    proj_no_cutoff = projection(params, detector, hphc, t_of_f)
     
-def test_max_f_cutoff_signal_duration():
+    assert not np.allclose(proj_no_cutoff[-1, :], 0j, atol=ATOL)
+    
+@pytest.mark.parametrize('redefine_tf_vectors', [True, False])
+def test_max_f_cutoff_signal_duration(redefine_tf_vectors):
 
     # 170817-like parameters, with masses switched to BWD-like ones.
     params = {
@@ -64,7 +75,7 @@ def test_max_f_cutoff_signal_duration():
     }
 
     # LGWA mission duration is 10 years
-    detector = Detector('LGWA', parameters = [None], fisher_parameters = [None])
+    detector = Detector('LGWA')
     
     # if the BWD merges at 0.2 Hz (say), then the relevant part of the waveform is 
     # at best the one from 0.13Hz to 0.2Hz, since the BWD will take ~10yr to get
@@ -78,37 +89,54 @@ def test_max_f_cutoff_signal_duration():
     polarizations = waveform_obj()
     timevector = waveform_obj.t_of_f
 
-    signal = projection(
-        params,
-        detector,
-        polarizations,
-        timevector
-    )
+    if redefine_tf_vectors:
+        signal, timevector, frequencyvector = projection(
+            params,
+            detector,
+            polarizations,
+            timevector,
+            redefine_tf_vectors=True
+        )
+    
+    else:
+        signal = projection(
+            params,
+            detector,
+            polarizations,
+            timevector,
+        )
     
     # if the signal is all zero that's a problem
     assert not np.all(signal == 0.j)
 
     signal_nonzero_indices, = np.where(signal[:, 0])
-    
-    # print(signal)
-    # print(nonzero_times)
 
     # the indices at which the signal is nonzero should be "in the middle",
     # not starting nor ending at the edge frequencies
     assert signal_nonzero_indices[0] > 0
     assert signal_nonzero_indices[-1] < timevector.shape[0]
     
-    # print(len(signal_nonzero_indices))
-    # print(timevector.shape)
-
     # hardest check: the region of the signal for which the
+    # waveform is nonzero should last the correct amount of time
     nonzero_times = timevector[signal_nonzero_indices]
-    delta_t = nonzero_times[1] - nonzero_times[0]
+    
+    # we define a margin of error based on the discretization of the time vector
+    # in the region where the signal is nonzero
+    
+    delta_t = (
+        nonzero_times[1] - nonzero_times[0]
+    ) + (
+        nonzero_times[-1] - nonzero_times[-2]
+    )
     
     # time delta corresponding to the lowest frequency spacing 
     # in which the signal is considered to be nonzero
     # it should be smaller than one year
     assert delta_t < 3e7
+    
+    if redefine_tf_vectors:
+        # expect this to be close to 1000
+        assert len(nonzero_times) > 900
 
     assert np.isclose(
         detector.mission_lifetime, 

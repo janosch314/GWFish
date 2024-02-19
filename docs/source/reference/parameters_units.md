@@ -1,7 +1,7 @@
 (parameter-definitions-units)=
 # Parameter definitions and units
 
-The parameters used to describe a CBC within `GWFish` are as follows:
+The parameters used to describe a {term}`CBC` within `GWFish` are as follows:
 
 - `'mass_1'`: the mass of the primary object in the source frame, in solar masses $M_{\odot}$;
 - `'mass_2'`: the mass of the secondary object in the source frame, in solar masses $M_{\odot}$;

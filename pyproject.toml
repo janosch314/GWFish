@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.11"
+python = ">=3.9, <3.12"
 numpy = "^1.22.2"
 tables = "^3.7.0"
 pandas = "^1.4.1"
@@ -18,9 +18,8 @@ scipy = "^1.8.0"
 matplotlib = "^3.5.1"
 tqdm = "^4.64.0"
 sympy = "^1.10.1"
-
-[tool.poetry.group.waveforms.dependencies]
-lalsuite = ">=7.8"
+lalsuite = {version=">=7.8", optional=true}
+jplephem = "^2.21"
 
 [tool.poetry.group.docs]
 optional = true
@@ -32,6 +31,7 @@ sphinx-copybutton = "^0.5.0"
 readthedocs-sphinx-search = "^0.1.2"
 sphinxcontrib-bibtex = "^2.4.2"
 sphinx-toolbox = "^3.1.2"
+sphinx-autodoc2 = "^0.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.1"
@@ -41,6 +41,10 @@ pytest-sugar = "^0.9.6"
 healpy = "^1.16.2"
 pycbc = "^2.2.0"
 hypothesis = "^6.75.2"
+pytest-mock = "^3.11.1"
+pytest-profiling = "^1.7.0"
+jupyter = "^1.0.0"
+corner = "^2.2.2"
 
 [tool.poetry.extras]
 waveforms = ["lalsuite"]

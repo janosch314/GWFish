@@ -5,6 +5,13 @@ import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
 
 import copy
+import pandas as pd
+from typing import Optional, Union
+
+from tqdm import tqdm
+
+import logging
+from pathlib import Path
 
 def invertSVD(matrix):
     thresh = 1e-10
@@ -16,6 +23,9 @@ def invertSVD(matrix):
     [U, S, Vh] = np.linalg.svd(matrix_norm)
 
     kVal = sum(S > thresh)
+    
+    logging.debug(f'Inverting a matrix keeping {kVal}/{len(S)} singular values')
+    
     matrix_inverse_norm = U[:, 0:kVal] @ np.diag(1. / S[0:kVal]) @ Vh[0:kVal, :]
 
     # print(matrix @ (matrix_inverse_norm / normalizer))
@@ -164,6 +174,7 @@ class FisherMatrix:
         for p1 in np.arange(self.nd):
             deriv1_p = self.fisher_parameters[p1]
             deriv1 = self.derivative(deriv1_p)
+            
             self._fm[p1, p1] = np.sum(aux.scalar_product(deriv1, deriv1, self.detector), axis=0)
             for p2 in np.arange(p1+1, self.nd):
                 deriv2_p = self.fisher_parameters[p2]
@@ -184,91 +195,318 @@ class FisherMatrix:
     def __call__(self):
         return self.fm
 
-def analyzeFisherErrors(network, parameter_values, fisher_parameters, population, networks_ids):
+def sky_localization_area(
+    network_fisher_inverse: np.ndarray,
+    declination_angle: np.ndarray,
+    right_ascension_index: int,
+    declination_index: int,
+) -> float:
     """
-    Analyze parameter errors.
+    Compute the 1-sigma sky localization ellipse area starting
+    from the full network Fisher matrix inverse and the inclination.
     """
+    return (
+        np.pi
+        * np.abs(np.cos(declination_angle))
+        * np.sqrt(
+            network_fisher_inverse[right_ascension_index, right_ascension_index]
+            * network_fisher_inverse[declination_index, declination_index]
+            - network_fisher_inverse[right_ascension_index, declination_index] ** 2
+        )
+    )
 
-    # Check if sky-location parameters are part of Fisher analysis. If yes, sky-location error will be calculated.
-    signals_havesky = False
-    if ('ra' in fisher_parameters) and ('dec' in fisher_parameters):
-        signals_havesky = True
-        i_ra = fisher_parameters.index('ra')
-        i_dec = fisher_parameters.index('dec')
-    signals_haveids = False
-    if 'id' in parameter_values.columns:
-        signals_haveids = True
-        signal_ids = parameter_values['id']
-        parameter_values.drop('id', inplace=True, axis=1)
+def sky_localization_percentile_factor(
+    percentile: float=90.) -> float:
+    """Conversion factor $C_{X\%}$ to go from the sky localization area provided 
+    by GWFish (one sigma, in steradians) to the X% contour, in degrees squared.
+    
+    $$ \Delta \Omega_{X\%} = C_{X\%} \Delta \Omega_{\\text{GWFish output}} $$
+    
+    :param percentile: Percentile of the sky localization area.
+    
+    :return: Conversion factor $C_{X\%}$
+    """
+    
+    return - 2 * np.log(1 - percentile / 100.) * (180 / np.pi)**2
 
+def compute_detector_fisher(
+    detector: det.Detector,
+    signal_parameter_values: Union[pd.DataFrame, dict[str, float]],
+    fisher_parameters: Optional[list[str]] = None,
+    waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
+    waveform_class: type(wf.Waveform) = wf.LALFD_Waveform,
+    use_duty_cycle: bool = False,
+    redefine_tf_vectors: bool = False,
+) -> tuple[np.ndarray, float]:
+    """Compute the Fisher matrix and SNR for a single detector.
+    
+    Example usage:
+    
+    ```
+    >>> from GWFish.modules.detection import Detector
+    >>> detector = Detector('ET')
+    >>> params = {
+    ...    'mass_1': 10.,
+    ...    'mass_2': 10.,
+    ...    'luminosity_distance': 1000.,
+    ...    'theta_jn': 0.,
+    ...    'ra': 0.,
+    ...    'dec': 0.,
+    ...    'phase': 0.,
+    ...    'psi': 0.,
+    ...    'geocent_time': 1e9,
+    ...    }
+    >>> fisher, detector_SNR_square = compute_detector_fisher(detector, params)
+    >>> print(fisher.shape)
+    (9, 9)
+    >>> print(f'{np.sqrt(detector_SNR_square):.0f}')
+    260
+    
+    ```
+    
+    :param detector: The detector to compute the Fisher matrix for
+    :param signal_parameter_values: The parameter values for the signal. They can be a dictionary of parameter names and values, or a single-row pandas DataFrame with the parameter names as columns.
+    :param fisher_parameters: The parameters to compute the Fisher matrix for. If None, all parameters are used.
+    :param waveform_model: The waveform model to use (see [choosing an approximant](../how-to/choosing_an_approximant.md));
+    :param waveform_class: The waveform class to use (see [choosing an approximant](../how-to/choosing_an_approximant.md));
+    :param use_duty_cycle: Whether to use the detector duty cycle (i.e. stochastically set the SNR to zero some of the time); defaults to `False`
+    :param redefine_tf_vectors: Whether to redefine the time-frequency vectors in order to correctly model signals with small frequency evolution. Defaults to `False`.
+    
+    :return: The Fisher matrix, and the square of the detector SNR.
+    """
+    data_params = {
+        'frequencyvector': detector.frequencyvector,
+        'f_ref': 50.
+    }
+    waveform_obj = waveform_class(waveform_model, signal_parameter_values, data_params)
+    wave = waveform_obj()
+    t_of_f = waveform_obj.t_of_f
 
-    npar = len(fisher_parameters)
-    ns = len(network.detectors[0].fisher_matrix[:, 0, 0])  # number of signals
-    N = len(networks_ids)
+    if redefine_tf_vectors:
+        signal, timevector, frequencyvector = det.projection(signal_parameter_values, detector, wave, t_of_f, redefine_tf_vectors=True)
+    else:
+        signal = det.projection(signal_parameter_values, detector, wave, t_of_f)
+        frequencyvector = detector.frequencyvector[:, 0]
 
-    detect_SNR = network.detection_SNR
+    component_SNRs = det.SNR(detector, signal, use_duty_cycle, frequencyvector=frequencyvector)
+    detector_SNR_square = np.sum(component_SNRs ** 2)
 
-    network_names = []
-    for n in np.arange(N):
-        network_names.append('_'.join([network.detectors[k].name for k in networks_ids[n]]))
-
-    for n in np.arange(N):
-        parameter_errors = np.zeros((ns, npar))
-        sky_localization = np.zeros((ns,))
-        networkSNR = np.zeros((ns,))
-        fishers = np.zeros((ns, npar, npar))
-        inv_fishers = np.zeros((ns, npar, npar))
-        sing_values = np.zeros((ns, npar))
-        
-        for d in networks_ids[n]:
-            networkSNR += network.detectors[d].SNR ** 2
-        networkSNR = np.sqrt(networkSNR)
-
-        for k in np.arange(ns):
-            network_fisher_matrix = np.zeros((npar, npar))
-
-            if networkSNR[k] > detect_SNR[1]:
-                for d in networks_ids[n]:
-                    if network.detectors[d].SNR[k] > detect_SNR[0]:
-                        network_fisher_matrix += np.squeeze(network.detectors[d].fisher_matrix[k, :, :])
-
-                if npar > 0:
-                    network_fisher_inverse, S = invertSVD(network_fisher_matrix)
-                    fishers[k, :, :] = network_fisher_matrix
-                    inv_fishers[k, :, :] = network_fisher_inverse
-                    sing_values[k, :] = S
-                    parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
-
-                    if signals_havesky:
-                        sky_localization[k] = np.pi * np.abs(np.cos(parameter_values['dec'].iloc[k])) \
-                                              * np.sqrt(network_fisher_inverse[i_ra, i_ra]*network_fisher_inverse[i_dec, i_dec]
-                                                        -network_fisher_inverse[i_ra, i_dec]**2)
-        delim = " "
-        header = 'network_SNR '+delim.join(parameter_values.keys())+" "+delim.join(["err_" + x for x in fisher_parameters])
-
-        ii = np.where(networkSNR > detect_SNR[1])[0]
-        save_data = np.c_[networkSNR[ii], parameter_values.iloc[ii], parameter_errors[ii, :]]
-        fishers = fishers[ii, :, :]
-        inv_fishers = inv_fishers[ii, :, :]
-        sing_values = sing_values[ii, :]
-        
-        np.save('Fishers_'+ network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.npy', fishers)
-        np.save('Inv_Fishers_'+ network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.npy', inv_fishers)
-        np.save('Sing_Values_'+ network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.npy', sing_values)
-        
-        if signals_havesky:
-            header += " err_sky_location"
-            save_data = np.c_[save_data, sky_localization[ii]]
-        if signals_haveids:
-            header = "signal "+header
-            save_data = np.c_[signal_ids.iloc[ii], save_data]
-
-        file_name = 'Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt'
-
-        if signals_haveids and (len(save_data) > 0):
-            np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
-                       save_data, delimiter=' ', fmt='%s' + " %.3E" * (len(save_data[0, :]) - 1), header=header, comments='')
+    if fisher_parameters is None:
+        if isinstance(signal_parameter_values, dict):
+            fisher_parameters = list(signal_parameter_values.keys())
         else:
-            np.savetxt('Errors_' + network_names[n] + '_' + population + '_SNR' + str(detect_SNR[1]) + '.txt',
-                       save_data, delimiter=' ', fmt='%s' + " %.3E" * (len(save_data[0, :]) - 1), header=header, comments='')
+            fisher_parameters = signal_parameter_values.columns
 
+    return FisherMatrix(waveform_model, signal_parameter_values, fisher_parameters, detector, waveform_class=waveform_class).fm, detector_SNR_square
+
+def compute_network_errors(
+    network: det.Network,
+    parameter_values: pd.DataFrame,
+    fisher_parameters: Optional[list[str]] = None,
+    waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
+    waveform_class = wf.LALFD_Waveform,
+    use_duty_cycle: bool = False,
+    redefine_tf_vectors: bool = False,
+    save_matrices: bool = False,
+    save_matrices_path: Union[Path, str] = Path('.'),
+    matrix_naming_postfix: str = '',
+) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
+    """
+    Compute Fisher matrix errors for a network whose
+    SNR and Fisher matrices have already been calculated.
+
+    Will only return output for the `n_above_thr` signals 
+    for which the network SNR is above `network.detection_SNR[1]`.
+    
+    :param network: detector network to use
+    :param parameter_values: dataframe with parameters for one or more signals
+    :param fisher_parameters: list of parameters to use for the Fisher matrix analysis - if `None` (default), all waveform parameters are used
+    :param waveform_model: waveform model to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    :param waveform_model: waveform class to use - refer to [choosing an approximant](../how-to/choosing_an_approximant.md)
+    :param redefine_tf_vectors: Whether to redefine the time-frequency vectors in order to correctly model signals with small frequency evolution. Defaults to `False`.
+    :param use_duty_cycle: Whether to use the detector duty cycle (i.e. stochastically set the SNR to zero some of the time); defaults to `False`
+    :param save_matrices: Whether to save the Fisher matrices and their inverses to disk; defaults to `False`
+    :param save_matrices_path: Path (expressed with Pathlib or through a string) where  to save the Fisher matrices and their inverses to disk; defaults to `Path('.')` (the current folder)
+    :param matrix_naming_postfix: string to be appended to the names of the Fisher matrices and their inverses: they will look like `fisher_matrices_postfix.npy` and `inv_fisher_matrices_postfix.npy`
+    
+    :return:
+    - `network_snr`: array with shape `(n_above_thr,)` - Network SNR for the detected    signals.
+    - `parameter_errors`: array with shape `(n_above_thr, n_parameters)` - One-sigma     Fisher errors for the parameters.
+    - `sky_localization`: array with shape `(n_above_thr,)` or `None` - One-sigma sky localization area in steradians, returned if the signals have both right ascension and declination, or `None` otherwise.
+    """
+
+    if fisher_parameters is None:
+        fisher_parameters = list(parameter_values.keys())
+
+    n_params = len(fisher_parameters)
+    n_signals = len(parameter_values)
+
+    assert n_params > 0
+    assert n_signals > 0
+    
+    if isinstance(save_matrices_path, str):
+        save_matrices_path = Path(save_matrices_path)
+    
+    if save_matrices:
+        save_matrices_path.mkdir(parents=True, exist_ok=True)
+        fisher_matrices = np.zeros((n_signals, n_params, n_params))
+        inv_fisher_matrices = np.zeros((n_signals, n_params, n_params))
+
+    signals_havesky = False
+    if ("ra" in fisher_parameters) and ("dec" in fisher_parameters):
+        signals_havesky = True
+        i_ra = fisher_parameters.index("ra")
+        i_dec = fisher_parameters.index("dec")
+
+    detector_snr_thr, network_snr_thr = network.detection_SNR
+
+    parameter_errors = np.zeros((n_signals, n_params))
+    if signals_havesky:
+        sky_localization = np.zeros((n_signals,))
+    network_snr = np.zeros((n_signals,))
+
+    for k in tqdm(range(n_signals)):
+        network_fisher_matrix = np.zeros((n_params, n_params))
+
+        network_snr_square = 0.
+        
+        signal_parameter_values = parameter_values.iloc[k]
+
+        for detector in network.detectors:
+            
+            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, waveform_model, waveform_class, use_duty_cycle)
+            
+            network_snr_square += detector_snr_square
+        
+            if np.sqrt(detector_snr_square) > detector_snr_thr:
+                network_fisher_matrix += detector_fisher
+
+        network_fisher_inverse, _ = invertSVD(network_fisher_matrix)
+        
+        if save_matrices:
+            fisher_matrices[k, :, :] = network_fisher_matrix
+            inv_fisher_matrices[k, :, :] = network_fisher_inverse
+        
+        parameter_errors[k, :] = np.sqrt(np.diagonal(network_fisher_inverse))
+
+        network_snr[k] = np.sqrt(network_snr_square)
+
+        if signals_havesky:
+            sky_localization[k] = sky_localization_area(
+                network_fisher_inverse, parameter_values["dec"].iloc[k], i_ra, i_dec
+            )
+
+    detected, = np.where(network_snr > network_snr_thr)
+
+    if save_matrices:
+        
+        if matrix_naming_postfix is not '':
+            if not matrix_naming_postfix.startswith('_'):
+                matrix_naming_postfix = f'_{matrix_naming_postfix}'
+        
+        fisher_matrices = fisher_matrices[detected, :, :]
+        inv_fisher_matrices = inv_fisher_matrices[detected, :, :]
+        
+        np.save(save_matrices_path /  f"fisher_matrices{matrix_naming_postfix}.npy", fisher_matrices)
+        np.save(save_matrices_path /  f"inv_fisher_matrices{matrix_naming_postfix}.npy", inv_fisher_matrices)
+
+    if signals_havesky:
+        return (
+            network_snr[detected],
+            parameter_errors[detected, :],
+            sky_localization[detected],
+        )
+
+    return network_snr[detected], parameter_errors[detected, :], None
+
+
+def errors_file_name(
+    network: det.Network, sub_network_ids: list[int], population_name: str
+) -> str:
+
+    sub_network = "_".join([network.detectors[k].name for k in sub_network_ids])
+
+    return (
+        f"Errors_{sub_network}_{population_name}_SNR{network.detection_SNR[1]:.0f}")
+
+
+def output_to_txt_file(
+    parameter_values: pd.DataFrame,
+    network_snr: np.ndarray,
+    parameter_errors: np.ndarray,
+    sky_localization: Optional[np.ndarray],
+    fisher_parameters: list[str],
+    filename: Union[str, Path],
+) -> None:
+
+    if isinstance(filename, str):
+        filename = Path(filename)
+    
+    delim = " "
+    header = (
+        "network_SNR "
+        + delim.join(parameter_values.keys())
+        + " "
+        + delim.join(["err_" + x for x in fisher_parameters])
+    )
+    save_data = np.c_[network_snr, parameter_values, parameter_errors]
+    if sky_localization is not None:
+        header += " err_sky_location"
+        save_data = np.c_[save_data, sky_localization]
+
+    row_format = "%s " + " ".join(["%.3E" for _ in range(save_data.shape[1] - 1)])
+
+    np.savetxt(
+        filename.with_suffix(".txt"),
+        save_data,
+        delimiter=" ",
+        header=header,
+        comments="",
+        fmt=row_format,
+    )
+
+def analyze_and_save_to_txt(
+    network: det.Network,
+    parameter_values: pd.DataFrame,
+    fisher_parameters: list[str],
+    sub_network_ids_list: list[list[int]],
+    population_name: str,
+    save_path: Optional[Union[Path, str]] = None,
+    save_matrices: bool = False,
+    **kwargs
+) -> None:
+    
+    if save_path is None:
+        save_path = Path().resolve()
+    if isinstance(save_path, str):
+        save_path = Path(save_path)
+
+    for sub_network_ids in sub_network_ids_list:
+
+        partial_network = network.partial(sub_network_ids)
+
+        filename = errors_file_name(
+            network=network,
+            sub_network_ids=sub_network_ids,
+            population_name=population_name,
+        )
+        
+        network_snr, errors, sky_localization = compute_network_errors(
+            network=network,
+            parameter_values=parameter_values,
+            fisher_parameters=fisher_parameters,
+            save_matrices=save_matrices,
+            save_matrices_path=save_path,
+            matrix_naming_postfix='_'.join(filename.split('_')[1:]),
+            **kwargs,
+        )
+
+        output_to_txt_file(
+            parameter_values=parameter_values,
+            network_snr=network_snr,
+            parameter_errors=errors,
+            sky_localization=sky_localization,
+            fisher_parameters=fisher_parameters,
+            filename=save_path/filename,
+        )
+        
