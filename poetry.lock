@@ -14,14 +14,14 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "4.2.0"
+version = "4.3.0"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
 category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "anyio-4.2.0-py3-none-any.whl", hash = "sha256:745843b39e829e108e518c489b31dc757de7d2131d53fac32bd8df268227bfee"},
-    {file = "anyio-4.2.0.tar.gz", hash = "sha256:e1875bb4b4e2de1669f4bc7869b6d3f54231cdced71605e6e64c9be77e3be50f"},
+    {file = "anyio-4.3.0-py3-none-any.whl", hash = "sha256:048e05d0f6caeed70d731f3db756d35dcc1f35747c8c403364a8332c630441b8"},
+    {file = "anyio-4.3.0.tar.gz", hash = "sha256:f75253795a87df48568485fd18cdd2a3fa5c4f7c5be8e5e36637733fce06fed6"},
 ]
 
 [package.dependencies]
@@ -1329,14 +1329,14 @@ socks = ["socksio (>=1.0.0,<2.0.0)"]
 
 [[package]]
 name = "hypothesis"
-version = "6.98.6"
+version = "6.98.8"
 description = "A library for property-based testing"
 category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "hypothesis-6.98.6-py3-none-any.whl", hash = "sha256:6d94e748311e331d1bc975550bece652d961b3f5218d77a2d450eb541a94cbae"},
-    {file = "hypothesis-6.98.6.tar.gz", hash = "sha256:2d80f64c58f58a60e035c665e94a36f77c3f8fe057b55053d06b2c82dcefc507"},
+    {file = "hypothesis-6.98.8-py3-none-any.whl", hash = "sha256:82d13cc46311c4a8de49a8a8613f4e6afbeabbc037e86d24ac16e2f15a0d676d"},
+    {file = "hypothesis-6.98.8.tar.gz", hash = "sha256:35bcb6e497967e73d968fc4adedaf49ca5d85a22cc8065798716581f2205563a"},
 ]
 
 [package.dependencies]
@@ -2560,14 +2560,14 @@ test = ["flaky", "ipykernel (>=6.19.3)", "ipython", "ipywidgets", "nbconvert (>=
 
 [[package]]
 name = "nbconvert"
-version = "7.16.0"
-description = "Converting Jupyter Notebooks"
+version = "7.16.1"
+description = "Converting Jupyter Notebooks (.ipynb files) to other formats.  Output formats include asciidoc, html, latex, markdown, pdf, py, rst, script.  nbconvert can be used both as a Python library (`import nbconvert`) or as a command line tool (invoked as `jupyter nbconvert ...`)."
 category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "nbconvert-7.16.0-py3-none-any.whl", hash = "sha256:ad3dc865ea6e2768d31b7eb6c7ab3be014927216a5ece3ef276748dd809054c7"},
-    {file = "nbconvert-7.16.0.tar.gz", hash = "sha256:813e6553796362489ae572e39ba1bff978536192fb518e10826b0e8cadf03ec8"},
+    {file = "nbconvert-7.16.1-py3-none-any.whl", hash = "sha256:3188727dffadfdc9c6a1c7250729063d7bc78b355ad7aa023138afa030d1cd07"},
+    {file = "nbconvert-7.16.1.tar.gz", hash = "sha256:e79e6a074f49ba3ed29428ed86487bf51509d9aab613bd8522ac08f6d28fd7fd"},
 ]
 
 [package.dependencies]
@@ -4843,14 +4843,14 @@ dev = ["flake8", "flake8-annotations", "flake8-bandit", "flake8-bugbear", "flake
 
 [[package]]
 name = "urllib3"
-version = "2.2.0"
+version = "2.2.1"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "urllib3-2.2.0-py3-none-any.whl", hash = "sha256:ce3711610ddce217e6d113a2732fafad960a03fd0318c91faa79481e35c11224"},
-    {file = "urllib3-2.2.0.tar.gz", hash = "sha256:051d961ad0c62a94e50ecf1af379c3aba230c66c710493493560c0c223c49f20"},
+    {file = "urllib3-2.2.1-py3-none-any.whl", hash = "sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d"},
+    {file = "urllib3-2.2.1.tar.gz", hash = "sha256:d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19"},
 ]
 
 [package.extras]
