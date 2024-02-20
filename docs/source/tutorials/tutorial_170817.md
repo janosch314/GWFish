@@ -60,7 +60,7 @@ Once we have this population dictionary, we can compute the required errors by d
     
 >>> network = Network(['ET', 'CE1', 'CE2'])
 
->>> snr, errors, sky_localization = compute_network_errors(
+>>> detected, snr, errors, sky_localization = compute_network_errors(
 ...    network, 
 ...    parameters, 
 ...    waveform_model='IMRPhenomD_NRTidalv2'
