@@ -310,7 +310,7 @@ def compute_network_errors(
     save_matrices: bool = False,
     save_matrices_path: Union[Path, str] = Path('.'),
     matrix_naming_postfix: str = '',
-) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """
     Compute Fisher matrix errors for a network whose
     SNR and Fisher matrices have already been calculated.
@@ -413,11 +413,12 @@ def compute_network_errors(
     if signals_havesky:
         return (
             network_snr[detected],
+            parameter_values.iloc[detected],
             parameter_errors[detected, :],
             sky_localization[detected],
         )
 
-    return network_snr[detected], parameter_errors[detected, :], None
+    return network_snr[detected], parameter_values.iloc[detected], parameter_errors[detected, :], None
 
 
 def errors_file_name(
@@ -491,7 +492,7 @@ def analyze_and_save_to_txt(
             population_name=population_name,
         )
         
-        network_snr, errors, sky_localization = compute_network_errors(
+        network_snr, params, errors, sky_localization = compute_network_errors(
             network=network,
             parameter_values=parameter_values,
             fisher_parameters=fisher_parameters,
@@ -502,7 +503,7 @@ def analyze_and_save_to_txt(
         )
 
         output_to_txt_file(
-            parameter_values=parameter_values,
+            parameter_values=params,
             network_snr=network_snr,
             parameter_errors=errors,
             sky_localization=sky_localization,
