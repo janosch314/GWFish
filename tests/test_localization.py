@@ -35,7 +35,7 @@ def test_gw170817_localization(gw170817_params):
     
     network = Network(['LGWA'])
     
-    network_snr, parameter_errors, sky_localization = compute_network_errors(
+    detected, network_snr, parameter_errors, sky_localization = compute_network_errors(
         network,
         gw170817_params,
         fisher_parameters=list(gw170817_params.keys()),
