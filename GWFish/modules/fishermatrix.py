@@ -330,9 +330,10 @@ def compute_network_errors(
     :param matrix_naming_postfix: string to be appended to the names of the Fisher matrices and their inverses: they will look like `fisher_matrices_postfix.npy` and `inv_fisher_matrices_postfix.npy`
     
     :return:
-    - `network_snr`: array with shape `(n_above_thr,)` - Network SNR for the detected    signals.
-    - `parameter_errors`: array with shape `(n_above_thr, n_parameters)` - One-sigma     Fisher errors for the parameters.
-    - `sky_localization`: array with shape `(n_above_thr,)` or `None` - One-sigma sky localization area in steradians, returned if the signals have both right ascension and declination, or `None` otherwise.
+    - `detected`: array with shape `(n_above_thr,)` - array of indices for the detected signals.
+    - `network_snr`: array with shape `(n_signals,)` - Network SNR for all signals.
+    - `parameter_errors`: array with shape `(n_signals, n_parameters)` - One-sigma     Fisher errors for the parameters.
+    - `sky_localization`: array with shape `(n_signals,)` or `None` - One-sigma sky localization area in steradians, returned if the signals have both right ascension and declination, or `None` otherwise.
     """
 
     if fisher_parameters is None:
@@ -412,12 +413,13 @@ def compute_network_errors(
 
     if signals_havesky:
         return (
-            network_snr[detected],
-            parameter_errors[detected, :],
-            sky_localization[detected],
+            detected,
+            network_snr,
+            parameter_errors,
+            sky_localization,
         )
 
-    return network_snr[detected], parameter_errors[detected, :], None
+    return detected, network_snr, parameter_errors, None
 
 
 def errors_file_name(
@@ -491,7 +493,7 @@ def analyze_and_save_to_txt(
             population_name=population_name,
         )
         
-        network_snr, errors, sky_localization = compute_network_errors(
+        detected, network_snr, errors, sky_localization = compute_network_errors(
             network=network,
             parameter_values=parameter_values,
             fisher_parameters=fisher_parameters,
@@ -502,11 +504,13 @@ def analyze_and_save_to_txt(
         )
 
         output_to_txt_file(
-            parameter_values=parameter_values,
-            network_snr=network_snr,
-            parameter_errors=errors,
-            sky_localization=sky_localization,
+            parameter_values=parameter_values.iloc[detected],
+            network_snr=network_snr[detected],
+            parameter_errors=errors[detected, :],
+            sky_localization=(
+                sky_localization[detected] if sky_localization is not None else None
+            ),
             fisher_parameters=fisher_parameters,
             filename=save_path/filename,
         )
-        
+

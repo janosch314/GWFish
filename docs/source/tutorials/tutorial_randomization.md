@@ -67,11 +67,15 @@ Fisher matrix errors just like discussed in the
     
 >>> network = Network(['ET', 'CE1', 'CE2'])
 
->>> snr, errors, sky_localization = compute_network_errors(
+>>> detected, snr, errors, sky_localization = compute_network_errors(
 ...    network, 
 ...    parameters, 
 ...    waveform_model='IMRPhenomD_NRTidalv2'
 ... )
+
+>>> snr = snr[detected]
+>>> errors = errors[detected, :]
+>>> sky_localization = sky_localization[detected]
 
 ```
 

@@ -12,12 +12,12 @@ from GWFish.modules.fishermatrix import (analyze_and_save_to_txt,
 
 BASE_PATH = Path(__file__).parent.parent
 
-@pytest.mark.skip('Takes a long time and still does not check anything')
+# @pytest.mark.skip('Takes a long time and still does not check anything')
 def test_gwtc3_catalog_results(plot):
     params = pd.read_hdf(BASE_PATH / 'injections/GWTC3_cosmo_median.hdf5')
     
     z = params['redshift'].copy()
-    params.drop('redshift')
+    params = params.drop(['event_ID'], axis=1)
     params.loc[:, 'mass_1'] = params['mass_1'].to_numpy() * (1+z)
     params.loc[:, 'mass_2'] = params['mass_2'].to_numpy() * (1+z)
     
@@ -35,14 +35,16 @@ def test_gwtc3_catalog_results(plot):
         'a_2', 
     ]
 
-    network = Network(['LLO', 'LHO', 'VIR'], detection_SNR=(0., 1.))
+    network = Network(['LLO', 'LHO', 'VIR'], detection_SNR=(0., 25.))
 
-    network_snr, parameter_errors, sky_localization = compute_network_errors(
-        network,
-        params,
-        fisher_parameters=fisher_params, 
-        waveform_model='IMRPhenomXPHM'
-    )
+    # network_snr, parameter_errors, sky_localization = compute_network_errors(
+    #     network,
+    #     params.iloc[:5],
+    #     fisher_parameters=fisher_params, 
+    #     waveform_model='IMRPhenomXPHM'
+    # )
+    
+    analyze_and_save_to_txt(network, params.iloc[:5], fisher_params, [[0, 1, 2]], 'GWTC3', save_matrices=False, waveform_model='IMRPhenomXPHM')
     
     # TODO: assert correctness based on catalog results
 
@@ -81,7 +83,7 @@ def test_gw190521_full_fisher(plot):
     
     network = Network(['LGWA'], detection_SNR=(0., 1.))
     
-    network_snr, parameter_errors, sky_localization = compute_network_errors(
+    detected, network_snr, parameter_errors, sky_localization = compute_network_errors(
         network,
         params,
         fisher_parameters=fisher_params, 
