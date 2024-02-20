@@ -1,8 +1,14 @@
 [tool.poetry]
 name = "GWFish"
-version = "0.1.0"
+version = "1.0.0"
 description = "A Fisher Matrix code for third-generation gravitational wave detectors."
-authors = ["Jan Harms <jan.harms@gssi.it>"]
+authors = [
+    "Jan Harms <jan.harms@gssi.it>",
+    "Ulyana Dupletsa <ulyana.dupletsa@gssi.it>",
+    "Jacopo Tissino <jacopo.tissino@gssi.it>",
+    "Boris Goncharov <boris.goncharov@gssi.it>",
+    "Biswajit Banerjee <biswajit.banerjee@gssi.it>",
+]
 packages = [
     { include = "GWFish" },
     { include = "GWFish/**/*.py" },
