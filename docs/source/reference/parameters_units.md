@@ -7,8 +7,8 @@ The parameters used to describe a {term}`CBC` within `GWFish` are as follows:
 - `'mass_2'`: the mass of the secondary object in the source frame, in solar masses $M_{\odot}$;
 - `'redshift'`: the redshift of the merger;
 - `'luminosity_distance'`: the luminosity distance of the merger, in Megaparsecs;
-- `'theta_jn'`: the inclination angle (between the observation direction 
-    and the angular momentum of the merger), in radians;
+- `'theta_jn'`: the angle between the observation direction $\vec{N}$
+    and the total angular momentum of the merger - the sum of orbital angular momentum and the compact objects' spins, $\vec{J} = \vec{L} + \vec{S}_1 +\vec{S}_2 + (\text{GR corrections})$, as opposed to $\iota$, which is the inclination angle between the observation direction and the orbital angular momentum $\vec{L}$ -, in radians;
 - `'psi'`: the polarization angle of the merger, in radians;
 - `'phase'`: the initial phase of the waveform, in radians;
 - `'ra'`: the right ascension of the merger, in radians;
