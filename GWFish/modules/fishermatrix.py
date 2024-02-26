@@ -401,7 +401,7 @@ def compute_network_errors(
 
     if save_matrices:
         
-        if matrix_naming_postfix is not '':
+        if matrix_naming_postfix != '':
             if not matrix_naming_postfix.startswith('_'):
                 matrix_naming_postfix = f'_{matrix_naming_postfix}'
         
