@@ -1,10 +1,11 @@
 """
 Functions for LAL FFD of derivatives of time-domain waveforms
 """
+import logging
+
 try:
     import lal
 except ModuleNotFoundError:
-    uselal = err
     logging.warning('LAL package is not installed.'+\
                     'Only GWFish waveforms available.')
 
