@@ -78,6 +78,8 @@ class EphemerisInterpolate:
             if t1 <= self.earliest_possible_time:
                 raise ValueError('Signal must end after 1980 (gps time=0)')
             time_interval = t1 - t0
+            if time_interval < self.time_step_seconds:
+                time_interval = self.time_step_seconds
             self.interp_gps_time_range = t0 - time_interval / 10, t1 + time_interval / 10
             
             # ensure at least two points for linear interpolation, four for cubic
