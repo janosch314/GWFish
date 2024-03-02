@@ -86,7 +86,6 @@ class DetectorComponent:
 
             
             # psd_data contains proof-mass (PM) and optical-metrology-subsystem (OMS) noise as Doppler noise (y)
-            # the psd_data uses the OMC and ACC models presented in https://arxiv.org/abs/2108.01167
             raw_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
             ff = raw_data[:,0]
             self.psd_data = np.zeros((len(ff), 2))

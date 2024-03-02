@@ -140,6 +140,7 @@ LIN:
             npoints:          5000     
 LISA:  
             arm_length:       2.5e9
+	    # the ACC and OMS Doppler-noise PSDs are taken from https://arxiv.org/abs/2108.01167
             psd_data:         LISA_psd.txt
             duty_factor:      1
             detector_class:   satellitesolarorbit
