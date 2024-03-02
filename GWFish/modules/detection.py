@@ -81,15 +81,12 @@ class DetectorComponent:
             self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
             self.psd_data[:, 1] = self.psd_data[:, 1]/eval(str(detector_def['number_stations']))
         elif detector_def['detector_class'] == 'satellitesolarorbit':
-            # see LISA 2017 mission document
-            # ff = np.logspace(-4, 0, 1000)   # later interpolated onto frequencyvector
-            # S_acc = 9e-30 * (1 + (4e-4 / ff) ** 2) * (1 + (ff / 8e-3) ** 4)
-
             self.L = eval(str(detector_def['arm_length']))
             self.eps = self.L / cst.AU / (2 * np.sqrt(3))
 
             
             # psd_data contains proof-mass (PM) and optical-metrology-subsystem (OMS) noise as Doppler noise (y)
+            # the psd_data uses the OMC and ACC models presented in https://arxiv.org/abs/2108.01167
             raw_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
             ff = raw_data[:,0]
             self.psd_data = np.zeros((len(ff), 2))
