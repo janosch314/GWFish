@@ -146,7 +146,7 @@ LISA:
             detector_class:   satellitesolarorbit
             mission_lifetime: 4 * 3.16e7
             plotrange:        1e-3, 0.3, 1e-22, 1e-19
-            fmin:             1e-3
+            fmin:             1e-4
             fmax:             0.3
             spacing:          linear
             df:               1e-4
