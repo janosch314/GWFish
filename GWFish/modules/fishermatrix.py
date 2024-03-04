@@ -338,6 +338,9 @@ def compute_network_errors(
 
     if fisher_parameters is None:
         fisher_parameters = list(parameter_values.keys())
+        
+    if 'max_frequency_cutoff' in fisher_parameters:
+        fisher_parameters.remove('max_frequency_cutoff')
 
     n_params = len(fisher_parameters)
     n_signals = len(parameter_values)
