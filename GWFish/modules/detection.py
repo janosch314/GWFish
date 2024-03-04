@@ -390,12 +390,14 @@ def in_band_window(
         fmax_time = final_time
         new_timevector = timevector
     else:
-        if max_frequency_cutoff >= frequencyvector[0]:
-            i_final = np.searchsorted(frequencyvector, max_frequency_cutoff)
-        else:
+        if max_frequency_cutoff <= frequencyvector[0]:
             warnings.warn("The max_frequency given is lower than the lowest frequency for the detector."
                           "Returning a zero projection.")
             return slice(0, 0), timevector
+        elif max_frequency_cutoff >= frequencyvector[-1]:
+            i_final = -1
+        else:
+            i_final = np.searchsorted(frequencyvector, max_frequency_cutoff)
 
         fmax_time = timevector[i_final]
 
