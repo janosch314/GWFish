@@ -444,8 +444,7 @@ def projection_solarorbit(parameters, detector, polarizations, timevector, in_ba
 
     # start_time = time.time()
     doppler_to_strain = cst.c / (components[0].L * 2 * np.pi * ff)
-    proj[in_band_slice, :] = doppler_to_strain * AET(polarizations[in_band_slice, :], eij, theta, ra, psi, components[0].L, ff)
-    # print("Calculation of projection: %s seconds" % (time.time() - start_time))
+    proj[in_band_slice, :] = AET(polarizations[in_band_slice, :], eij, theta, ra, psi, components[0].L, ff)    # print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     return proj
 
