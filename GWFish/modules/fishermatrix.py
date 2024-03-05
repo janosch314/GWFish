@@ -122,6 +122,13 @@ class Derivative:
             self.pv_set1[target_parameter] = pv - dp / 2.
             self.pv_set2[target_parameter] = pv + dp / 2.
 
+            if target_parameter == 'chirp_mass' or target_parameter == 'mass_ratio':
+                self.pv_set1['mass_1'] = self.pv_set1['chirp_mass'] * (1 + self.pv_set1['mass_ratio'])**(1/5) * self.pv_set1['mass_ratio']**(-3/5)
+                self.pv_set1['mass_2'] = self.pv_set1['chirp_mass'] * (1 + self.pv_set1['mass_ratio'])**(1/5) * self.pv_set1['mass_ratio']**(2/5)
+                self.pv_set2['mass_1'] = self.pv_set2['chirp_mass'] * (1 + self.pv_set2['mass_ratio'])**(1/5) * self.pv_set2['mass_ratio']**(-3/5)
+                self.pv_set2['mass_2'] = self.pv_set2['chirp_mass'] * (1 + self.pv_set2['mass_ratio'])**(1/5) * self.pv_set2['mass_ratio']**(2/5)
+
+
             if target_parameter in ['ra', 'dec', 'psi']:  # these parameters do not influence the waveform
     
                 signal1 = det.projection(self.pv_set1, self.detector, 
