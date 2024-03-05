@@ -92,8 +92,15 @@ def t_of_f_PN(parameters, frequencyvector):
     term, which does not matter for SNR calculations.
     """
 
-    M1 = parameters['mass_1'] * (1 + parameters['redshift']) * cst.Msol
-    M2 = parameters['mass_2'] * (1 + parameters['redshift']) * cst.Msol
+    if ('mass_1_source' in parameters.keys()) or ('mass_2_source' in parameters.keys()):
+        if 'redshift' not in parameters.keys():
+            raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+        else:
+            parameters['mass_1'] = parameters['mass_1_source'] * (1 + parameters['redshift'])
+            parameters['mass_2'] = parameters['mass_2_source'] * (1 + parameters['redshift'])
+
+    M1 = parameters['mass_1'] * cst.Msol
+    M2 = parameters['mass_2'] * cst.Msol
 
     M = M1 + M2
     mu = M1 * M2 / M
@@ -261,6 +268,13 @@ class LALFD_Waveform(Waveform):
             reference_frequency=self.f_ref, **gwfish_input_params)
 
     def _setup_lal_caller_args(self):
+        if ('mass_1_source' in self.gw_params.keys()) or ('mass_2_source' in self.gw_params.keys()):
+                if 'redshift' not in self.gw_params.keys():
+                    raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+                else:
+                    self.gw_params['mass_1'] = self.gw_params['mass_1_source'] * (1 + self.gw_params['redshift'])
+                    self.gw_params['mass_2'] = self.gw_params['mass_2_source'] * (1 + self.gw_params['redshift'])
+
         if lalsim.SimInspiralImplementedFDApproximants(self._approx_lal):
             self._lal_frequency_array = CreateREAL8Vector(len(self.frequencyvector))
             self._lal_frequency_array.data = self.frequencyvector
@@ -268,8 +282,8 @@ class LALFD_Waveform(Waveform):
             self._lalsim_caller = lalsim.SimInspiralChooseFDWaveformSequence
             self._lalsim_args = [
                 self.gw_params['phase'],
-                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
-                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_1'] * lal.MSUN_SI,  # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI,  # in [kg]
                 self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'], 
                 self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
                 self.f_ref,  # reference frequency
@@ -283,8 +297,8 @@ class LALFD_Waveform(Waveform):
             self._waveform_postprocessing = self._hf_postproccessing_SimInspiralFD
             self._lalsim_caller = lalsim.SimInspiralFD
             self._lalsim_args = [
-                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
-                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_1'] * lal.MSUN_SI,  # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI,  # in [kg]
                 self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'], 
                 self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
                 self.gw_params['luminosity_distance'] * lal.PC_SI * 1e6,  # in [m]
@@ -372,12 +386,20 @@ class LALTD_Waveform(LALFD_Waveform):
         self.ht_cross_out = None
 
     def _setup_lal_caller_args(self):
+
+        if ('mass_1_source' in self.gw_params.keys()) or ('mass_2_source' in self.gw_params.keys()):
+                if 'redshift' not in self.gw_params.keys():
+                    raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+                else:
+                    self.gw_params['mass_1'] = self.gw_params['mass_1_source'] * (1 + self.gw_params['redshift'])
+                    self.gw_params['mass_2'] = self.gw_params['mass_2_source'] * (1 + self.gw_params['redshift'])
+
         if lalsim.SimInspiralImplementedTDApproximants(self._approx_lal):
             self._waveform_postprocessing = self._ht_postproccessing_SimInspiralTD    
             self._lalsim_caller = lalsim.SimInspiralTD
             self._lalsim_args = [
-                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
-                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_1'] * lal.MSUN_SI,  # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI,  # in [kg]
                 self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'],
                 self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
                 self.gw_params['luminosity_distance'] * lal.PC_SI * 1e6,  # in [m]
@@ -510,8 +532,17 @@ class TaylorF2(Waveform):
         z = self.gw_params['redshift']
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
-        M1 = self.gw_params['mass_1'] * (1 + z) * cst.Msol
-        M2 = self.gw_params['mass_2'] * (1 + z) * cst.Msol
+
+        if ('mass_1_source' in self.gw_params.keys()) or ('mass_2_source' in self.gw_params.keys()):
+                if 'redshift' not in self.gw_params.keys():
+                    raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+                else:
+                    self.gw_params['mass_1'] = self.gw_params['mass_1_source'] * (1 + self.gw_params['redshift'])
+                    self.gw_params['mass_2'] = self.gw_params['mass_2_source'] * (1 + self.gw_params['redshift'])
+
+
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
     
         M = M1 + M2
         mu = M1 * M2 / M
@@ -665,8 +696,17 @@ class IMRPhenomD(Waveform):
         z = self.gw_params['redshift']
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
-        M1 = self.gw_params['mass_1'] * (1 + z) * cst.Msol
-        M2 = self.gw_params['mass_2'] * (1 + z) * cst.Msol
+
+        if ('mass_1_source' in self.gw_params.keys()) or ('mass_2_source' in self.gw_params.keys()):
+                if 'redshift' not in self.gw_params.keys():
+                    raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+                else:
+                    self.gw_params['mass_1'] = self.gw_params['mass_1_source'] * (1 + self.gw_params['redshift'])
+                    self.gw_params['mass_2'] = self.gw_params['mass_2_source'] * (1 + self.gw_params['redshift'])
+
+
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
         if (M1 < M2):
             aux_mass = M1
             M1 = M2
