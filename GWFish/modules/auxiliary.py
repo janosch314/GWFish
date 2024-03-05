@@ -8,7 +8,14 @@ import GWFish.modules.detection as det
 import GWFish.modules.constants as cst
 
 def fisco(parameters):
-    M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + parameters['redshift'])
+    if ('mass_1_source' in parameters.keys()) or ('mass_2_source' in parameters.keys()):
+        if 'redshift' not in parameters.keys():
+            raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+        else:
+            parameters['mass_1'] = parameters['mass_1_source'] * (1 + parameters['redshift'])
+            parameters['mass_2'] = parameters['mass_2_source'] * (1 + parameters['redshift'])
+
+    M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol
 
     return 1 / (np.pi) * cst.c ** 3 / (cst.G * M) / 6 ** 1.5  # frequency of innermost stable circular orbit
 
@@ -19,6 +26,13 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
         z = np.max([0.05, z[0]])
 
         r = cosmo.luminosity_distance(z).value * cst.Mpc
+
+        if ('mass_1_source' in parameters.keys()) or ('mass_2_source' in parameters.keys()):
+            if 'redshift' not in parameters.keys():
+                raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+            else:
+                parameters['mass_1'] = parameters['mass_1_source'] * (1 + parameters['redshift'])
+                parameters['mass_2'] = parameters['mass_2_source'] * (1 + parameters['redshift'])
 
         # define necessary variables, multiplied with solar mass, parsec, etc.
         M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + z)
