@@ -449,7 +449,11 @@ def output_to_txt_file(
     sky_localization: Optional[np.ndarray],
     fisher_parameters: list[str],
     filename: Union[str, Path],
+    decimal_output_format: str = ''
 ) -> None:
+
+    if decimal_output_format == '':
+        decimal_output_format = '%.15f'
 
     if isinstance(filename, str):
         filename = Path(filename)
@@ -466,7 +470,7 @@ def output_to_txt_file(
         header += " err_sky_location"
         save_data = np.c_[save_data, sky_localization]
 
-    row_format = "%s " + " ".join(["%.3E" for _ in range(save_data.shape[1] - 1)])
+    row_format = "%s " + " ".join([decimal_output_format for _ in range(save_data.shape[1] - 1)])
 
     np.savetxt(
         filename.with_suffix(".txt"),
