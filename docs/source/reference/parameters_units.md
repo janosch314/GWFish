@@ -3,8 +3,10 @@
 
 The parameters used to describe a {term}`CBC` within `GWFish` are as follows:
 
-- `'mass_1'`: the mass of the primary object in the source frame, in solar masses $M_{\odot}$;
-- `'mass_2'`: the mass of the secondary object in the source frame, in solar masses $M_{\odot}$;
+- `'mass_1'`: the mass of the primary object in the detector frame, in solar masses $M_{\odot}$;
+- `'mass_2'`: the mass of the secondary object in the detector frame, in solar masses $M_{\odot}$;
+- `'mass_1_source'`: the mass of the primary object in the source frame, in solar masses $M_{\odot}$;
+- `'mass_2_source'`: the mass of the secondary object in the source frame, in solar masses $M_{\odot}$;
 - `'redshift'`: the redshift of the merger;
 - `'luminosity_distance'`: the luminosity distance of the merger, in Megaparsecs;
 - `'theta_jn'`: the angle between the observation direction $\vec{N}$
