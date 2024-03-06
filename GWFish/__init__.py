@@ -12,7 +12,7 @@ import sys
 
 from . import modules
 
-from .modules import auxiliary, detection, fishermatrix, waveforms, constants, priors
+from .modules import auxiliary, detection, fishermatrix, waveforms, constants
 
 if sys.version_info < (3,):
     raise ImportError("You need Python 3")
