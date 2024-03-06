@@ -106,15 +106,15 @@ The `errors` array contains the one-sigma errors for all the parameters included
 ```python
 >>> for name, error in zip(parameters.keys(), errors[0]):
 ...     print(f'{name}: {error:.2e}') 
-mass_1_source: 1.25e-04
-mass_2_source: 1.15e-04
-luminosity_distance: 6.44e+01
-theta_jn: 2.80e-01
-ra: 9.82e-03
-dec: 4.75e-03
-psi: 7.22e-01
-phase: 1.45e+00
-geocent_time: 2.71e-05
+mass_1_source: 1.34e-04
+mass_2_source: 1.23e-04
+luminosity_distance: 6.33e+01
+theta_jn: 2.75e-01
+ra: 9.68e-03
+dec: 4.68e-03
+psi: 7.11e-01
+phase: 1.43e+00
+geocent_time: 2.67e-05
 
 ```
 
@@ -125,9 +125,9 @@ The sky localization error is given separately:
 ```python
 >>> from GWFish.modules.fishermatrix import sky_localization_percentile_factor
 >>> print(f'{sky_localization[0]:.2e}')
-6.74e-05
+6.54e-05
 >>> print(f'{sky_localization[0] * sky_localization_percentile_factor():.2e}')
-1.02e+00
+9.89e-01
 
 ```
 
