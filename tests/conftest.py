@@ -16,8 +16,8 @@ def plot(request):
 @pytest.fixture
 def gw170817_params():
     params = {
-        'mass_1': 1.4957673, 
-        'mass_2': 1.24276395, 
+        'mass_1_source': 1.4957673, 
+        'mass_2_source': 1.24276395, 
         'redshift': 0.00980,
         'luminosity_distance': 43.74755446,
         'theta_jn': 2.545065595974997,

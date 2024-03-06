@@ -3,8 +3,13 @@
 
 The parameters used to describe a {term}`CBC` within `GWFish` are as follows:
 
-- `'mass_1'`: the mass of the primary object in the source frame, in solar masses $M_{\odot}$;
-- `'mass_2'`: the mass of the secondary object in the source frame, in solar masses $M_{\odot}$;
+- `'mass_1_source'`: the mass of the primary object in the source frame, in solar masses $M_{\odot}$;
+- `'mass_2_source'`: the mass of the secondary object in the source frame, in solar masses $M_{\odot}$;
+- `'mass_1'`: the mass of the primary object in the detector frame, in solar masses $M_{\odot}$;
+- `'mass_2'`: the mass of the secondary object in the detector frame, in solar masses $M_{\odot}$;
+- `'chirp_mass'`: chirp mass in detector frame, in solar masses $M_{\odot}$;
+- `'chirp_mass_source'`: chirp mass in source frame, in solar masses $M_{\odot}$;
+- `'mass_ratio'`: the mass of the secondary object in the source frame, in solar masses $M_{\odot}$;
 - `'redshift'`: the redshift of the merger;
 - `'luminosity_distance'`: the luminosity distance of the merger, in Megaparsecs;
 - `'theta_jn'`: the angle between the observation direction $\vec{N}$
@@ -25,6 +30,15 @@ The parameters used to describe a {term}`CBC` within `GWFish` are as follows:
     section III.D of [the GW170817 properties paper](https://arxiv.org/abs/1805.11579). This parameter is not available for all approximants;
 - `'lambda_2'`: tidal polarizability $\Lambda_2$ of the secondary (compact) star,
     not available for all approximants.
+
+```{warning}
+For masses one can pass:
+- `mass_1`, `mass_2`
+- `mass_1_source`, `mass_2_source`
+- `chirp_mass`, `mass_ratio`
+- `chirp_mass_source', `mass_ratio`
+The Fisher parameters should correspond!
+```
 
 ```{warning}
 Including parameters which do not apply for a specific approximants (e.g. giving `'a_1'` 

@@ -141,8 +141,8 @@ def test_phase_term_differentiated(ephem, plot):
     frequencies = np.geomspace(0.1, 2000., num=1000)
     times = t_of_f_PN({
             'geocent_time': 1.8e9,
-            'mass_1': 1.4,
-            'mass_2': 1.4,
+            'mass_1_source': 1.4,
+            'mass_2_source': 1.4,
             'redshift': 0.}, 
         frequencies)
     
@@ -204,8 +204,8 @@ def test_signal_ends_with_stationary_phase(ephem, plot):
     frequencies = np.geomspace(0.1, 2000., num=1000)
     times = t_of_f_PN({
             'geocent_time': 1.8e9,
-            'mass_1': 1.4,
-            'mass_2': 1.4,
+            'mass_1_source': 1.4,
+            'mass_2_source': 1.4,
             'redshift': 0.}, 
         frequencies)
 
