@@ -341,6 +341,9 @@ def compute_network_errors(
         
     if 'max_frequency_cutoff' in fisher_parameters:
         fisher_parameters.remove('max_frequency_cutoff')
+    
+    if 'redshift' in fisher_parameters:
+        fisher_parameters.remove('redshift')
 
     n_params = len(fisher_parameters)
     n_signals = len(parameter_values)
