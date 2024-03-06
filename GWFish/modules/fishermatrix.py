@@ -445,11 +445,8 @@ def output_to_txt_file(
     sky_localization: Optional[np.ndarray],
     fisher_parameters: list[str],
     filename: Union[str, Path],
-    decimal_output_format: str = ''
+    decimal_output_format: str = '%.3E'
 ) -> None:
-
-    if decimal_output_format == '':
-        decimal_output_format = '%.3E'
 
     if isinstance(filename, str):
         filename = Path(filename)
