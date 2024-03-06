@@ -68,7 +68,7 @@ Once we have this population dictionary, we can compute the required errors by d
 ... )
 
 >>> print(f'{snr[0]:.0f}')
-282
+287
 
 >>> print(f'{errors[0].shape}')
 (9,)
