@@ -137,12 +137,12 @@ def test_fisher_analysis_output(mocker):
     header = (
         "network_SNR mass_1 mass_2 redshift luminosity_distance "
         "theta_jn ra dec psi phase geocent_time err_mass_1 err_mass_2 "
-        "err_redshift err_luminosity_distance err_theta_jn err_ra "
+        "err_luminosity_distance err_theta_jn err_ra "
         "err_dec err_psi err_phase err_geocent_time err_sky_location"
     )
 
     data = [
-        750.,
+        751.,
         1.39999999999e00,
         1.39999999999e00,
         1.00000000000e-02,
@@ -153,17 +153,16 @@ def test_fisher_analysis_output(mocker):
         1.60000000000e00,
         0.00000000000e00,
         1.18700888200e09,
-        1.01791427671e-07,
-        1.01791427689e-07,
-        8.96883449508e-08,
-        2.32204133549e00,
-        1.04213847237e-01,
-        3.12695677565e-03,
-        2.69412953826e-03,
-        2.04240222976e-01,
-        4.09349000642e-01,
-        5.63911212310e-05,
-        2.42285325663e-05,
+        4.14585880e-08,
+        4.14585880e-08,
+        2.09920985e+00,
+        9.25054358e-02,
+        3.23901261e-03,
+        2.76717809e-03,
+        1.74624505e-01,
+        3.50802588e-01,
+        5.83902445e-05,
+        2.57008004e-05,
     ]
 
     assert np.savetxt.call_args.args[0].name == "Errors_ET_test_SNR10.txt"
@@ -175,7 +174,7 @@ def test_fisher_analysis_output(mocker):
         "comments": "",
         "fmt": (
             "%s %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E "
-            "%.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E"
+            "%.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E"
         ),
     }
 
@@ -220,12 +219,12 @@ def test_fisher_analysis_output_nosky(mocker):
     header = (
         "network_SNR mass_1 mass_2 redshift luminosity_distance "
         "theta_jn ra dec psi phase geocent_time err_mass_1 err_mass_2 "
-        "err_redshift err_luminosity_distance err_theta_jn err_ra "
+        "err_luminosity_distance err_theta_jn err_ra "
         "err_psi err_phase err_geocent_time"
     )
 
     data = [
-        750.,
+        751.,
         1.400E+00,
         1.400E+00,
         1.000E-02,
@@ -236,15 +235,14 @@ def test_fisher_analysis_output_nosky(mocker):
         1.600E+00,
         0.000E+00,
         1.187E+09,
-        1.009E-07,
-        1.009E-07,
-        8.648E-08,
-        2.321E+00,
-        1.040E-01,
-        3.121E-03,
-        8.905E-02,
-        1.771E-01,
-        2.251E-05,
+        4.035E-08,
+        4.035E-08,
+        2.068E+00,
+        9.210E-02,
+        3.223E-03,
+        7.521E-02,
+        1.504E-01,
+        2.529E-05,
     ]
 
     assert np.savetxt.call_args.args[0].name == "Errors_ET_test_SNR10.txt"
@@ -256,7 +254,7 @@ def test_fisher_analysis_output_nosky(mocker):
         "comments": "",
         "fmt": (
             "%s %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E "
-            "%.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E"
+            "%.3E %.3E %.3E %.3E %.3E %.3E %.3E %.3E"
         ),
     }
 
