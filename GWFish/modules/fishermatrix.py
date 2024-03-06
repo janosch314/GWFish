@@ -482,7 +482,7 @@ def analyze_and_save_to_txt(
     population_name: str,
     save_path: Optional[Union[Path, str]] = None,
     save_matrices: bool = False,
-    decimal_output_format: str = '',
+    decimal_output_format: str = '.%3E',
     **kwargs
 ) -> None:
     
