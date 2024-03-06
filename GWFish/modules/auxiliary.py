@@ -7,8 +7,33 @@ cosmo = FlatLambdaCDM(H0=69.6, Om0=0.286)
 import GWFish.modules.detection as det
 import GWFish.modules.constants as cst
 
+def from_mChirp_q_to_m1_m2(mChirp, q):
+    """
+    Compute the transformation from mChirp, q to m1, m2
+    """
+    m1 = mChirp * (1 + q)**(1/5) * q**(-3/5)
+    m2 = mChirp * (1 + q)**(1/5) * q**(2/5)
+    
+    return m1, m2
+
+def check_and_convert_to_mass_1_mass_2(parameters):
+    if ('chirp_mass' in parameters.keys()) and ('mass_ratio' in parameters.keys()):
+            parameters['mass_1'], parameters['mass_2'] = from_mChirp_q_to_m1_m2(parameters['chirp_mass'], parameters['mass_ratio'])
+    if ('chirp_mass_source' in parameters.keys()) and ('mass_ratio' in parameters.keys()):
+            parameters['mass_1_source'], parameters['mass_2_source'] = from_mChirp_q_to_m1_m2(parameters['chirp_mass'], parameters['mass_ratio'])
+    if ('mass_1_source' in parameters.keys()) or ('mass_2_source' in parameters.keys()):
+        if 'redshift' not in parameters.keys():
+            raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+        else:
+            parameters['mass_1'] = parameters['mass_1_source'] * (1 + parameters['redshift'])
+            parameters['mass_2'] = parameters['mass_2_source'] * (1 + parameters['redshift'])
+
+
 def fisco(parameters):
-    M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + parameters['redshift'])
+    local_params = parameters.copy()
+    check_and_convert_to_mass_1_mass_2(local_params)
+
+    M = (local_params['mass_1'] + local_params['mass_2']) * cst.Msol
 
     return 1 / (np.pi) * cst.c ** 3 / (cst.G * M) / 6 ** 1.5  # frequency of innermost stable circular orbit
 
@@ -20,13 +45,16 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
 
         r = cosmo.luminosity_distance(z).value * cst.Mpc
 
-        # define necessary variables, multiplied with solar mass, parsec, etc.
-        M = (parameters['mass_1'] + parameters['mass_2']) * cst.Msol * (1 + z)
-        mu = (parameters['mass_1'] * parameters['mass_2'] / (
-                parameters['mass_1'] + parameters['mass_2'])) * cst.Msol * (1 + z)
+        local_params = parameters.copy()
+        check_and_convert_to_mass_1_mass_2(local_params)
 
-        parameters['redshift'] = z
-        f_isco_z = fisco(parameters)
+        # define necessary variables, multiplied with solar mass, parsec, etc.
+        M = (local_params['mass_1'] + local_params['mass_2']) * cst.Msol
+        mu = (local_params['mass_1'] * local_params['mass_2'] / (
+                local_params['mass_1'] + local_params['mass_2'])) * cst.Msol
+
+        local_params['redshift'] = z
+        f_isco_z = fisco(local_params)
 
         Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
 
@@ -71,7 +99,7 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
         zmax = optimize.root(lambda x: dSNR(x, network.detectors[d], detSNR[1]), 5).x[0]
 
         print(network.detectors[d].name + ' horizon (time-invariant antenna pattern; M={:.3f}; SNR>{:.2f}): z={:.3f}'
-              .format(parameters['mass_1'] + parameters['mass_2'], detSNR[1], zmax))
+              .format(local_paramss['mass_1'] + local_params['mass_2'], detSNR[1], zmax))
 
 
 def scalar_product(deriv1, deriv2, detector):

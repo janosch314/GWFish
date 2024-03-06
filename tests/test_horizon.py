@@ -55,8 +55,8 @@ def test_horizon_computation_result_170817_scaling():
     """
     
     params = {
-        'mass_1': 1.4,
-        'mass_2': 1.4,
+        'mass_1_source': 1.4,
+        'mass_2_source': 1.4,
         'theta_jn': 5/6 * np.pi,
         'ra': 3.45,
         'dec': -0.41,
@@ -73,8 +73,8 @@ def test_horizon_computation_result_170817_scaling():
     assert isinstance(redshift, float)
     
     params2 = params | {
-        'mass_1': 2.8, 
-        'mass_2': 2.8, 
+        'mass_1_source': 2.8, 
+        'mass_2_source': 2.8, 
     }
     
     distance2, redshift2 = horizon(params2, detector)
@@ -84,8 +84,8 @@ def test_horizon_computation_result_170817_scaling():
 def test_horizon_warns_when_given_redshift():
     params = {
         'redshift': 0.4,
-        'mass_1': 1.4, 
-        'mass_2': 1.4, 
+        'mass_1_source': 1.4, 
+        'mass_2_source': 1.4, 
         'theta_jn': 5/6 * np.pi,
         'ra': 3.45,
         'dec': -0.41,
@@ -118,8 +118,8 @@ def test_difficult_convergence_of_horizon_calculation(mass, detector_name, extri
     right_ascension, declination, polarization, gps_time, theta_jn, phase = extrinsic
     
     params = {
-            'mass_1': mass,
-            'mass_2': mass,
+            'mass_1_source': mass,
+            'mass_2_source': mass,
             'theta_jn': theta_jn, 
             'dec': declination, 
             'ra': right_ascension, 
@@ -158,8 +158,8 @@ def test_horizon_for_very_large_masses(mass, equals_zero, detector_name, extrins
     right_ascension, declination, polarization, gps_time, theta_jn, phase = extrinsic
     
     params = {
-            'mass_1': mass,
-            'mass_2': mass,
+            'mass_1_source': mass,
+            'mass_2_source': mass,
             'theta_jn': theta_jn, 
             'dec': declination, 
             'ra': right_ascension, 
@@ -193,8 +193,8 @@ def test_horizon_computation_with_network(mass, network, extrinsic):
     right_ascension, declination, polarization, gps_time, theta_jn, phase = extrinsic
     
     params = {
-        'mass_1': mass,
-        'mass_2': mass,
+        'mass_1_source': mass,
+        'mass_2_source': mass,
         'theta_jn': theta_jn, 
         'dec': declination, 
         'ra': right_ascension, 
@@ -214,8 +214,8 @@ def test_horizon_computation_with_network(mass, network, extrinsic):
 @pytest.mark.parametrize('mass', [30.,])
 def test_optimal_parameter_finding(mass, network):
     base_params = {
-        'mass_1': mass,
-        'mass_2': mass,
+        'mass_1_source': mass,
+        'mass_2_source': mass,
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 
@@ -241,8 +241,8 @@ def test_optimal_parameter_finding(mass, network):
 def test_optimal_parameter_finding_against_pycbc(detector_pycbc, detector_gwfish, gps_time):
     
     base_params = {
-        'mass_1': 1.4,
-        'mass_2': 1.4,
+        'mass_1_source': 1.4,
+        'mass_2_source': 1.4,
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 
@@ -278,8 +278,8 @@ def test_optimal_parameter_finding_against_pycbc(detector_pycbc, detector_gwfish
 )
 def test_against_lrr_paper(detector_name, bns_range):
     base_params = {
-        'mass_1': 1.4,
-        'mass_2': 1.4,
+        'mass_1_source': 1.4,
+        'mass_2_source': 1.4,
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 
@@ -305,8 +305,8 @@ def test_against_lrr_paper(detector_name, bns_range):
 @pytest.mark.parametrize('mass', [2000.,])
 def test_horizon_with_network_against_single_detector(mass):
     params = {
-        'mass_1': mass,
-        'mass_2': mass,
+        'mass_1_source': mass,
+        'mass_2_source': mass,
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 
@@ -336,8 +336,8 @@ def test_horizon_with_network_against_single_detector(mass):
 @pytest.mark.parametrize('detector_name', ['ET', 'LGWA', 'VIR'])
 def test_best_position_makes_sense(detector_name, plot):
     base_params = {
-        'mass_1': 1.4,
-        'mass_2': 1.4,
+        'mass_1_source': 1.4,
+        'mass_2_source': 1.4,
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 
@@ -386,8 +386,8 @@ def test_best_position_makes_sense_network(network_name, plot):
     # around these masses the SNR for ET and LGWA are similar;
     
     base_params = {
-        'mass_1': 4000.,
-        'mass_2': 4000.,
+        'mass_1_source': 4000.,
+        'mass_2_source': 4000.,
         'theta_jn': 0., 
         'psi': 0., 
         'phase': 0., 

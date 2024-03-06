@@ -11,8 +11,8 @@ ATOL = 1e-30
 def test_max_f_cutoff_170817():
     
     params = {
-        'mass_1': 1.4, 
-        'mass_2': 1.4, 
+        'mass_1_source': 1.4, 
+        'mass_2_source': 1.4, 
         'redshift': 0.01,
         'luminosity_distance': 40,
         'theta_jn': 5/6 * np.pi,
@@ -61,8 +61,8 @@ def test_max_f_cutoff_signal_duration(redefine_tf_vectors):
 
     # 170817-like parameters, with masses switched to BWD-like ones.
     params = {
-        'mass_1': .6, 
-        'mass_2': .6, 
+        'mass_1_source': .6, 
+        'mass_2_source': .6, 
         'redshift': 0.01,
         'luminosity_distance': 40,
         'theta_jn': 5/6 * np.pi,

@@ -91,9 +91,11 @@ def t_of_f_PN(parameters, frequencyvector):
     Marsat/Baker arXiv:1806.10734v1; equation (22) neglecting the phase 
     term, which does not matter for SNR calculations.
     """
+    local_params = parameters.copy()
+    aux.check_and_convert_to_mass_1_mass_2(local_params)
 
-    M1 = parameters['mass_1'] * (1 + parameters['redshift']) * cst.Msol
-    M2 = parameters['mass_2'] * (1 + parameters['redshift']) * cst.Msol
+    M1 = local_params['mass_1'] * cst.Msol
+    M2 = local_params['mass_2'] * cst.Msol
 
     M = M1 + M2
     mu = M1 * M2 / M
@@ -102,11 +104,12 @@ def t_of_f_PN(parameters, frequencyvector):
 
     t_of_f = -5./(256.*np.pi**(8/3))/Mc**(5/3)/frequencyvector**(8/3)
 
-    return t_of_f+parameters['geocent_time']
+    return t_of_f+local_params['geocent_time']
 
 
 class Waveform:
     def __init__(self, name, gw_params, data_params):
+        aux.check_and_convert_to_mass_1_mass_2(gw_params)
         self.name = name
         self._set_default_gw_params()
         self.gw_params.update(gw_params)
@@ -510,8 +513,9 @@ class TaylorF2(Waveform):
         z = self.gw_params['redshift']
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
-        M1 = self.gw_params['mass_1'] * (1 + z) * cst.Msol
-        M2 = self.gw_params['mass_2'] * (1 + z) * cst.Msol
+
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
     
         M = M1 + M2
         mu = M1 * M2 / M
@@ -665,8 +669,8 @@ class IMRPhenomD(Waveform):
         z = self.gw_params['redshift']
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
-        M1 = self.gw_params['mass_1'] * (1 + z) * cst.Msol
-        M2 = self.gw_params['mass_2'] * (1 + z) * cst.Msol
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
         if (M1 < M2):
             aux_mass = M1
             M1 = M2

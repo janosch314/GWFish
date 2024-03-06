@@ -18,8 +18,8 @@ def test_gwtc3_catalog_results(plot):
     
     z = params['redshift'].copy()
     params = params.drop(['event_ID'], axis=1)
-    params.loc[:, 'mass_1'] = params['mass_1'].to_numpy() * (1+z)
-    params.loc[:, 'mass_2'] = params['mass_2'].to_numpy() * (1+z)
+    params.loc[:, 'mass_1'] = params['mass_1'].to_numpy()# * (1+z)
+    params.loc[:, 'mass_2'] = params['mass_2'].to_numpy()# * (1+z)
     
     fisher_params = [
         'mass_1', 
@@ -55,8 +55,8 @@ def test_gw190521_full_fisher(plot):
     # do not perform the Fisher analysis over z
     z = params['redshift'].copy()
     params.drop(columns='redshift')
-    params.loc[:, 'mass_1'] = params['mass_1'].to_numpy() * (1+z)
-    params.loc[:, 'mass_2'] = params['mass_2'].to_numpy() * (1+z)
+    params.loc[:, 'mass_1'] = params['mass_1'].to_numpy()# * (1+z)
+    params.loc[:, 'mass_2'] = params['mass_2'].to_numpy()# * (1+z)
     
     # the first parameter is the event ID
     # fisher_params = params.columns.tolist()[1:]
@@ -100,8 +100,8 @@ def test_gw190521_full_fisher(plot):
 
 def test_fisher_analysis_output(mocker):
     params = {
-        "mass_1": 1.4,
-        "mass_2": 1.4,
+        "mass_1_source": 1.4,
+        "mass_2_source": 1.4,
         "redshift": 0.01,
         "luminosity_distance": 40,
         "theta_jn": 5 / 6 * np.pi,
@@ -117,6 +117,7 @@ def test_fisher_analysis_output(mocker):
         parameter_values[key] = np.full((1,), item)
 
     fisher_parameters = list(params.keys())
+    fisher_parameters.remove('redshift')
 
     network = Network(
         detector_ids=["ET"],
@@ -135,14 +136,14 @@ def test_fisher_analysis_output(mocker):
     )
 
     header = (
-        "network_SNR mass_1 mass_2 redshift luminosity_distance "
-        "theta_jn ra dec psi phase geocent_time err_mass_1 err_mass_2 "
+        "network_SNR mass_1_source mass_2_source redshift luminosity_distance "
+        "theta_jn ra dec psi phase geocent_time err_mass_1_source err_mass_2_source "
         "err_luminosity_distance err_theta_jn err_ra "
         "err_dec err_psi err_phase err_geocent_time err_sky_location"
     )
 
     data = [
-        751.,
+        751.6,
         1.39999999999e00,
         1.39999999999e00,
         1.00000000000e-02,
@@ -180,8 +181,8 @@ def test_fisher_analysis_output(mocker):
 
 def test_fisher_analysis_output_nosky(mocker):
     params = {
-        "mass_1": 1.4,
-        "mass_2": 1.4,
+        "mass_1_source": 1.4,
+        "mass_2_source": 1.4,
         "redshift": 0.01,
         "luminosity_distance": 40,
         "theta_jn": 5 / 6 * np.pi,
@@ -197,6 +198,7 @@ def test_fisher_analysis_output_nosky(mocker):
         parameter_values[key] = np.full((1,), item)
 
     fisher_parameters = list(params.keys())
+    fisher_parameters.remove('redshift')
     fisher_parameters.remove('dec')
 
     network = Network(
@@ -217,14 +219,14 @@ def test_fisher_analysis_output_nosky(mocker):
     )
 
     header = (
-        "network_SNR mass_1 mass_2 redshift luminosity_distance "
-        "theta_jn ra dec psi phase geocent_time err_mass_1 err_mass_2 "
+        "network_SNR mass_1_source mass_2_source redshift luminosity_distance "
+        "theta_jn ra dec psi phase geocent_time err_mass_1_source err_mass_2_source "
         "err_luminosity_distance err_theta_jn err_ra "
         "err_psi err_phase err_geocent_time"
     )
 
     data = [
-        751.,
+        751.6,
         1.400E+00,
         1.400E+00,
         1.000E-02,
@@ -260,8 +262,8 @@ def test_fisher_analysis_output_nosky(mocker):
 
 def test_saving_matrices(mocker):
     params = {
-        "mass_1": 1.4,
-        "mass_2": 1.4,
+        "mass_1_source": 1.4,
+        "mass_2_source": 1.4,
         "redshift": 0.01,
         "luminosity_distance": 40,
         "theta_jn": 5 / 6 * np.pi,
