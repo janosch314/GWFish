@@ -99,7 +99,7 @@ def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
         zmax = optimize.root(lambda x: dSNR(x, network.detectors[d], detSNR[1]), 5).x[0]
 
         print(network.detectors[d].name + ' horizon (time-invariant antenna pattern; M={:.3f}; SNR>{:.2f}): z={:.3f}'
-              .format(local_paramss['mass_1'] + local_params['mass_2'], detSNR[1], zmax))
+              .format(local_params['mass_1'] + local_params['mass_2'], detSNR[1], zmax))
 
 
 def scalar_product(deriv1, deriv2, detector):
