@@ -26,7 +26,7 @@ Assuming we already know what the values of the parameters should be, we can gen
 >>> param_dict = {
 ...     'mass_1_source': 1.4, 
 ...     'mass_2_source': 1.3, 
-...		'redshift': 0.01*one,
+...		'redshift': 0.01,
 ...     'luminosity_distance': 400,
 ...     'theta_jn': 5/6 * np.pi,
 ...     'ra': 3.45,
