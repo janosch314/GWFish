@@ -24,8 +24,8 @@ Assuming we already know what the values of the parameters should be, we can gen
 >>> import numpy as np
 
 >>> param_dict = {
-...     'mass_1': 1.4, 
-...     'mass_2': 1.3, 
+...     'mass_1_source': 1.4, 
+...     'mass_2_source': 1.3, 
 ...     'luminosity_distance': 400,
 ...     'theta_jn': 5/6 * np.pi,
 ...     'ra': 3.45,
@@ -105,8 +105,8 @@ The `errors` array contains the one-sigma errors for all the parameters included
 ```python
 >>> for name, error in zip(parameters.keys(), errors[0]):
 ...     print(f'{name}: {error:.2e}') 
-mass_1: 1.25e-04
-mass_2: 1.15e-04
+mass_1_source: 1.25e-04
+mass_2_source: 1.15e-04
 luminosity_distance: 6.44e+01
 theta_jn: 2.80e-01
 ra: 9.82e-03

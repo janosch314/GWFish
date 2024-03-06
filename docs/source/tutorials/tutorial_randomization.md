@@ -43,8 +43,8 @@ it will suffice for this tutorial, and it will allow us to run quickly.
 >>> ns = 10
 >>> one = np.ones((ns,))
 >>> parameters = pd.DataFrame.from_dict({
-...    'mass_1': 1.4*one, 
-...    'mass_2': 1.4*one, 
+...    'mass_1_source': 1.4*one, 
+...    'mass_2_source': 1.4*one, 
 ...    'redshift': 0.01*one,
 ...    'luminosity_distance': 400*one,
 ...    'theta_jn': np.arccos(rng.uniform(-1., 1., size=(ns,))),
