@@ -24,9 +24,8 @@ Assuming we already know what the values of the parameters should be, we can gen
 >>> import numpy as np
 
 >>> param_dict = {
-...     'mass_1_source': 1.4, 
-...     'mass_2_source': 1.3, 
-...		'redshift': 0.01,
+...     'mass_1': 1.4 * (1 + 0.01), 
+...     'mass_2': 1.3 * (1 + 0.01), 
 ...     'luminosity_distance': 400,
 ...     'theta_jn': 5/6 * np.pi,
 ...     'ra': 3.45,
@@ -68,7 +67,7 @@ Once we have this population dictionary, we can compute the required errors by d
 ... )
 
 >>> print(f'{snr[0]:.0f}')
-287
+285
 
 >>> print(f'{errors[0].shape}')
 (9,)
@@ -106,15 +105,15 @@ The `errors` array contains the one-sigma errors for all the parameters included
 ```python
 >>> for name, error in zip(parameters.keys(), errors[0]):
 ...     print(f'{name}: {error:.2e}') 
-mass_1_source: 1.34e-04
-mass_2_source: 1.23e-04
-luminosity_distance: 6.33e+01
-theta_jn: 2.75e-01
-ra: 9.68e-03
-dec: 4.68e-03
-psi: 7.11e-01
-phase: 1.43e+00
-geocent_time: 2.67e-05
+mass_1: 1.30e-04
+mass_2: 1.20e-04
+luminosity_distance: 6.38e+01
+theta_jn: 2.77e-01
+ra: 9.76e-03
+dec: 4.72e-03
+psi: 7.17e-01
+phase: 1.44e+00
+geocent_time: 2.69e-05
 
 ```
 
@@ -125,9 +124,9 @@ The sky localization error is given separately:
 ```python
 >>> from GWFish.modules.fishermatrix import sky_localization_percentile_factor
 >>> print(f'{sky_localization[0]:.2e}')
-6.54e-05
+6.65e-05
 >>> print(f'{sky_localization[0] * sky_localization_percentile_factor():.2e}')
-9.89e-01
+1.00e+00
 
 ```
 
