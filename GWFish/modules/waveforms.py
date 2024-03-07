@@ -271,8 +271,8 @@ class LALFD_Waveform(Waveform):
             self._lalsim_caller = lalsim.SimInspiralChooseFDWaveformSequence
             self._lalsim_args = [
                 self.gw_params['phase'],
-                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
-                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_1'] * lal.MSUN_SI, # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI, # in [kg]
                 self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'], 
                 self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
                 self.f_ref,  # reference frequency
@@ -286,8 +286,8 @@ class LALFD_Waveform(Waveform):
             self._waveform_postprocessing = self._hf_postproccessing_SimInspiralFD
             self._lalsim_caller = lalsim.SimInspiralFD
             self._lalsim_args = [
-                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
-                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_1'] * lal.MSUN_SI, # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI, # in [kg]
                 self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'], 
                 self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
                 self.gw_params['luminosity_distance'] * lal.PC_SI * 1e6,  # in [m]
@@ -379,8 +379,8 @@ class LALTD_Waveform(LALFD_Waveform):
             self._waveform_postprocessing = self._ht_postproccessing_SimInspiralTD    
             self._lalsim_caller = lalsim.SimInspiralTD
             self._lalsim_args = [
-                self.gw_params['mass_1'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
-                self.gw_params['mass_2'] * lal.MSUN_SI * (1 + self.gw_params['redshift']),  # in [kg]
+                self.gw_params['mass_1'] * lal.MSUN_SI, # in [kg]
+                self.gw_params['mass_2'] * lal.MSUN_SI, # in [kg]
                 self.gw_params['spin_1x'], self.gw_params['spin_1y'], self.gw_params['spin_1z'],
                 self.gw_params['spin_2x'], self.gw_params['spin_2y'], self.gw_params['spin_2z'],
                 self.gw_params['luminosity_distance'] * lal.PC_SI * 1e6,  # in [m]
