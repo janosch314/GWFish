@@ -46,6 +46,11 @@ def fft_derivs_at_detectors(deriv_list, frequency_vector):
     idx_f_high = int(frequency_vector[-1,0]/delta_f)
 
     return np.vstack(ffd_deriv_list).T[idx_f_low:idx_f_high+1,:]
+    
+
+#############################################################################################
+####################################### Derivatives #########################################
+#############################################################################################
 
 class Derivative:
     """
@@ -92,8 +97,8 @@ class Derivative:
     @property
     def projection_at_parameters(self):
         if self._projection_at_parameters is None:
-            self._projection_at_parameters = det.projection(self.local_params, self.detector,
-                                                            self.waveform_at_parameters[0], # wave
+            self._projection_at_parameters = det.projection(self.local_params,
+                                                            self.detector self.waveform_at_parameters[0], # wave
                                                             self.waveform_at_parameters[1]) # t(f)
         return self._projection_at_parameters
 
@@ -124,12 +129,8 @@ class Derivative:
 
             if target_parameter in ['ra', 'dec', 'psi']:  # these parameters do not influence the waveform
     
-                signal1 = det.projection(self.pv_set1, self.detector, 
-                                         self.waveform_at_parameters[0], 
-                                         self.waveform_at_parameters[1])
-                signal2 = det.projection(self.pv_set2, self.detector, 
-                                         self.waveform_at_parameters[0], 
-                                         self.waveform_at_parameters[1])
+                signal1 = det.projection(self.pv_set1, self.detector, self.waveform_at_parameters[0], self.waveform_at_parameters[1])
+                signal2 = det.projection(self.pv_set2, self.detector, self.waveform_at_parameters[0], self.waveform_at_parameters[1])
     
                 derivative = (signal2 - signal1) / dp
             else:
@@ -150,9 +151,7 @@ class Derivative:
                 signal1 = det.projection(self.pv_set1, self.detector, wave1, t_of_f1 + self.tc)
                 signal2 = det.projection(self.pv_set2, self.detector, wave2, t_of_f2 + self.tc)
     
-
-                derivative = np.exp(2j * np.pi * self.detector.frequencyvector \
-                                    * self.tc) * (signal2 - signal1) / dp
+                derivative = np.exp(2j * np.pi * self.detector.frequencyvector * self.tc) * (signal2 - signal1) / dp
                                     
         self.waveform_object.update_gw_params(self.local_params)
 
@@ -160,6 +159,11 @@ class Derivative:
 
     def __call__(self, target_parameter):
         return self.with_respect_to(target_parameter)
+        
+
+#############################################################################################
+####################################### Fisher Matrix #######################################
+#############################################################################################
 
 class FisherMatrix:
     def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
@@ -194,6 +198,10 @@ class FisherMatrix:
 
     def __call__(self):
         return self.fm
+
+#############################################################################################
+###################################### Errors & sky localization ############################
+#############################################################################################
 
 def sky_localization_area(
     network_fisher_inverse: np.ndarray,
@@ -234,7 +242,7 @@ def compute_detector_fisher(
     signal_parameter_values: Union[pd.DataFrame, dict[str, float]],
     fisher_parameters: Optional[list[str]] = None,
     waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
-    waveform_class: type(wf.Waveform) = wf.LALFD_Waveform,
+    waveform_class = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
     redefine_tf_vectors: bool = False,
 ) -> tuple[np.ndarray, float]:
@@ -426,7 +434,11 @@ def compute_network_errors(
         )
 
     return detected, network_snr, parameter_errors, None
+    
 
+#############################################################################################
+####################################### File outputs ########################################
+#############################################################################################
 
 def errors_file_name(
     network: det.Network, sub_network_ids: list[int], population_name: str
