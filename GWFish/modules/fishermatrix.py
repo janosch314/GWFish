@@ -98,7 +98,8 @@ class Derivative:
     def projection_at_parameters(self):
         if self._projection_at_parameters is None:
             self._projection_at_parameters = det.projection(self.local_params,
-                                                            self.detector self.waveform_at_parameters[0], # wave
+                                                            self.detector, 
+                                                            self.waveform_at_parameters[0], # wave
                                                             self.waveform_at_parameters[1]) # t(f)
         return self._projection_at_parameters
 
