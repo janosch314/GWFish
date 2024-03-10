@@ -505,9 +505,10 @@ class TaylorF2(Waveform):
         return self._maxn
 
     def calculate_frequency_domain_strain(self):
-        ff = self.frequencyvector[:,np.newaxis]
-        ones = np.ones((len(ff), 1))
-    
+        
+        frequencyvector = self.frequencyvector[:,np.newaxis]
+        f_isco = aux.fisco(self.gw_params)  #inner stable circular orbit 
+        
         phic = self.gw_params['phase']
         tc = self.gw_params['geocent_time']
         z = self.gw_params['redshift']
@@ -519,51 +520,59 @@ class TaylorF2(Waveform):
     
         M = M1 + M2
         mu = M1 * M2 / M
-    
         Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-    
-        # compute GW amplitudes (https://arxiv.org/pdf/2012.01350.pdf)
-        hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / \
-             (np.pi * ff) ** (7. / 6.) * (1. + np.cos(iota) ** 2.)
-        hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / \
-             (np.pi * ff) ** (7. / 6.) * 2. * np.cos(iota)
-    
+
+        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
+        ones = np.ones((len(ff), 1))
+
         C = 0.57721566  # Euler constant
         eta = mu / M
-    
-        f_isco = aux.fisco(self.gw_params)
+        eta2 = eta*eta
+        eta3 = eta2*eta
+
+        chi_eff = (M1*chi_1 + M2*chi_2)/M
+        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
+        chi_s = 0.5*(chi_1 + chi_2)
+        chi_a = 0.5*(chi_1 - chi_2)
+
+        #f_cut = cut_order * f_isco
+        cut = self.gw_params['cut']
     
         v = (np.pi * cst.G * M / cst.c ** 3 * ff) ** (1. / 3.)
+
+        # compute GW amplitudes (https://arxiv.org/pdf/2012.01350.pdf)
+        hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) /  (np.pi * ff) ** (7. / 6.) * (1. + np.cos(iota) ** 2.)
+        hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / (np.pi * ff) ** (7. / 6.) * 2. * np.cos(iota)
     
-        # coefficients of the PN expansion (https://arxiv.org/pdf/0907.0700.pdf)
-        pp = np.hstack((1. * ones, 0. * ones, 20. / 9. * (743. / 336. + eta * \
-                        11. / 4.) * ones, -16 * np.pi * ones, 10. * \
-                        (3058673. / 1016064. + 5429. / 1008. * eta + \
-                        617. / 144. * eta ** 2) * ones, \
-                        np.pi * (38645. / 756. - 65. / 9. * eta) * \
-                        (1 + 3. * np.log(v)),
-                        11583231236531. / 4694215680. - 640. / 3. * \
-                        np.pi ** 2 - 6848. / 21. * (C + np.log(4 * v)) + \
-                        (-15737765635. / 3048192. + 2255. / 12. * \
-                        np.pi ** 2) * eta + 76055. / 1728. * eta ** 2 - \
-                        127825. / 1296. * eta ** 3,
-                        np.pi * (77096675. / 254016. + 378515. / 1512. * \
-                        eta - 74045. / 756. * eta ** 2) * ones))
-    
-        self.psi = 0.
-    
-        for k in np.arange(self.maxn):
-            PNc = pp[:, k]
-            self.psi += PNc[:, np.newaxis] * v ** k
-    
-        self.psi *= 3. / (128. * eta * v ** 5)
-        self.psi += 2. * np.pi * ff * tc - phic - np.pi / 4.
+
+        phi_0 = 1.
+        phi_1 = 0.
+        phi_2 = 3715./756. + 55./9.*eta
+        phi_3 = -16.*np.pi + 113./3.*delta_mass*chi_a + (113./3. - 76./3.*eta)*chi_s
+        phi_4 = 15293365./508032. + 27145./504.*eta + 3085./72.*eta2 + (-(405./8.) + 200*eta)*chi_a**2 - 405./4.*delta_mass*chi_a*chi_s + (-(405./8.) + 5./2.*eta)*chi_s**2
+        phi_5 = (1 + np.log(np.pi*ff))*(38645./756.*np.pi - 65./9.*np.pi*eta + delta_mass*(-(732985./2268.) - 140./9.*eta)*chi_a + (-(732985./2268.) + 24260./81.*eta + 340./9.*eta2)*chi_s)
+        phi_6 = 11583231236531./4694215680. - 6848./21.*C - (640.*np.pi**2)/3. + (-15737765635./3048192. + 2255.*np.pi**2/12.)*eta + 76055.*eta2/1728. - 127825.*eta3/1296. - 6848./63.*np.log(64*np.pi*ff) + 2270./3.*np.pi*delta_mass*chi_a + (2270.*np.pi/3. - 520.*np.pi*eta)*chi_s
+        phi_7 = (77096675./254016. + 378515./1512.*eta - 74045./756.*eta2)*np.pi + delta_mass*(-(25150083775./3048192.) + 26804935./6048.*eta - 1985./48.*eta2)*chi_a + (-(25150083775./3048192.) + 10566655595./762048.*eta - 1042165./3024.*eta2 + 5345./36.*eta3)*chi_s
+
+
+        psi_TF2 = 2.*np.pi*ff*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
+                3./(128.*eta)*((np.pi*ff)**(-5./3.) +\
+                phi_2*(np.pi*ff)**(-1.) +\
+                phi_3*(np.pi*ff)**(-2./3.) +\
+                phi_4*(np.pi*ff)**(-1./3.) +\
+                phi_5 +\
+                phi_6*(np.pi*ff)**(1./3.) +\
+                phi_7*(np.pi*ff)**(2./3.))
+
+        psi_tot = psi_TF2 + 2. * np.pi * ff * tc - phic - np.pi / 4.
+        self.psi = psi_tot
     
         phase = np.exp(1.j * self.psi)
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
 
         # very crude high-f cut-off:
-        polarizations[np.where(ff[:,0] > 4 * f_isco), :] = 0.j
+        f_cut = cut*f_isco
+        polarizations[np.where(ff[:,0] > f_cut), :] = 0.j
 
         self._frequency_domain_strain = polarizations
 
