@@ -402,7 +402,7 @@ class TaylorF2_PPE(Waveform):
         
         #EARLY INSPIRAL PART OF THE PHASE
 
-        psi_TF2 = 2.*np.pi*ff*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\ 
+        psi_TF2 = 2.*np.pi*ff*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
                 3./(128.*eta)*((np.pi*ff)**(-5./3.) +\
                 phi_2*(np.pi*ff)**(-1.) +\
                 phi_3*(np.pi*ff)**(-2./3.) +\
