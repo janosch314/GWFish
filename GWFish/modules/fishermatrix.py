@@ -60,7 +60,7 @@ class Derivative:
 
     eps: 1e-5, this follows the simple "cube root of numerical precision" recommendation, which is 1e-16 for double
     """
-    def __init__(self, waveform, parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
+    def __init__(self, waveform, parameters, detector, eps=1e-9, waveform_class=wf.Waveform):
         self.waveform = waveform
         self.detector = detector
         self.eps = eps
@@ -167,7 +167,7 @@ class Derivative:
 #############################################################################################
 
 class FisherMatrix:
-    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
+    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-9, waveform_class=wf.Waveform):
         self.fisher_parameters = fisher_parameters
         self.detector = detector
         self.derivative = Derivative(waveform, parameters, detector, eps=eps, waveform_class=waveform_class)
