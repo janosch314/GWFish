@@ -144,6 +144,7 @@ class Waveform:
             'beta':0., 'PN':0.,
             #gIMR
             'delta_phi_0':0.,
+            'delta_phi_1':1.,
             'delta_phi_2':0.,
             'delta_phi_3':0.,
             'delta_phi_4':0.,
@@ -355,6 +356,7 @@ class TaylorF2_PPE(Waveform):
         
         #gIMR phase parameters
         delta_phi_0 = self.gw_params['delta_phi_0']
+        delta_phi_1 = self.gw_params['delta_phi_1']
         delta_phi_2 = self.gw_params['delta_phi_2']
         delta_phi_3 = self.gw_params['delta_phi_3']
         delta_phi_4 = self.gw_params['delta_phi_4']
@@ -401,7 +403,7 @@ class TaylorF2_PPE(Waveform):
         #EARLY INSPIRAL PART OF THE PHASE
 
         psi_TF2 = 2.*np.pi*ff*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
-                3./(128.*eta)*((np.pi*ff)**(-5./3.) +\
+                3./(128.*eta)*((np.pi*ff)**(-5./3.) +\    
                 phi_2*(np.pi*ff)**(-1.) +\
                 phi_3*(np.pi*ff)**(-2./3.) +\
                 phi_4*(np.pi*ff)**(-1./3.) +\
@@ -410,6 +412,7 @@ class TaylorF2_PPE(Waveform):
                 phi_7*(np.pi*ff)**(2./3.))
     
         psi_gIMR = 3./(128.*eta)*(delta_phi_0*(np.pi*ff)**(-5./3.) +\
+                delta_phi_1*(np.pi*ff)**(-4./3.)+\
                 phi_2*delta_phi_2*(np.pi*ff)**(-1.) +\
                 phi_3*delta_phi_3*(np.pi*ff)**(-2./3.) +\
                 phi_4*delta_phi_4*(np.pi*ff)**(-1./3.) +\
@@ -613,7 +616,7 @@ class IMRPhenomD_PPE(Waveform):
                         phi_4*(np.pi)**(-1./3.)*(-1./3.*ff**(2./3.)) +\
                         phi_6*(np.pi)**(1./3.)*(1./3.*ff**(4./3.)) +\
                         phi_7*(np.pi)**(2./3.)*(2./3.*ff**(5./3.))
-                        )
+                      )
         
         psi_ppe_prime = beta*(2*PN-5.)/3.*((np.pi*(ff/(cst.G*M/cst.c**3))*Mc)**((2*PN-8.)/3.))
 
