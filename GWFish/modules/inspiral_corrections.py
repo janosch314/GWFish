@@ -679,7 +679,7 @@ class IMRPhenomD_PPE(Waveform):
         ########################################################################
         # Impose C1 conditions at the interface (same conditions as in IMRPhenomD but with different psi_ins_prime)
         
-        beta1 = eta*psi_ins_prime_a_f1 - beta2*f1**(-1.) - beta3*f1**(-4.)  #psi_ins_prime_f1 = psi_int_prime_f1
+        beta1 = eta*psi_ins_prime_f1 - beta2*f1**(-1.) - beta3*f1**(-4.)  #psi_ins_prime_f1 = psi_int_prime_f1
         beta0 = eta*psi_ins_tot_f1 - beta1*f1 - beta2*np.log(f1) + beta3/3.*f1**(-3.) #psi_ins_tot_f1 = psi_int_f1
        
         #INTERMEDIATE PART OF THE PHASE and its analytical derivative
