@@ -164,7 +164,7 @@ class Waveform:
             'beta':0., 'PN':0.,
             #gIMR
             'delta_phi_0':0.,
-            'delta_phi_1':1.,
+            'delta_phi_1':0.,
             'delta_phi_2':0.,
             'delta_phi_3':0.,
             'delta_phi_4':0.,
