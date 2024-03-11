@@ -159,7 +159,7 @@ class Waveform:
             'mass_1': 0., 'mass_2': 0., 'luminosity_distance': 0., 
             'redshift': 0., 'theta_jn': 0., 'phase': 0., 'geocent_time': 0., 
             'a_1': 0., 'tilt_1': 0., 'phi_12': 0., 'a_2': 0., 'tilt_2': 0., 
-            'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0.
+            'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0. , 'cut' : 4.
         }
 
     def update_gw_params(self, new_gw_params):
@@ -535,7 +535,7 @@ class TaylorF2(Waveform):
         chi_s = 0.5*(chi_1 + chi_2)
         chi_a = 0.5*(chi_1 - chi_2)
 
-        #f_cut = cut_order * f_isco
+        #f_cut = cut_order * f_isco, default is 4*f_isco
         cut = self.gw_params['cut']
     
         v = (np.pi * cst.G * M / cst.c ** 3 * ff) ** (1. / 3.)
