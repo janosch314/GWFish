@@ -10,23 +10,13 @@ import sympy as sp
 from scipy.interpolate import interp1d
 import scipy.optimize as optimize
 
-#LAL libraries
-
-try:
-    import lalsimulation as lalsim
-    import lal
-    from lal import CreateREAL8Vector
-except ModuleNotFoundError as err:
-    uselal = err
-    logging.warning('LAL package is not installed.'+\
-                    'Only GWFish waveforms available.')
-
 #GWFish libraries
 
 import GWFish as gw 
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
+from GWFish.modules.waveforms.py import Waveform
 
 ################################################################################
 ########################### Some FUNCTION DEFINITIONS ##########################
@@ -66,156 +56,7 @@ def t_of_f_PN(parameters, frequencyvector):
     t_of_f = -5./(256.*np.pi**(8/3))/Mc**(5/3)/frequencyvector**(8/3)
 
     return t_of_f+parameters['geocent_time']
-
-################################################################################
-################### WAVEFORMS PARAMETERS AND VARIABLES #########################
-################################################################################
-
-class Waveform:
-
-    def __init__(self, name, gw_params, data_params):
-        aux.check_and_convert_to_mass_1_mass_2(gw_params)
-        self.name = name
-        self._set_default_gw_params()
-        self.gw_params.update(gw_params)
-        self.data_params = data_params
-        self._frequency_domain_strain = None
-        self._time_domain_strain = None
-        self._f_ref = None
-
-        if 'frequencyvector' in data_params:
-            self.frequencyvector = data_params['frequencyvector']
-        else:
-            self.frequencyvector = None
-
-        if 'delta_t' in data_params:
-            self.delta_t = delta_t
-        else:
-            # Set sampling frequency to Nyquist frequency
-            self.delta_t = 0.5/self.f_max
-
-    def __call__(self):
-        """ Return frequency-domain polarization modes """
-        return self.frequency_domain_strain
-
-    def calculate_frequency_domain_strain(self):
-        raise NotImplementedError('Frequency-domain strain is not'+ 'implemented in this class')
-
-    @property
-    def frequency_domain_strain(self):
-        if self._frequency_domain_strain is None:
-            self.calculate_frequency_domain_strain()
-            
-        return self._frequency_domain_strain
-
-    def calculate_time_domain_strain(self):
-        raise NotImplementedError('Time-domain strain is not implemeted'+'in this class')
-
-    @property
-    def time_domain_strain(self):
-        if self._time_domain_strain is None:
-            self.calculate_time_domain_strain()
-        return self._time_domain_strain
-
-    @property
-    def time_domain_strain(self):
-        if self._time_domain_strain is None:
-            self.calculate_time_domain_strain()
-        return self._frequency_domain_strain
-
-    def _set_default_gw_params(self):
-        self.gw_params = {
-            'mass_1': 0., 
-            'mass_2': 0., 
-            'luminosity_distance': 0., 
-            'redshift': 0., 
-            'theta_jn': 0., 
-            'phase': 0., 
-            'geocent_time': 0., 
-            'a_1': 0., 
-            'tilt_1': 0., 
-            'phi_12': 0., 
-            'a_2': 0., 
-            'tilt_2': 0., 
-            'phi_jl': 0., 
-            #NS parameters
-            'lambda_1': 0., 'lambda_2': 0., 
-            #ppE parameters
-            'beta':0., 'PN':0.,
-            #gIMR
-            'delta_phi_0':0.,
-            'delta_phi_1':1.,
-            'delta_phi_2':0.,
-            'delta_phi_3':0.,
-            'delta_phi_4':0.,
-            'delta_phi_5':0.,
-            'delta_phi_6':0.,
-            'delta_phi_7':0.,
-            #f_cut for TaylorF2_PPE
-            'cut':4.
-        }
-
-    def update_gw_params(self, new_gw_params):
-        self.gw_params.update(new_gw_params)
-        self._frequency_domain_strain = None
-        self._time_domain_strain = None
-
-    @property
-    def frequencyvector(self):
-        return self._frequencyvector
-
-    @frequencyvector.setter
-    def frequencyvector(self, new_frequencyvector):
-        self._frequencyvector = np.squeeze(new_frequencyvector)
-
-    @property
-    def delta_t(self):
-        return self._delta_t
-
-    @delta_t.setter
-    def delta_t(self, new_delta_t):
-        self._delta_t = new_delta_t
-
-    @property
-    def f_ref(self):
-        """
-        Setting reference frequency to minimum frequency if not specified
-        """
-        if self._f_ref is None:
-            if 'f_ref' in self.data_params:
-                self._f_ref = self.data_params['f_ref']
-            else:
-                self._f_ref = self.frequencyvector[0]
-        return self._f_ref
-
-    @property
-    def f_min(self):
-        return self._frequencyvector[0]
-
-    @property
-    def f_max(self):
-        return self._frequencyvector[-1]
-
-    @property
-    def f_nyquist(self):
-        return self.f_max
-
-    @property
-    def t_obs(self):
-        return 1/self.delta_f
-
-    @property
-    def delta_f(self):
-        return self._frequencyvector[1] - self._frequencyvector[0]
-
-    @property
-    def t_of_f(self):
-        return t_of_f_PN(self.gw_params, self.frequencyvector)
     
-
-################################################################################
-########################### Other FUNCTION DEFINITIONS #########################
-################################################################################
     
 def step_function(f1, f2):
     vec = []
