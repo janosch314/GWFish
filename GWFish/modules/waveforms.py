@@ -550,9 +550,9 @@ class TaylorF2(Waveform):
 
         # compute GW amplitudes (https://arxiv.org/pdf/2012.01350.pdf)
         hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
-             Mc ** (5. / 6.)/(np.pi * ff*cst.c**3/(cst.G*M)) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
+             Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
         hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
-             Mc ** (5. / 6.)/(np.pi * ff*cst.c**3/(cst.G*M)) ** (7. / 6.) *2. * np.cos(iota)
+             Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *2. * np.cos(iota)
 
         phi_0 = 1.
         phi_1 = 0.
