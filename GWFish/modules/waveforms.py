@@ -519,14 +519,14 @@ class TaylorF2(Waveform):
         M1 = self.gw_params['mass_1'] * cst.Msol
         M2 = self.gw_params['mass_2'] * cst.Msol
 
+        chi_1 = self.gw_params.get('a_1', 0.0)
+        chi_2 = self.gw_params.get('a_2', 0.0)
+        
         if (M1 < M2):
             aux_mass = M1
             M1 = M2
             M2 = aux_mass
 
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-    
         M = M1 + M2
         mu = M1 * M2 / M
         Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
