@@ -60,7 +60,7 @@ class Derivative:
 
     eps: 1e-5, this follows the simple "cube root of numerical precision" recommendation, which is 1e-16 for double
     """
-    def __init__(self, waveform, parameters, detector, eps=1e-9, waveform_class=wf.Waveform):
+    def __init__(self, waveform, parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
         self.waveform = waveform
         self.detector = detector
         self.eps = eps
@@ -130,8 +130,10 @@ class Derivative:
 
             if target_parameter in ['ra', 'dec', 'psi']:  # these parameters do not influence the waveform
     
-                signal1 = det.projection(self.pv_set1, self.detector, self.waveform_at_parameters[0], self.waveform_at_parameters[1])
-                signal2 = det.projection(self.pv_set2, self.detector, self.waveform_at_parameters[0], self.waveform_at_parameters[1])
+                signal1 = det.projection(self.pv_set1, self.detector,
+                                         self.waveform_at_parameters[0], self.waveform_at_parameters[1])
+                signal2 = det.projection(self.pv_set2, self.detector, 
+                                         self.waveform_at_parameters[0], self.waveform_at_parameters[1])
     
                 derivative = (signal2 - signal1) / dp
             else:
@@ -152,7 +154,8 @@ class Derivative:
                 signal1 = det.projection(self.pv_set1, self.detector, wave1, t_of_f1 + self.tc)
                 signal2 = det.projection(self.pv_set2, self.detector, wave2, t_of_f2 + self.tc)
     
-                derivative = np.exp(2j * np.pi * self.detector.frequencyvector * self.tc) * (signal2 - signal1) / dp
+                derivative = np.exp(2j * np.pi * self.detector.frequencyvector * self.tc) *\
+                            (signal2 - signal1) / dp
                                     
         self.waveform_object.update_gw_params(self.local_params)
 
@@ -167,7 +170,7 @@ class Derivative:
 #############################################################################################
 
 class FisherMatrix:
-    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-9, waveform_class=wf.Waveform):
+    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
         self.fisher_parameters = fisher_parameters
         self.detector = detector
         self.derivative = Derivative(waveform, parameters, detector, eps=eps, waveform_class=waveform_class)
@@ -243,7 +246,7 @@ def compute_detector_fisher(
     signal_parameter_values: Union[pd.DataFrame, dict[str, float]],
     fisher_parameters: Optional[list[str]] = None,
     waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
-    waveform_class = wf.LALFD_Waveform,
+    waveform_class : type(wf.Waveform) = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
     redefine_tf_vectors: bool = False,
 ) -> tuple[np.ndarray, float]:
@@ -292,7 +295,8 @@ def compute_detector_fisher(
     t_of_f = waveform_obj.t_of_f
 
     if redefine_tf_vectors:
-        signal, timevector, frequencyvector = det.projection(signal_parameter_values, detector, wave, t_of_f, redefine_tf_vectors=True)
+        signal, timevector, frequencyvector = det.projection(signal_parameter_values, detector,
+                                                             wave, t_of_f, redefine_tf_vectors=True)
     else:
         signal = det.projection(signal_parameter_values, detector, wave, t_of_f)
         frequencyvector = detector.frequencyvector[:, 0]
@@ -306,14 +310,15 @@ def compute_detector_fisher(
         else:
             fisher_parameters = signal_parameter_values.columns
 
-    return FisherMatrix(waveform_model, signal_parameter_values, fisher_parameters, detector, waveform_class=waveform_class).fm, detector_SNR_square
+    return FisherMatrix(waveform_model, signal_parameter_values, fisher_parameters, detector, 
+                        waveform_class=waveform_class).fm, detector_SNR_square
 
 def compute_network_errors(
     network: det.Network,
     parameter_values: pd.DataFrame,
     fisher_parameters: Optional[list[str]] = None,
     waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
-    waveform_class = wf.LALFD_Waveform,
+    waveform_class : type(wf.Waveform) = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
     redefine_tf_vectors: bool = False,
     save_matrices: bool = False,
@@ -390,7 +395,9 @@ def compute_network_errors(
 
         for detector in network.detectors:
             
-            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, waveform_model, waveform_class, use_duty_cycle)
+            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, 
+                                                                           fisher_parameters, waveform_model, 
+                                                                           waveform_class, use_duty_cycle)
             
             network_snr_square += detector_snr_square
         
