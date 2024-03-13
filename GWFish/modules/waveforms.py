@@ -160,8 +160,7 @@ class Waveform:
             'redshift': 0., 'theta_jn': 0., 'phase': 0., 'geocent_time': 0., 
             'a_1': 0., 'tilt_1': 0., 'phi_12': 0., 'a_2': 0., 'tilt_2': 0., 
             'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0.,
-            #f_cut for TaylorF2
-            'cut':4.
+            'cut': 4.
         }
 
     def update_gw_params(self, new_gw_params):
@@ -551,9 +550,9 @@ class TaylorF2(Waveform):
 
         # compute GW amplitudes (https://arxiv.org/pdf/2012.01350.pdf)
         hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
-             Mc ** (5. / 6.)/(np.pi * frequencyvector) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
+             Mc ** (5. / 6.)/(np.pi * ff*cst.c**3/(G*M)) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
         hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
-             Mc ** (5. / 6.)/(np.pi * frequencyvector) ** (7. / 6.) *2. * np.cos(iota)
+             Mc ** (5. / 6.)/(np.pi * ff*cst.c**3/(cst.G*M)) ** (7. / 6.) *2. * np.cos(iota)
 
         phi_0 = 1.
         phi_1 = 0.
