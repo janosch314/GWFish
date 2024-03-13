@@ -775,6 +775,8 @@ class IMRPhenomD(Waveform):
                             3./5.*sigma3*ff**(5./3.) +\
                             1./2.*sigma4*ff**2)
 
+        self.psi_ins = psi_ins
+
         psi_TF2_prime = 2.*np.pi*cst.c**3/(cst.G*M)*tc +\
                       3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*ff**(-8./3.)) +\
                       phi_2*(np.pi)**(-1.)*(-1.*ff**(-2.)) +\
@@ -787,6 +789,8 @@ class IMRPhenomD(Waveform):
                       phi_7*(np.pi)**(2./3.)*(2./3.*ff**(-1./3.)))
         
         psi_ins_prime = psi_TF2_prime + 1./eta*(sigma2*ff**(1./3.) + sigma3*ff**(2./3.) + sigma4*ff)
+
+        self.psi_ins_prime = psi_ins_prime 
     
         # Evaluate phase and its derivate at the interface between inspiral and intermediate phase
         f1 = 0.018
@@ -808,6 +812,8 @@ class IMRPhenomD(Waveform):
         
         psi_ins_f1 = psi_TF2_f1 + psi_late_ins_f1
 
+        self.psi_ins_f1 = psi_ins_f1
+
         psi_TF2_prime_f1 = 2.*np.pi*cst.c**3/(cst.G*M)*tc +\
                         3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*f1**(-8./3.)) +\
                         phi_2*(np.pi)**(-1.)*(-1.*f1**(-2.)) +\
@@ -824,6 +830,8 @@ class IMRPhenomD(Waveform):
                                         sigma4*f1)
     
         psi_ins_prime_f1 = psi_TF2_prime_f1 + psi_late_ins_prime_f1
+
+        self.psi_ins_prime_f1 = psi_ins_prime_f1
     
         # Coefficients for the intermediate phase
         beta2 = -3.282701958759534 - 9.051384468245866*eta\
@@ -901,9 +909,12 @@ class IMRPhenomD(Waveform):
     
        
         psi_tot = psi_ins + psi_int + psi_MR
+        self.psi_tot = psi_tot
+        
         psi_prime_tot = psi_ins_prime*theta_minus1+theta_minus2*psi_int_prime*theta_plus1+theta_plus2*psi_MR_prime
-    
-    
+        self.psi_prime_tot = psi_prime_tot
+
+        
         # Construct the phase
         phase = np.exp(1.j * psi_tot)
         #########################################################################################################
