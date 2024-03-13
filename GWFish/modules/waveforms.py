@@ -160,7 +160,6 @@ class Waveform:
             'redshift': 0., 'theta_jn': 0., 'phase': 0., 'geocent_time': 0., 
             'a_1': 0., 'tilt_1': 0., 'phi_12': 0., 'a_2': 0., 'tilt_2': 0., 
             'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0.,
-            'cut': 4.
         }
 
     def update_gw_params(self, new_gw_params):
@@ -521,6 +520,7 @@ class TaylorF2(Waveform):
 
         chi_1 = self.gw_params.get('a_1', 0.0)
         chi_2 = self.gw_params.get('a_2', 0.0)
+        cut = self.gw_params.get('cut', 4.0)
         
         if (M1 < M2):
             aux_mass = M1
