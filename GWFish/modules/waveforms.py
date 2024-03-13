@@ -159,7 +159,7 @@ class Waveform:
             'mass_1': 0., 'mass_2': 0., 'luminosity_distance': 0., 
             'redshift': 0., 'theta_jn': 0., 'phase': 0., 'geocent_time': 0., 
             'a_1': 0., 'tilt_1': 0., 'phi_12': 0., 'a_2': 0., 'tilt_2': 0., 
-            'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0., 'cut': 0.
+            'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0., 'cut': 4.
         }
 
     def update_gw_params(self, new_gw_params):
