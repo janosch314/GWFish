@@ -571,8 +571,7 @@ class TaylorF2(Waveform):
                 phi_6*(np.pi*ff)**(1./3.) +\
                 phi_7*(np.pi*ff)**(2./3.))
 
-        psi_tot = psi_TF2 + 2. * np.pi * frequencyvector * tc - phic - np.pi / 4.
-        self.psi = psi_tot
+        self.psi = psi_TF2
     
         phase = np.exp(1.j * self.psi)
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
