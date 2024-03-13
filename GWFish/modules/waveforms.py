@@ -580,12 +580,13 @@ class TaylorF2(Waveform):
                 phi_7*(np.pi*ff)**(2./3.))
 
         self.psi = psi_TF2
-    
         phase = np.exp(1.j * self.psi)
+        
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
 
         # very crude high-f cut-off:
         f_cut = cut*f_isco*cst.G*M/cst.c**3
+        
         polarizations[np.where(ff[:,0] > f_cut), :] = 0.j
 
         self._frequency_domain_strain = polarizations
@@ -721,7 +722,6 @@ class IMRPhenomD(Waveform):
         chi_s = 0.5*(chi_1 + chi_2)
         chi_a = 0.5*(chi_1 - chi_2)
     
-    
         #########################################################################################################
         #########################################################################################################
         #########################################################################################################
@@ -729,25 +729,33 @@ class IMRPhenomD(Waveform):
         # PHASE
     
         # PN expansion of phase
-        # PN coefficients:
         phi_0 = 1.
         phi_1 = 0.
         phi_2 = 3715./756. + 55./9.*eta
         phi_3 = -16.*np.pi + 113./3.*delta_mass*chi_a + (113./3. - 76./3.*eta)*chi_s
-        phi_4 = 15293365./508032. + 27145./504.*eta + 3085./72.*eta2 + (-(405./8.) + 200*eta)*chi_a**2 - \
-                405./4.*delta_mass*chi_a*chi_s + (-(405./8.) + 5./2.*eta)*chi_s**2
-        phi_5 = (1 + np.log(np.pi*ff))*(38645./756.*np.pi - 65./9.*np.pi*eta + \
-                delta_mass*(-(732985./2268.) - 140./9.*eta)*chi_a + (-(732985./2268.) + 24260./81.*eta + 340./9.*eta2)*chi_s)
-        phi_6 = 11583231236531./4694215680. - 6848./21.*C - (640.*np.pi**2)/3. + (-15737765635./3048192. + 2255.*np.pi**2/12.)*eta +\
-                76055.*eta2/1728. - 127825.*eta3/1296. - 6848./63.*np.log(64*np.pi*ff) + 2270./3.*np.pi*delta_mass*chi_a +\
-                (2270.*np.pi/3. - 520.*np.pi*eta)*chi_s
+        phi_4 = 15293365./508032. + 27145./504.*eta + 3085./72.*eta2 + (-(405./8.) +\
+                200*eta)*chi_a**2 - 405./4.*delta_mass*chi_a*chi_s + (-(405./8.) + 5./2.*eta)*chi_s**2
+        phi_5 = 38645./756.*np.pi - 65./9.*np.pi*eta + delta_mass*(-(732985./2268.) -\
+                140./9.*eta)*chi_a + (-(732985./2268.) + 24260./81.*eta + 340./9.*eta2)*chi_s
+        phi_5_l = 3.*phi_5
+        phi_6 = 11583231236531./4694215680. - 6848./21.*C - (640.*np.pi**2)/3. +\
+                (-15737765635./3048192. + 2255.*np.pi**2/12.)*eta + 76055.*eta2/1728. - 127825.*eta3/1296. +\
+                2270./3.*np.pi*delta_mass*chi_a + (2270.*np.pi/3. - 520.*np.pi*eta)*chi_s -6848./63.*np.log(64.)
+        phi_6_l = - 6848./63.*3.
         phi_7 = (77096675./254016. + 378515./1512.*eta - 74045./756.*eta2)*np.pi +\
                 delta_mass*(-(25150083775./3048192.) + 26804935./6048.*eta - 1985./48.*eta2)*chi_a +\
                 (-(25150083775./3048192.) + 10566655595./762048.*eta - 1042165./3024.*eta2 + 5345./36.*eta3)*chi_s
        
-        psi_TF2 = 2.*np.pi*ff*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones + 3./(128.*eta)*((np.pi*ff)**(-5./3.) +\
-                phi_2*(np.pi*ff)**(-1.) + phi_3*(np.pi*ff)**(-2./3.) + phi_4*(np.pi*ff)**(-1./3.) +\
-                phi_5 + phi_6*(np.pi*ff)**(1./3.) + phi_7*(np.pi*ff)**(2./3.))
+        psi_TF2 = 2.*np.pi*ff*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
+                3./(128.*eta)*((np.pi*ff)**(-5./3.) +\
+                phi_2*(np.pi*ff)**(-1.) +\
+                phi_3*(np.pi*ff)**(-2./3.) +\
+                phi_4*(np.pi*ff)**(-1./3.) +\
+                phi_5 +\
+                phi_5_l*np.log(np.pi*ff) +\
+                phi_6*(np.pi*ff)**(1./3.) +\
+                phi_6_l*np.log(np.pi*ff)*(np.pi*ff)**(1./3.) +\
+                phi_7*(np.pi*ff)**(2./3.))
         
         # Coefficients for the late ispiral phase
         sigma2 = -10114.056472621156 - 44631.01109458185*eta\
@@ -763,29 +771,59 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)**2*(-22366.683262266528 - 2.5019716386377467e6*eta + 1.0274495902259542e7*eta2)\
                 + (chi_PN - 1)**3*(-85360.30079034246 - 570025.3441737515*eta + 4.396844346849777e6*eta2)
     
-        psi_ins = psi_TF2 + 1./eta*(3./4.*sigma2*ff**(4./3.) + 3./5.*sigma3*ff**(5./3.) +\
-                        1./2.*sigma4*ff**2)
+        psi_ins = psi_TF2 + 1./eta*(3./4.*sigma2*ff**(4./3.) +\
+                            3./5.*sigma3*ff**(5./3.) +\
+                            1./2.*sigma4*ff**2)
+
+        psi_TF2_prime = 2.*np.pi*cst.c**3/(cst.G*M)*tc +\
+                      3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*ff**(-8./3.)) +\
+                      phi_2*(np.pi)**(-1.)*(-1.*ff**(-2.)) +\
+                      phi_3*(np.pi)**(-2./3.)*(-2./3.*ff**(-5./3.)) +\
+                      phi_4*(np.pi)**(-1./3.)*(-1./3.*ff**(-4./3.)) +\
+                      phi_5_l*(np.pi)*ff**(-1.) +\
+                      phi_6*(np.pi)**(1./3.)*(1./3.*ff**(-2./3.)) +\
+                      phi_6_l*((np.pi)*ff**(-1.)*(np.pi*ff)**(1./3.) +\
+                               np.log(np.pi*ff)*(np.pi)**(1./3.)*(1./3.*ff**(-2./3.))) +\
+                      phi_7*(np.pi)**(2./3.)*(2./3.*ff**(-1./3.)))
         
-        #psi_ins_prime = psi_TF2_prime + 1./eta*(sigma2*ff**(1./3.) + sigma3*ff**(2./3.) + sigma4*ff)
+        psi_ins_prime = psi_TF2_prime + 1./eta*(sigma2*ff**(1./3.) + sigma3*ff**(2./3.) + sigma4*ff)
     
         # Evaluate phase and its derivate at the interface between inspiral and intermediate phase
         f1 = 0.018
-        psi_ins_gradient = interp1d(ff[:,0], np.gradient(psi_ins[:,0]))
     
-        phi_5_f1 = (1 + np.log(np.pi*f1))*(38645./756.*np.pi - 65./9.*np.pi*eta + \
-                delta_mass*(-(732985./2268.) - 140./9.*eta)*chi_a + (-(732985./2268.) + 24260./81.*eta + 340./9.*eta2)*chi_s)
-        phi_6_f1 = 11583231236531./4694215680. - 6848./21.*C - (640.*np.pi**2)/3. + (-15737765635./3048192. + 2255.*np.pi**2/12.)*eta +\
-                76055.*eta2/1728. - 127825.*eta3/1296. - 6848./63.*np.log(64*np.pi*f1) + 2270./3.*np.pi*delta_mass*chi_a +\
-                (2270.*np.pi/3. - 520.*np.pi*eta)*chi_s
-        psi_ins_f1 = 2.*np.pi*f1/(cst.G*M)*cst.c**3*tc - phic - np.pi/4. + 3./(128.*eta)*(np.pi*f1)**(-5/3)*(phi_0 +\
-                phi_2*(np.pi*f1)**(2./3.) + phi_3*(np.pi*f1) +\
-                phi_4*(np.pi*f1)**(4./3.) + phi_5_f1*(np.pi*f1)**(5./3.) +\
-                phi_6_f1*(np.pi*f1)**2. + phi_7*(np.pi*f1)**(7./3.)) +\
-                1./eta*(3./4.*sigma2*f1**(4./3.) + 3./5.*sigma3*f1**(5./3.) +\
-                1./2.*sigma4*f1**2)
+        psi_TF2_f1 = 2.*np.pi*f1*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
+                     3./(128.*eta)*((np.pi*f1)**(-5./3.) +\
+                     phi_2*(np.pi*f1)**(-1.) +\
+                     phi_3*(np.pi*f1)**(-2./3.) +\
+                     phi_4*(np.pi*f1)**(-1./3.) +\
+                     phi_5 +\
+                     phi_5_l*np.log(np.pi*f1) +\
+                     phi_6*(np.pi*f1)**(1./3.) +\
+                     phi_6_l*np.log(np.pi*f1)*(np.pi*f1)**(1./3.) +\
+                     phi_7*(np.pi*f1)**(2./3.))
+        
+        psi_late_ins_f1 = 1./eta*(3./4.*sigma2*f1**(4./3.) +\
+                                  3./5.*sigma3*f1**(5./3.) +\
+                                  1./2.*sigma4*f1**2)
+        
+        psi_ins_f1 = psi_TF2_f1 + psi_late_ins_f1
+
+        psi_TF2_prime_f1 = 2.*np.pi*cst.c**3/(cst.G*M)*tc +\
+                        3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*f1**(-8./3.)) +\
+                        phi_2*(np.pi)**(-1.)*(-1.*f1**(-2.)) +\
+                        phi_3*(np.pi)**(-2./3.)*(-2./3.*f1**(-5./3.)) +\
+                        phi_4*(np.pi)**(-1./3.)*(-1./3.*f1**(-4./3.)) +\
+                        phi_5_l*(np.pi)*f1**(-1.) +\
+                        phi_6*(np.pi)**(1./3.)*(1./3.*f1**(-2./3.)) +\
+                        phi_6_l*((np.pi)*f1**(-1.)*(np.pi*f1)**(1./3.) +\
+                                 np.log(np.pi*f1)*(np.pi)**(1./3.)*(1./3.*f1**(-2./3.))) +\
+                        phi_7*(np.pi)**(2./3.)*(2./3.*f1**(-1./3.)))
+        
+        psi_late_ins_prime_f1 = 1./eta*(sigma2*f1**(1./3.) +\
+                                        sigma3*f1**(2./3.) +\
+                                        sigma4*f1)
     
-        psi_ins_prime_f1 = psi_ins_gradient(f1)
-    
+        psi_ins_prime_f1 = psi_TF2_prime_f1 + psi_late_ins_prime_f1
     
         # Coefficients for the intermediate phase
         beta2 = -3.282701958759534 - 9.051384468245866*eta\
