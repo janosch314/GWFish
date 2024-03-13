@@ -585,7 +585,7 @@ class TaylorF2(Waveform):
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
 
         # very crude high-f cut-off:
-        f_cut = cut*f_isco
+        f_cut = cut*f_isco*cst.G*M/cst.c**3
         polarizations[np.where(ff[:,0] > f_cut), :] = 0.j
 
         self._frequency_domain_strain = polarizations
