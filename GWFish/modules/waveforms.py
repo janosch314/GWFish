@@ -160,17 +160,6 @@ class Waveform:
             'redshift': 0., 'theta_jn': 0., 'phase': 0., 'geocent_time': 0., 
             'a_1': 0., 'tilt_1': 0., 'phi_12': 0., 'a_2': 0., 'tilt_2': 0., 
             'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0.,
-            #ppE parameters
-            'beta':0., 'PN':0.,
-            #gIMR
-            'delta_phi_0':0.,
-            'delta_phi_1':0.,
-            'delta_phi_2':0.,
-            'delta_phi_3':0.,
-            'delta_phi_4':0.,
-            'delta_phi_5':0.,
-            'delta_phi_6':0.,
-            'delta_phi_7':0.,
             #f_cut for TaylorF2
             'cut':4.
         }
@@ -550,15 +539,12 @@ class TaylorF2(Waveform):
 
         #f_cut = cut_order * f_isco, default is 4*f_isco
         cut = self.gw_params['cut']
-    
-        v = (np.pi * cst.G * M / cst.c ** 3 * ff) ** (1. / 3.)
 
         # compute GW amplitudes (https://arxiv.org/pdf/2012.01350.pdf)
-        hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.)\/ (np.pi * ff) ** (7. / 6.) *\
-             (1. + np.cos(iota) ** 2.)
-        hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.) * Mc ** (5. / 6.) / (np.pi * ff) ** (7. / 6.) *\
-             2. * np.cos(iota)
-    
+        hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
+             Mc ** (5. / 6.)/(np.pi * frequencyvector) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
+        hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
+             Mc ** (5. / 6.)/(np.pi * frequencyvector) ** (7. / 6.) *2. * np.cos(iota)
 
         phi_0 = 1.
         phi_1 = 0.
@@ -585,7 +571,7 @@ class TaylorF2(Waveform):
                 phi_6*(np.pi*ff)**(1./3.) +\
                 phi_7*(np.pi*ff)**(2./3.))
 
-        psi_tot = psi_TF2 + 2. * np.pi * ff * tc - phic - np.pi / 4.
+        psi_tot = psi_TF2 + 2. * np.pi * frequencyvector * tc - phic - np.pi / 4.
         self.psi = psi_tot
     
         phase = np.exp(1.j * self.psi)
