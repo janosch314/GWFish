@@ -901,7 +901,7 @@ class IMRPhenomD(Waveform):
     
        
         psi_tot = psi_ins + psi_int + psi_MR
-        psi_prime_tot = psi_ins_gradient(ff)*theta_minus1+theta_minus2*psi_int_prime*theta_plus1+theta_plus2*psi_MR_prime
+        psi_prime_tot = psi_ins_prime*theta_minus1+theta_minus2*psi_int_prime*theta_plus1+theta_plus2*psi_MR_prime
     
     
         # Construct the phase
