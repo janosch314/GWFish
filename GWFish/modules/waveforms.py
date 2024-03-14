@@ -1124,7 +1124,7 @@ class IMRPhenomD(Waveform):
         ff = frequencyvector*cst.G*M/cst.c**3
         ones = np.ones((len(ff), 1))
 
-        psi = IMRPhenomD.calculate_phase(self)      
+        psi, psi_prime = IMRPhenomD.calculate_phase(self)      
         hp, hc = IMRPhenomD.calculate_amplitude(self)
 
         # Construct the phase
