@@ -556,7 +556,7 @@ class TaylorF2(Waveform):
     
     def calculate_phase(self):
         
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
 
@@ -627,7 +627,7 @@ class TaylorF2(Waveform):
         
     def calculate_amplitude(self):
         
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
         
@@ -641,7 +641,7 @@ class TaylorF2(Waveform):
     
     def calculate_frequency_domain_strain(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
         
@@ -762,7 +762,7 @@ class IMRPhenomD(Waveform):
 
     def calculate_ins_phase(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
 
@@ -808,7 +808,7 @@ class IMRPhenomD(Waveform):
 
     def RD_damping(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
 
@@ -827,7 +827,7 @@ class IMRPhenomD(Waveform):
         
     def calculate_int_phase(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
         
@@ -865,7 +865,7 @@ class IMRPhenomD(Waveform):
 
     def calculate_MR_phase(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
 
@@ -910,7 +910,7 @@ class IMRPhenomD(Waveform):
     
     def calculate_phase(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
 
         ones = np.ones((len(ff), 1))
 
@@ -942,7 +942,7 @@ class IMRPhenomD(Waveform):
 
     def calculate_amplitude(self):
         
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
 
         ones = np.ones((len(ff), 1))
 
@@ -1068,7 +1068,7 @@ class IMRPhenomD(Waveform):
         
     def calculate_frequency_domain_strain(self):
         
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
 
         ones = np.ones((len(ff), 1))
 
