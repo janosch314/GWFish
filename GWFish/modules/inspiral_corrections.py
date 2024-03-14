@@ -171,6 +171,9 @@ class TaylorF2_PPE(Waveform):
 
     def calculate_frequency_domain_strain(self):
 
+        cut = self.gw_params['cut']
+        f_isco = aux.fisco(self.gw_params)
+
         psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2_PPE.calculate_phase(self)
 
         hp, hc = wf.TaylorF2.calculate_amplitude(self)
