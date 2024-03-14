@@ -605,7 +605,7 @@ class TaylorF2(Waveform):
         hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
              Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *2. * np.cos(iota)
 
-    return hp, hc
+        return hp, hc
 
     
     def calculate_frequency_domain_strain(self):
