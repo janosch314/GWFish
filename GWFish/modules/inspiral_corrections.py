@@ -48,7 +48,7 @@ class TaylorF2_PPE(Waveform):
 
     def calculate_phase(self): 
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = wf.get_param_comb(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = wf.Waveform.get_param_comb(self)
 
         f_isco = aux.fisco(self.gw_params)  #inner stable circular orbit 
 
@@ -238,7 +238,7 @@ class IMRPhenomD_PPE(Waveform):
 
     def calculate_phase(self): 
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = wf.get_param_comb(self)
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = wf.Waveform.get_param_comb(self)
 
         f_isco = aux.fisco(self.gw_params)  #inner stable circular orbit 
 
