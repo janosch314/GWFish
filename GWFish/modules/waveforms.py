@@ -827,10 +827,6 @@ class IMRPhenomD(Waveform):
         
         psi_ins, psi_Ins_prime, psi_Ins_f1, psi_ins_prime_f1 = IMRPhenomD.calculate_ins_phase(self)
 
-        # Impose C1 conditions at the interface
-        beta1 = eta*psi_ins_prime_f1 - beta2*f1**(-1.) - beta3*f1**(-4.)  # psi_ins_prime_f1 = psi_int_prime_f1
-        beta0 = eta*psi_ins_f1 - beta1*f1 - beta2*np.log(f1) + beta3/3.*f1**(-3.) #psi_ins_f1 = psi_int_f1
-
         # Coefficients for the intermediate phase
         beta2 = -3.282701958759534 - 9.051384468245866*eta\
                 + (chi_PN - 1)*(-12.415449742258042 + 55.4716447709787*eta - 106.05109938966335*eta2)\
@@ -840,6 +836,10 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)**2*(-0.000018370671469295915 + 0.000021886317041311973*eta + 0.00008250240316860033*eta2)\
                 + (chi_PN - 1)**2*(7.157371250566708e-6 - 0.000055780000112270685*eta + 0.00019142082884072178*eta2)\
                 + (chi_PN - 1)**3*(5.447166261464217e-6 - 0.00003220610095021982*eta + 0.00007974016714984341*eta2)
+
+        # Impose C1 conditions at the interface
+        beta1 = eta*psi_ins_prime_f1 - beta2*f1**(-1.) - beta3*f1**(-4.)  # psi_ins_prime_f1 = psi_int_prime_f1
+        beta0 = eta*psi_ins_f1 - beta1*f1 - beta2*np.log(f1) + beta3/3.*f1**(-3.) #psi_ins_f1 = psi_int_f1
       
         # Evaluate full psi intermediate and its analytical derivative
         psi_int = 1./eta*(beta0 + beta1*ff + beta2*np.log(ff) - 1./3.*beta3*ff**(-3.))
@@ -866,11 +866,6 @@ class IMRPhenomD(Waveform):
         ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
         f2 = 0.5*ff_RD
 
-        # Impose C1 conditions at the interface
-        alpha1 = psi_int_prime_f2 - alpha2*f2**(-2.) - alpha3*f2**(-1./4.) -\
-                (alpha4*ff_damp)/(ff_damp**2. + (f2 - alpha5*ff_RD)**2.) # psi_int_prime_f2 = psi_MR_prime_f2
-        alpha0 = psi_int_f2 - alpha1*f2 + alpha2*f2**(-1.) -\
-                4./3.*alpha3*f2**(3./4.) - alpha4*np.arctan((f2 - alpha5*ff_RD)/ff_damp) #psi_int_f2 = psi_MR_f2
 
         # Coefficients for the merger-ringdown phase
         alpha2 = -0.07020209449091723 - 0.16269798450687084*eta\
@@ -890,6 +885,14 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)**2*(-0.05585343136869692 + 1.7516580039343603*eta - 5.990208965347804*eta2)\
                 + (chi_PN - 1)**3*(-0.017945336522161195 + 0.5965097794825992*eta - 2.0608879367971804*eta2)
 
+        
+        # Impose C1 conditions at the interface
+        alpha1 = psi_int_prime_f2 - alpha2*f2**(-2.) - alpha3*f2**(-1./4.) -\
+                (alpha4*ff_damp)/(ff_damp**2. + (f2 - alpha5*ff_RD)**2.) # psi_int_prime_f2 = psi_MR_prime_f2
+        alpha0 = psi_int_f2 - alpha1*f2 + alpha2*f2**(-1.) -\
+                4./3.*alpha3*f2**(3./4.) - alpha4*np.arctan((f2 - alpha5*ff_RD)/ff_damp) #psi_int_f2 = psi_MR_f2
+
+        
         psi_MR = 1./eta*(alpha0 + alpha1*ff - alpha2*ff**(-1.) + 4./3.*alpha3*ff**(3./4.) +\
                                 alpha4*np.arctan((ff - alpha5*ff_RD)/ff_damp))
         
