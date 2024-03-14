@@ -519,7 +519,6 @@ class TaylorF2(Waveform):
 
 
     def calculate_amplitude(self):
-    
         frequencyvector = self.frequencyvector[:,np.newaxis]
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
@@ -548,7 +547,6 @@ class TaylorF2(Waveform):
 
     
     def calculate_phase(self):
-    
         frequencyvector = self.frequencyvector[:,np.newaxis]
         phic = self.gw_params['phase']
         tc = self.gw_params['geocent_time']
