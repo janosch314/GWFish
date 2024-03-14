@@ -611,9 +611,6 @@ class TaylorF2(Waveform):
     def calculate_frequency_domain_strain(self):
         frequencyvector = self.frequencyvector[:,np.newaxis]
         
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
-        ones = np.ones((len(ff), 1))
-
         hp, hc = TaylorF2.calculate_amplitude(self.gw_params)
         psi = TaylorF2.calculate_phase(self.gw_params)       
 
