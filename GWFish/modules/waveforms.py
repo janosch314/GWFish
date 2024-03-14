@@ -267,7 +267,7 @@ class Waveform:
         
         ff = frequencyvector*cst.G*M/cst.c**3 #adimensional frequency ----> ff = 4.93*10^{-6} (M/M_sol)(f/Hz)
 
-        return M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff
+        return M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff
 
 class LALFD_Waveform(Waveform):
     """
@@ -556,7 +556,8 @@ class TaylorF2(Waveform):
     
     def calculate_phase(self):
         
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
 
@@ -627,7 +628,8 @@ class TaylorF2(Waveform):
         
     def calculate_amplitude(self):
         
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
         
@@ -641,7 +643,8 @@ class TaylorF2(Waveform):
     
     def calculate_frequency_domain_strain(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
         
@@ -762,7 +765,8 @@ class IMRPhenomD(Waveform):
 
     def calculate_ins_phase(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
 
@@ -808,7 +812,8 @@ class IMRPhenomD(Waveform):
 
     def RD_damping(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
 
@@ -827,7 +832,8 @@ class IMRPhenomD(Waveform):
         
     def calculate_int_phase(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
         
@@ -865,7 +871,8 @@ class IMRPhenomD(Waveform):
 
     def calculate_MR_phase(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
         ones = np.ones((len(ff), 1))
 
@@ -910,7 +917,8 @@ class IMRPhenomD(Waveform):
     
     def calculate_phase(self):
 
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
 
         ones = np.ones((len(ff), 1))
 
@@ -942,7 +950,8 @@ class IMRPhenomD(Waveform):
 
     def calculate_amplitude(self):
         
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
 
         ones = np.ones((len(ff), 1))
 
@@ -1068,7 +1077,8 @@ class IMRPhenomD(Waveform):
         
     def calculate_frequency_domain_strain(self):
         
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        M1, M2, chi_1, chi_2, M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a,
+        C, phic, tc, z, r, iota, ff = Waveform.get_params(self)
 
         ones = np.ones((len(ff), 1))
 
