@@ -19,6 +19,23 @@ import GWFish.modules.fft as fft
 from GWFish.modules.waveforms import Waveform
 
 
+def _set_default_ins_params(self):
+        self.ins_params = {
+            #ppE parameters
+            'beta':0., 'PN':0.,
+            #gIMR
+            'delta_phi_0':0.,
+            'delta_phi_1':0.,
+            'delta_phi_2':0.,
+            'delta_phi_3':0.,
+            'delta_phi_4':0.,
+            'delta_phi_5':0.,
+            'delta_phi_6':0.,
+            'delta_phi_7':0.,
+            'delta_phi_8':0.,
+            'delta_phi_9':0.,
+        }
+
 ################################################################################
 ################################ TAYLORF2_PPE ##################################
 ########################## with spin corrections ###############################
@@ -26,8 +43,8 @@ from GWFish.modules.waveforms import Waveform
 class TaylorF2_PPE(Waveform):
 
     """ GWFish implementation of TaylorF2_PPE """
-    def __init__(self, name, gw_params, data_params):
-        super().__init__(name, gw_params, data_params)
+    def __init__(self, name, gw_params, ins_params, data_params):
+        super().__init__(name, gw_params, ins_params, data_params)
         self._maxn = None
         self.psi = None
         if self.name != 'TaylorF2_PPE':
