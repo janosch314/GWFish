@@ -794,7 +794,7 @@ class IMRPhenomD(Waveform):
 
         psi_ins_prime = psi_prime + psi_late_ins_prime
 
-        psi_ins_prime_f1 = psi_prime_f1 + psi_ppe_prime_f1 + psi_gIMR_prime_f1 + psi_late_ins_prime_f1
+        psi_ins_prime_f1 = psi_prime_f1 + psi_late_ins_prime_f1
 
         return psi_ins, psi_ins_f1, psi_prime, psi_ins_prime_f1
         
