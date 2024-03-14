@@ -825,7 +825,7 @@ class IMRPhenomD(Waveform):
 
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
         
-        psi_ins, psi_Ins_prime, psi_Ins_f1, psi_ins_prime_f1 = IMRPhenomD.calculate_ins_phase(self)
+        psi_ins, psi_ins_prime, psi_ins_f1, psi_ins_prime_f1 = IMRPhenomD.calculate_ins_phase(self)
 
         # Coefficients for the intermediate phase
         beta2 = -3.282701958759534 - 9.051384468245866*eta\
