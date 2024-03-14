@@ -1128,7 +1128,7 @@ class IMRPhenomD(Waveform):
         hp, hc = IMRPhenomD.calculate_amplitude(self)
 
         # Construct the phase
-        phase = np.exp(1.j * psi_tot)
+        phase = np.exp(1.j * psi)
         
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
     
