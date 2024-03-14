@@ -232,6 +232,43 @@ class Waveform:
     def t_of_f(self):
         return t_of_f_PN(self.gw_params, self.frequencyvector)
 
+    def get_params(self):
+        
+        frequencyvector = self.frequencyvector[:,np.newaxis]
+        phic = self.gw_params['phase']
+        tc = self.gw_params['geocent_time']
+        z = self.gw_params['redshift']
+        r = self.gw_params['luminosity_distance'] * cst.Mpc
+        iota = self.gw_params['theta_jn']
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
+        chi_1 = self.gw_params.get('a_1', 0.0)
+        chi_2 = self.gw_params.get('a_2', 0.0)
+
+        if (M1 < M2):  #swapping M1 with M2 ---> We want M1>M2 
+            aux_mass = M1
+            M1 = M2
+            M2 = aux_mass
+        
+        M = M1 + M2
+        mu = M1 * M2 / M
+        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3 #chirp Mass in s
+        delta_mass = (M1 - M2)/M #always >0
+
+        C = 0.57721566  # Euler constant
+        eta = mu / M #
+        eta2 = eta*eta
+        eta3 = eta2*eta
+    
+        chi_eff = (M1*chi_1 + M2*chi_2)/M
+        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
+        chi_s = 0.5*(chi_1 + chi_2)
+        chi_a = 0.5*(chi_1 - chi_2)
+        
+        ff = frequencyvector*cst.G*M/cst.c**3 #adimensional frequency ----> ff = 4.93*10^{-6} (M/M_sol)(f/Hz)
+
+        return M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff
+
 class LALFD_Waveform(Waveform):
     """
     Calls LAL to provide waveforms in frequency domain. Works with both
@@ -519,37 +556,8 @@ class TaylorF2(Waveform):
     
     def calculate_phase(self):
         
-        frequencyvector = self.frequencyvector[:,np.newaxis]
-        phic = self.gw_params['phase']
-        tc = self.gw_params['geocent_time']
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
-        
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-        
-        if (M1 < M2):
-            aux_mass = M1
-            M1 = M2
-            M2 = aux_mass
-
-        M = M1 + M2
-        mu = M1 * M2 / M
-        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-        delta_mass = (M1 - M2)/M #always >0
-        
-        C = 0.57721566  # Euler constant
-        eta = mu / M
-        eta2 = eta*eta
-        eta3 = eta2*eta
-
-        chi_eff = (M1*chi_1 + M2*chi_2)/M
-        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
-        chi_s = 0.5*(chi_1 + chi_2)
-        chi_a = 0.5*(chi_1 - chi_2)
-
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
 
         phi_0 = 1.
@@ -619,27 +627,8 @@ class TaylorF2(Waveform):
         
     def calculate_amplitude(self):
         
-        frequencyvector = self.frequencyvector[:,np.newaxis]
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
-        z = self.gw_params['redshift']
-        r = self.gw_params['luminosity_distance'] * cst.Mpc
-        iota = self.gw_params['theta_jn']
-        
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        
-        
-        if (M1 < M2):
-            aux_mass = M1
-            M1 = M2
-            M2 = aux_mass
-
-        M = M1 + M2
-        mu = M1 * M2 / M
-        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-        delta_mass = (M1 - M2)/M #always >0
-
-        ff = frequencyvector*cst.G*M/cst.c**3 
         ones = np.ones((len(ff), 1))
         
         hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
@@ -652,12 +641,8 @@ class TaylorF2(Waveform):
     
     def calculate_frequency_domain_strain(self):
 
-        frequencyvector = self.frequencyvector[:,np.newaxis]
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        M = M1 + M2
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
-        ff = frequencyvector*cst.G*M/cst.c**3 
         ones = np.ones((len(ff), 1))
         
         cut = self.gw_params['cut']
@@ -771,39 +756,14 @@ class IMRPhenomD(Waveform):
         self.psi = None
         if self.name != 'IMRPhenomD':
             logging.warning('Different waveform name passed to IMRPhenomD: '+\
-                             self.name)
+                             self.name)    
+
             
 
     def calculate_ins_phase(self):
 
-        frequencyvector = self.frequencyvector[:,np.newaxis]    
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-        
-        if (M1 < M2):
-            aux_mass = M1
-            M1 = M2
-            M2 = aux_mass
-
-        M = M1 + M2
-        mu = M1 * M2 / M
-        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-        delta_mass = (M1 - M2)/M #always >0
-        
-        C = 0.57721566  # Euler constant
-        eta = mu / M
-        eta2 = eta*eta
-        eta3 = eta2*eta
-
-        chi_eff = (M1*chi_1 + M2*chi_2)/M
-        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
-        chi_s = 0.5*(chi_1 + chi_2)
-        chi_a = 0.5*(chi_1 - chi_2)
-        
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
 
 
@@ -846,39 +806,31 @@ class IMRPhenomD(Waveform):
         
         return psi_ins, psi_ins_f1, psi_prime, psi_ins_prime_f1
 
-    
-    def calculate_int_phase(self):
+    def RD_damping(self):
 
-        frequencyvector = self.frequencyvector[:,np.newaxis]
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-        
-        if (M1 < M2):
-            aux_mass = M1
-            M1 = M2
-            M2 = aux_mass
-
-        M = M1 + M2
-        mu = M1 * M2 / M
-        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-        delta_mass = (M1 - M2)/M #always >0
-        
-        C = 0.57721566  # Euler constant
-        eta = mu / M
-        eta2 = eta*eta
-        eta3 = eta2*eta
-
-        chi_eff = (M1*chi_1 + M2*chi_2)/M
-        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
-        chi_s = 0.5*(chi_1 + chi_2)
-        chi_a = 0.5*(chi_1 - chi_2)
-
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
 
+        # Interpolate from dataset to evaluate damping and ringdown frequencies
+        chi_f, m_f = final_bh(M1, M2, chi_1, chi_2)
+    
+        data_ff = np.loadtxt(os.path.dirname(gw.__file__)+'/IMRPhenomD_n1l2m2.dat', unpack = True)
+        M_omega = interp1d(data_ff[0, :], data_ff[1, :])
+        tau_omega = interp1d(data_ff[0, :], data_ff[2, :])
+    
+        ff_RD = (M_omega(chi_f)/(2*np.pi)*M/m_f)[0]
+        ff_damp = (-tau_omega(chi_f)/(2*np.pi)*M/m_f)[0]
+
+
+        return ff_RD, ff_damp
+        
+    def calculate_int_phase(self):
+
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+        
+        ones = np.ones((len(ff), 1))
+        
         psi_ins, psi_Ins_prime, psi_Ins_f1, psi_ins_prime_f1 = IMRPhenomD.calculate_ins_phase(self)
 
         # Impose C1 conditions at the interface
@@ -900,17 +852,8 @@ class IMRPhenomD(Waveform):
         
         psi_int_prime = 1./eta*(beta1 + beta2*ff**(-1.) + beta3*ff**(-4.))
 
-        # Interpolate from dataset to evaluate damping and ringdown frequencies
-        chi_f, m_f = final_bh(M1, M2, chi_1, chi_2)
-    
-        data_ff = np.loadtxt(os.path.dirname(gw.__file__)+'/IMRPhenomD_n1l2m2.dat', unpack = True)
-        M_omega = interp1d(data_ff[0, :], data_ff[1, :])
-        tau_omega = interp1d(data_ff[0, :], data_ff[2, :])
-    
-        ff_RD = (M_omega(chi_f)/(2*np.pi)*M/m_f)[0]
-        ff_damp = (-tau_omega(chi_f)/(2*np.pi)*M/m_f)[0]
-        
         # Frequency at the interface between intermediate and merger-ringdown phases
+        ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
         f2 = 0.5*ff_RD
 
         psi_int_f2 = 1./eta*(beta0 + beta1*f2 + beta2*np.log(f2) - 1./3.*beta3*f2**(-3.))
@@ -922,49 +865,14 @@ class IMRPhenomD(Waveform):
 
     def calculate_MR_phase(self):
 
-        frequencyvector = self.frequencyvector[:,np.newaxis]
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
         
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-        
-        if (M1 < M2):
-            aux_mass = M1
-            M1 = M2
-            M2 = aux_mass
-
-        M = M1 + M2
-        mu = M1 * M2 / M
-        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-        delta_mass = (M1 - M2)/M #always >0
-        
-        C = 0.57721566  # Euler constant
-        eta = mu / M
-        eta2 = eta*eta
-        eta3 = eta2*eta
-
-        chi_eff = (M1*chi_1 + M2*chi_2)/M
-        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
-        chi_s = 0.5*(chi_1 + chi_2)
-        chi_a = 0.5*(chi_1 - chi_2)
-
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
 
         psi_int, psi_int_prime, psi_int_f2, psi_int_prime_f2 = IMRPhenomD.calculate_int_phase(self)
 
-        # Interpolate from dataset to evaluate damping and ringdown frequencies
-        chi_f, m_f = final_bh(M1, M2, chi_1, chi_2)
-    
-        data_ff = np.loadtxt(os.path.dirname(gw.__file__)+'/IMRPhenomD_n1l2m2.dat', unpack = True)
-        M_omega = interp1d(data_ff[0, :], data_ff[1, :])
-        tau_omega = interp1d(data_ff[0, :], data_ff[2, :])
-    
-        ff_RD = (M_omega(chi_f)/(2*np.pi)*M/m_f)[0]
-        ff_damp = (-tau_omega(chi_f)/(2*np.pi)*M/m_f)[0]
-        
         # Frequency at the interface between intermediate and merger-ringdown phases
+        ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
         f2 = 0.5*ff_RD
 
         # Impose C1 conditions at the interface
@@ -1002,15 +910,11 @@ class IMRPhenomD(Waveform):
     
     def calculate_phase(self):
 
-        frequencyvector = self.frequencyvector[:,np.newaxis]
-        
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
 
-        M = M1 + M2
-
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
+
+        ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
         
         # Conjunction functions
         ff1 = 0.018*ones
@@ -1038,38 +942,8 @@ class IMRPhenomD(Waveform):
 
     def calculate_amplitude(self):
         
-        frequencyvector = self.frequencyvector[:,np.newaxis]
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
 
-        z = self.gw_params['redshift']
-        r = self.gw_params['luminosity_distance'] * cst.Mpc
-        iota = self.gw_params['theta_jn']
-        
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-        
-        if (M1 < M2):
-            aux_mass = M1
-            M1 = M2
-            M2 = aux_mass
-
-        M = M1 + M2
-        mu = M1 * M2 / M
-        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-        delta_mass = (M1 - M2)/M #always >0
-        
-        C = 0.57721566  # Euler constant
-        eta = mu / M
-        eta2 = eta*eta
-        eta3 = eta2*eta
-
-        chi_eff = (M1*chi_1 + M2*chi_2)/M
-        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
-        chi_s = 0.5*(chi_1 + chi_2)
-        chi_a = 0.5*(chi_1 - chi_2)
-
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
 
         #########################################################################################################
@@ -1131,15 +1005,8 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)**2*(0.7570782938606834 - 2.7256896890432474*eta + 7.1140380397149965*eta2)\
                 + (chi_PN - 1)**3*(0.1766934149293479 - 0.7978690983168183*eta + 2.1162391502005153*eta2)
 
-        # Interpolate from dataset to evaluate damping and ringdown frequencies
-        chi_f, m_f = final_bh(M1, M2, chi_1, chi_2)
-    
-        data_ff = np.loadtxt(os.path.dirname(gw.__file__)+'/IMRPhenomD_n1l2m2.dat', unpack = True)
-        M_omega = interp1d(data_ff[0, :], data_ff[1, :])
-        tau_omega = interp1d(data_ff[0, :], data_ff[2, :])
-    
-        ff_RD = (M_omega(chi_f)/(2*np.pi)*M/m_f)[0]
-        ff_damp = (-tau_omega(chi_f)/(2*np.pi)*M/m_f)[0]
+        
+        ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
         
         # Conjunction frequencies
         f1_amp = 0.014
@@ -1200,14 +1067,11 @@ class IMRPhenomD(Waveform):
         
         
     def calculate_frequency_domain_strain(self):
-        frequencyvector = self.frequencyvector[:,np.newaxis]
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
         
-        M = M1 + M2
-        
-        ff = frequencyvector*cst.G*M/cst.c**3
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff = Waveform.get_params(self)
+
         ones = np.ones((len(ff), 1))
+
 
         psi, psi_prime = IMRPhenomD.calculate_phase(self)      
         hp, hc = IMRPhenomD.calculate_amplitude(self)
