@@ -1007,6 +1007,8 @@ class IMRPhenomD(Waveform):
         M1 = self.gw_params['mass_1'] * cst.Msol
         M2 = self.gw_params['mass_2'] * cst.Msol
 
+        M = M1 + M2
+
         ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
         
