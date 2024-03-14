@@ -18,7 +18,7 @@ import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
 from GWFish.modules.waveforms import Waveform
 
-
+"""
 def _set_default_ins_params(self):
         self.ins_params = {
             #ppE parameters
@@ -33,8 +33,9 @@ def _set_default_ins_params(self):
             'delta_phi_6':0.,
             'delta_phi_7':0.,
             'delta_phi_8':0.,
-            'delta_phi_9':0.,
+            'delta_phi_9':0.
         }
+  """
 
 ################################################################################
 ################################ TAYLORF2_PPE ##################################
