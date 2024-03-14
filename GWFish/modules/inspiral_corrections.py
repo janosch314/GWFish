@@ -238,8 +238,8 @@ class TaylorF2_PPE(Waveform):
 class IMRPhenomD_PPE(Waveform):
     
     """ GWFish implementation of IMRPhenomD_PPE """
-    def __init__(self, name, gw_params, data_params):
-        super().__init__(name, gw_params, data_params)
+    def __init__(self, name, gw_params, ins_params, data_params):
+        super().__init__(name, gw_params, ins_params, data_params)
         self._maxn = None
         self.psi = None
         if self.name != 'IMRPhenomD_PPE':
