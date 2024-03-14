@@ -553,6 +553,8 @@ class TaylorF2(Waveform):
         
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
 
+        ones = np.ones((len(ff), 1))
+
         phic = self.gw_params['phase']
         tc = self.gw_params['geocent_time']
 
