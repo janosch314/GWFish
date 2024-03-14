@@ -136,7 +136,7 @@ class TaylorF2_PPE(Waveform):
                 
         psi_ppe_f1 = beta*((np.pi*(f1/(cst.G*M/cst.c**3)*Mc))**((2*PN-5.)/3.))
 
-        psi_EI = psi_TF2_f1 + psi_ppe_f1 + psi_gIMR_f1
+        psi_EI_f1 = psi_TF2_f1 + psi_ppe_f1 + psi_gIMR_f1
         
 
         psi_gIMR_prime = 3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*ff**(-8./3.)) +\
