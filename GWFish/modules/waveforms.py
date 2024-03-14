@@ -610,6 +610,10 @@ class TaylorF2(Waveform):
     
     def calculate_frequency_domain_strain(self):
         
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
+        M = M1 + M2
+        
         hp, hc = TaylorF2.calculate_amplitude(self)
         psi = TaylorF2.calculate_phase(self)       
 
