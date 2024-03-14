@@ -394,7 +394,7 @@ class IMRPhenomD_PPE(Waveform):
 
     def calculate_frequency_domain_strain(self): 
 
-        psi, psi_prime = IMRPhenomd_PPE.calculate_phase(self)
+        psi, psi_prime = IMRPhenomD_PPE.calculate_phase(self)
 
         hp, hc = wf.IMRPhenomD.calculate_amplitude(self)
         ########################### PHASE OUTPUT ###############################
