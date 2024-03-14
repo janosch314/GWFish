@@ -17,13 +17,14 @@ import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
 import GWFish.modules.waveforms as wf
+from GWFish.modules.waveforms import Waveform
 
 
 ################################################################################
 ################################ TAYLORF2_PPE ##################################
 ########################## with spin corrections ###############################
 
-class TaylorF2_PPE(wf):
+class TaylorF2_PPE(Waveform):
 
     """ GWFish implementation of TaylorF2_PPE """
     def __init__(self, name, gw_params, data_params):
@@ -223,7 +224,7 @@ class TaylorF2_PPE(wf):
 ############################## IMRPhenomD_PPE ##################################
 ################################################################################
 
-class IMRPhenomD_PPE(wf):
+class IMRPhenomD_PPE(Waveform):
     
     """ GWFish implementation of IMRPhenomD_PPE """
     def __init__(self, name, gw_params, data_params):
