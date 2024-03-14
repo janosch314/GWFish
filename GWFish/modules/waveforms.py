@@ -518,12 +518,15 @@ class TaylorF2(Waveform):
             if type(self._maxn) is not int:
                 return ValueError('maxn must be integer')
         return self._maxn
+    
+    def calculate_frequency_domain_strain(self):
 
-
-    def calculate_amplitude(self):
-        
         frequencyvector = self.frequencyvector[:,np.newaxis]
         r = self.gw_params['luminosity_distance'] * cst.Mpc
+        phic = self.gw_params['phase']
+        tc = self.gw_params['geocent_time']
+        chi_1 = self.gw_params.get('a_1', 0.0)
+        chi_2 = self.gw_params.get('a_2', 0.0)
         iota = self.gw_params['theta_jn']
         M1 = self.gw_params['mass_1'] * cst.Msol
         M2 = self.gw_params['mass_2'] * cst.Msol
@@ -537,43 +540,6 @@ class TaylorF2(Waveform):
         mu = M1 * M2 / M
         Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
         delta_mass = (M1 - M2)/M #always >0
-
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
-        ones = np.ones((len(ff), 1))
-
-        hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
-             Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
-        hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
-             Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *2. * np.cos(iota)
-        
-        return hp, hc
-
-    
-    def calculate_phase(self):
-        
-        frequencyvector = self.frequencyvector[:,np.newaxis]
-        phic = self.gw_params['phase']
-        tc = self.gw_params['geocent_time']
-
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        
-        if (M1 < M2):
-            aux_mass = M1
-            M1 = M2
-            M2 = aux_mass
-
-        M = M1 + M2
-        mu = M1 * M2 / M
-        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-        delta_mass = (M1 - M2)/M #always >0
-
-        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
-        ones = np.ones((len(ff), 1))
-
         C = 0.57721566  # Euler constant
         eta = mu / M
         eta2 = eta*eta
@@ -583,6 +549,14 @@ class TaylorF2(Waveform):
         chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
         chi_s = 0.5*(chi_1 + chi_2)
         chi_a = 0.5*(chi_1 - chi_2)
+
+        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
+        ones = np.ones((len(ff), 1))
+
+        hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
+             Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
+        hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
+             Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *2. * np.cos(iota)
 
         phi_0 = 1.
         phi_1 = 0.
@@ -607,20 +581,14 @@ class TaylorF2(Waveform):
                 phi_5 +\
                 phi_6*(np.pi*ff)**(1./3.) +\
                 phi_7*(np.pi*ff)**(2./3.))
-
-        return psi_TF2
-
-    
-    def calculate_frequency_domain_strain(self):
+        
 
         f_isco = aux.fisco(self.gw_params)
-        hp, hc = TaylorF2.calculate_amplitude(self.gw_params)
-        psi = TaylorF2.calculate_phase(self.gw_params)
         
         #f_cut = cut_order * f_isco, default is 4*f_isco
         cut = self.gw_params['cut']
 
-        phase = np.exp(1.j * psi)
+        phase = np.exp(1.j * psi_TF2)
         
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
 
