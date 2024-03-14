@@ -780,8 +780,28 @@ class IMRPhenomD(Waveform):
         
         M1 = self.gw_params['mass_1'] * cst.Msol
         M2 = self.gw_params['mass_2'] * cst.Msol
+        chi_1 = self.gw_params.get('a_1', 0.0)
+        chi_2 = self.gw_params.get('a_2', 0.0)
         
+        if (M1 < M2):
+            aux_mass = M1
+            M1 = M2
+            M2 = aux_mass
+
         M = M1 + M2
+        mu = M1 * M2 / M
+        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
+        delta_mass = (M1 - M2)/M #always >0
+        
+        C = 0.57721566  # Euler constant
+        eta = mu / M
+        eta2 = eta*eta
+        eta3 = eta2*eta
+
+        chi_eff = (M1*chi_1 + M2*chi_2)/M
+        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
+        chi_s = 0.5*(chi_1 + chi_2)
+        chi_a = 0.5*(chi_1 - chi_2)
         
         ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
