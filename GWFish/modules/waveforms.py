@@ -627,7 +627,6 @@ class TaylorF2(Waveform):
         psi = TaylorF2.calculate_phase(self)      
         hp, hc = TaylorF2.calculate_amplitude(self)
         
-        
         phase = np.exp(1.j * psi)
         
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
@@ -734,48 +733,45 @@ class IMRPhenomD(Waveform):
             logging.warning('Different waveform name passed to IMRPhenomD: '+\
                              self.name)
 
-    def calculate_frequency_domain_strain(self):
+    def calculate_phase(self):
+        
         frequencyvector = self.frequencyvector[:,np.newaxis]
         phic = self.gw_params['phase']
         tc = self.gw_params['geocent_time']
-        z = self.gw_params['redshift']
-        r = self.gw_params['luminosity_distance'] * cst.Mpc
-        iota = self.gw_params['theta_jn']
+        
+        
         M1 = self.gw_params['mass_1'] * cst.Msol
         M2 = self.gw_params['mass_2'] * cst.Msol
+        chi_1 = self.gw_params.get('a_1', 0.0)
+        chi_2 = self.gw_params.get('a_2', 0.0)
         
         if (M1 < M2):
             aux_mass = M1
             M1 = M2
             M2 = aux_mass
-    
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-        
+
         M = M1 + M2
         mu = M1 * M2 / M
         Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
-        delta_mass = (M1 - M2)/M
+        delta_mass = (M1 - M2)/M #always >0
         
-        ff = frequencyvector*cst.G*M/cst.c**3
-        ones = np.ones((len(ff), 1))
-    
         C = 0.57721566  # Euler constant
         eta = mu / M
         eta2 = eta*eta
         eta3 = eta2*eta
-    
+
         chi_eff = (M1*chi_1 + M2*chi_2)/M
         chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
         chi_s = 0.5*(chi_1 + chi_2)
         chi_a = 0.5*(chi_1 - chi_2)
-    
+
+        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
+        ones = np.ones((len(ff), 1))
+
         #########################################################################################################
         #########################################################################################################
         #########################################################################################################
-    
-        # PHASE
-    
+
         # PN expansion of phase
         phi_0 = 1.
         phi_1 = 0.
@@ -793,7 +789,7 @@ class IMRPhenomD(Waveform):
         phi_7 = (77096675./254016. + 378515./1512.*eta - 74045./756.*eta2)*np.pi +\
                 delta_mass*(-(25150083775./3048192.) + 26804935./6048.*eta - 1985./48.*eta2)*chi_a +\
                 (-(25150083775./3048192.) + 10566655595./762048.*eta - 1042165./3024.*eta2 + 5345./36.*eta3)*chi_s
-       
+
         psi_TF2 = 2.*np.pi*ff*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
                 3./(128.*eta)*((np.pi*ff)**(-5./3.) +\
                 phi_2*(np.pi*ff)**(-1.) +\
@@ -804,7 +800,8 @@ class IMRPhenomD(Waveform):
                 phi_6*(np.pi*ff)**(1./3.) +\
                 phi_6_l*np.log(np.pi*ff)*(np.pi*ff)**(1./3.) +\
                 phi_7*(np.pi*ff)**(2./3.))
-        
+
+
         # Coefficients for the late ispiral phase
         sigma2 = -10114.056472621156 - 44631.01109458185*eta\
                 + (chi_PN - 1)*(-6541.308761668722 - 266959.23419307504*eta + 686328.3229317984*eta2)\
@@ -823,8 +820,6 @@ class IMRPhenomD(Waveform):
                             3./5.*sigma3*ff**(5./3.) +\
                             1./2.*sigma4*ff**2)
 
-        self.psi_ins = psi_ins
-
         psi_TF2_prime = 2.*np.pi*cst.c**3/(cst.G*M)*tc +\
                       3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*ff**(-8./3.)) +\
                       phi_2*(np.pi)**(-1.)*(-1.*ff**(-2.)) +\
@@ -838,8 +833,6 @@ class IMRPhenomD(Waveform):
         
         psi_ins_prime = psi_TF2_prime + 1./eta*(sigma2*ff**(1./3.) + sigma3*ff**(2./3.) + sigma4*ff)
 
-        self.psi_ins_prime = psi_ins_prime 
-    
         # Evaluate phase and its derivate at the interface between inspiral and intermediate phase
         f1 = 0.018
     
@@ -860,8 +853,6 @@ class IMRPhenomD(Waveform):
         
         psi_ins_f1 = psi_TF2_f1 + psi_late_ins_f1
 
-        self.psi_ins_f1 = psi_ins_f1
-
         psi_TF2_prime_f1 = 2.*np.pi*cst.c**3/(cst.G*M)*tc +\
                         3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*f1**(-8./3.)) +\
                         phi_2*(np.pi)**(-1.)*(-1.*f1**(-2.)) +\
@@ -879,8 +870,6 @@ class IMRPhenomD(Waveform):
     
         psi_ins_prime_f1 = psi_TF2_prime_f1 + psi_late_ins_prime_f1
 
-        self.psi_ins_prime_f1 = psi_ins_prime_f1
-    
         # Coefficients for the intermediate phase
         beta2 = -3.282701958759534 - 9.051384468245866*eta\
                 + (chi_PN - 1)*(-12.415449742258042 + 55.4716447709787*eta - 106.05109938966335*eta2)\
@@ -898,7 +887,7 @@ class IMRPhenomD(Waveform):
         # Evaluate full psi intermediate and its analytical derivative
         psi_int = 1./eta*(beta0 + beta1*ff + beta2*np.log(ff) - 1./3.*beta3*ff**(-3.))
         psi_int_prime = 1./eta*(beta1 + beta2*ff**(-1.) + beta3*ff**(-4.))
-        
+
         # Coefficients for the merger-ringdown phase
         alpha2 = -0.07020209449091723 - 0.16269798450687084*eta\
                 + (chi_PN - 1)*(-0.1872514685185499 + 1.138313650449945*eta - 2.8334196304430046*eta2)\
@@ -954,17 +943,49 @@ class IMRPhenomD(Waveform):
         psi_ins = psi_ins*theta_minus1
         psi_int = theta_plus1*psi_int*theta_minus2
         psi_MR = psi_MR*theta_plus2
-    
-       
+
         psi_tot = psi_ins + psi_int + psi_MR
-        self.psi_tot = psi_tot
         
         psi_prime_tot = psi_ins_prime*theta_minus1+theta_minus2*psi_int_prime*theta_plus1+theta_plus2*psi_MR_prime
-        self.psi_prime_tot = psi_prime_tot
 
+        return psi_tot, psi_prime_tot
+
+    def calculate_amplitude(self):
         
-        # Construct the phase
-        phase = np.exp(1.j * psi_tot)
+        frequencyvector = self.frequencyvector[:,np.newaxis]
+
+        z = self.gw_params['redshift']
+        r = self.gw_params['luminosity_distance'] * cst.Mpc
+        iota = self.gw_params['theta_jn']
+        
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
+        chi_1 = self.gw_params.get('a_1', 0.0)
+        chi_2 = self.gw_params.get('a_2', 0.0)
+        
+        if (M1 < M2):
+            aux_mass = M1
+            M1 = M2
+            M2 = aux_mass
+
+        M = M1 + M2
+        mu = M1 * M2 / M
+        Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
+        delta_mass = (M1 - M2)/M #always >0
+        
+        C = 0.57721566  # Euler constant
+        eta = mu / M
+        eta2 = eta*eta
+        eta3 = eta2*eta
+
+        chi_eff = (M1*chi_1 + M2*chi_2)/M
+        chi_PN = chi_eff - 38/113*eta*(chi_1 + chi_2)
+        chi_s = 0.5*(chi_1 + chi_2)
+        chi_a = 0.5*(chi_1 - chi_2)
+
+        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
+        ones = np.ones((len(ff), 1))
+
         #########################################################################################################
         #########################################################################################################
         #########################################################################################################
@@ -1058,7 +1079,6 @@ class IMRPhenomD(Waveform):
         amp_int = (delta[0] + delta[1]*(ff) + delta[2]*(ff)**2. + delta[3]*(ff)**3. +\
                 delta[4]*(ff)**4.)
       
-    
         ff1_amp = f1_amp*ones
         ff3_amp = f3_amp*ones
     
@@ -1077,13 +1097,34 @@ class IMRPhenomD(Waveform):
     
         amp_tot = amp_ins + amp_int + amp_MR
         
-    
         hp = amp_tot*0.5*(1 + np.cos(iota)**2.)
         hc = amp_tot*np.cos(iota)
+
+        return hp, hc
+        
+
+        
+    def calculate_frequency_domain_strain(self):
+        frequencyvector = self.frequencyvector[:,np.newaxis]
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
+        
+        M = M1 + M2
+        
+        ff = frequencyvector*cst.G*M/cst.c**3
+        ones = np.ones((len(ff), 1))
+
+        psi = IMRPhenomD.calculate_phase(self)      
+        hp, hc = IMRPhenomD.calculate_amplitude(self)
+
+        # Construct the phase
+        phase = np.exp(1.j * psi_tot)
+        
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
     
         self._frequency_domain_strain = polarizations
 
+    
     def plot(self, output_folder='./'):
         plt.figure()
         #y_height = plot[3]/10
