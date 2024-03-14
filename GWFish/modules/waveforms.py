@@ -1001,6 +1001,14 @@ class IMRPhenomD(Waveform):
 
     
     def calculate_phase(self):
+
+        frequencyvector = self.frequencyvector[:,np.newaxis]
+        
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
+
+        ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
+        ones = np.ones((len(ff), 1))
         
         # Conjunction functions
         ff1 = 0.018*ones
