@@ -612,8 +612,8 @@ class TaylorF2(Waveform):
     def calculate_frequency_domain_strain(self):
 
         f_isco = aux.fisco(self.gw_params)
-        hp, hc = calculate_amplitude(self.gw_params)
-        psi = calculate_phase(self.gw_params)
+        hp, hc = TaylorF2.calculate_amplitude(self.gw_params)
+        psi = TaylorF2.calculate_phase(self.gw_params)
         
         #f_cut = cut_order * f_isco, default is 4*f_isco
         cut = self.gw_params['cut']
