@@ -1044,7 +1044,17 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)*(1.1610198035496786 - 2.3627771785551537*eta + 6.771038707057573*eta2)\
                 + (chi_PN - 1)**2*(0.7570782938606834 - 2.7256896890432474*eta + 7.1140380397149965*eta2)\
                 + (chi_PN - 1)**3*(0.1766934149293479 - 0.7978690983168183*eta + 2.1162391502005153*eta2)
+
+        # Interpolate from dataset to evaluate damping and ringdown frequencies
+        chi_f, m_f = final_bh(M1, M2, chi_1, chi_2)
     
+        data_ff = np.loadtxt(os.path.dirname(gw.__file__)+'/IMRPhenomD_n1l2m2.dat', unpack = True)
+        M_omega = interp1d(data_ff[0, :], data_ff[1, :])
+        tau_omega = interp1d(data_ff[0, :], data_ff[2, :])
+    
+        ff_RD = (M_omega(chi_f)/(2*np.pi)*M/m_f)[0]
+        ff_damp = (-tau_omega(chi_f)/(2*np.pi)*M/m_f)[0]
+        
         # Conjunction frequencies
         f1_amp = 0.014
         f3_amp = (np.abs(ff_RD + (ff_damp*gamma3*(np.sqrt(1-gamma2**2.) - 1)/gamma2)))
