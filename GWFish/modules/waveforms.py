@@ -558,6 +558,11 @@ class TaylorF2(Waveform):
         phic = self.gw_params['phase']
         tc = self.gw_params['geocent_time']
 
+        ###############################################################################
+        # PN coefficients (up to 3.5 PN order) INSPIRAL phase coefficients >>>>>>>>>>>>
+        # including the spin corrections
+        ###############################################################################
+        
         phi_0 = 1.
         phi_1 = 0.
         phi_2 = 3715./756. + 55./9.*eta
@@ -575,6 +580,8 @@ class TaylorF2(Waveform):
                 delta_mass*(-(25150083775./3048192.) + 26804935./6048.*eta - 1985./48.*eta2)*chi_a +\
                 (-(25150083775./3048192.) + 10566655595./762048.*eta - 1042165./3024.*eta2 + 5345./36.*eta3)*chi_s
         
+        #EARLY INSPIRAL PART OF THE PHASE phi_EI(f)>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        
         psi_TF2 = 2.*np.pi*ff*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
                 3./(128.*eta)*((np.pi*ff)**(-5./3.) +\
                 phi_2*(np.pi*ff)**(-1.) +\
@@ -585,6 +592,11 @@ class TaylorF2(Waveform):
                 phi_6*(np.pi*ff)**(1./3.) +\
                 phi_6_l*np.log(np.pi*ff)*(np.pi*ff)**(1./3.) +\
                 phi_7*(np.pi*ff)**(2./3.))
+
+
+        ################################################################################ 
+        # Evaluate PHASE and DERIVATIVE at the INTERFACE between ins and int >>>>>>>>>>>
+        ################################################################################ 
         
         f1 = 0.018
         
@@ -629,7 +641,11 @@ class TaylorF2(Waveform):
 
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
-        
+
+        ################################################################################
+        ################################# AMPLITUDE ####################################
+        ########################### without PN corrections #############################
+
         hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
              Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
         hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
@@ -647,11 +663,15 @@ class TaylorF2(Waveform):
         psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2.calculate_phase(self)      
         hp, hc = TaylorF2.calculate_amplitude(self)
         
+        ############################### PHASE OUTPUT ###############################
+
         phase = np.exp(1.j * psi)
+
+        ############################## STRAIN OUTPUT ###############################
         
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
 
-        # very crude high-f cut-off:
+        # Very crude high-f cut-off which can be an input parameter 'cut', default = 4*f_isco
         f_cut = cut*f_isco*cst.G*M/cst.c**3
         
         polarizations[np.where(ff[:,0] > f_cut), :] = 0.j
@@ -754,7 +774,6 @@ class IMRPhenomD(Waveform):
             logging.warning('Different waveform name passed to IMRPhenomD: '+\
                              self.name)    
 
-            
 
     def calculate_ins_phase(self):
 
@@ -762,7 +781,9 @@ class IMRPhenomD(Waveform):
 
         psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2.calculate_phase(self)
         
-        # Coefficients for the late ispiral phase
+        #LATE INSPIRAL Phase Coefficients >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        #(sigma0=sigma1=0 due to phase translation)
+        
         sigma2 = -10114.056472621156 - 44631.01109458185*eta\
                 + (chi_PN - 1)*(-6541.308761668722 - 266959.23419307504*eta + 686328.3229317984*eta2)\
                 + (chi_PN - 1)**2*(3405.6372187679685 - 437507.7208209015*eta + 1.6318171307344697e6*eta2)\
@@ -775,25 +796,29 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)*(-9608.682631509726 - 1.7108925257214056e6*eta + 4.332924601416521e6*eta2)\
                 + (chi_PN - 1)**2*(-22366.683262266528 - 2.5019716386377467e6*eta + 1.0274495902259542e7*eta2)\
                 + (chi_PN - 1)**3*(-85360.30079034246 - 570025.3441737515*eta + 4.396844346849777e6*eta2)
-        
+
         psi_late_ins = + 1./eta*(3./4.*sigma2*ff**(4./3.) +\
                             3./5.*sigma3*ff**(5./3.) +\
                             1./2.*sigma4*ff**2)
+        
+        ################################################################################ 
+        # Evaluate PHASE and DERIVATIVE at the INTERFACE between ins and int >>>>>>>>>>>
+        ################################################################################ 
 
         f1 = 0.018
         
         psi_late_ins_f1 = 1./eta*(3./4.*sigma2*f1**(4./3.) + 3./5.*sigma3*f1**(5./3.) + 1./2.*sigma4*f1**2)
 
         psi_late_ins_prime = 1./eta*(sigma2*ff**(1./3.) + sigma3*ff**(2./3.) + sigma4*ff)
-
         psi_late_ins_prime_f1 = 1./eta*(sigma2*f1**(1./3.) + sigma3*f1**(2./3.) + sigma4*f1)
+
+        #Total INSPIRAL PART OF THE PHASE (and its DERIVATIVE), with also late inspiral terms
+        ################################################################################ 
         
         psi_ins = psi + psi_late_ins
-        
         psi_ins_f1 = psi_f1 + psi_late_ins_f1
 
         psi_ins_prime = psi_prime + psi_late_ins_prime
-
         psi_ins_prime_f1 = psi_prime_f1 + psi_late_ins_prime_f1
 
         return psi_ins, psi_ins_f1, psi_prime, psi_ins_prime_f1
@@ -818,7 +843,6 @@ class IMRPhenomD(Waveform):
         ff_RD = (M_omega(chi_f)/(2*np.pi)*M/m_f)[0]
         ff_damp = (-tau_omega(chi_f)/(2*np.pi)*M/m_f)[0]
 
-
         return ff_RD, ff_damp
         
     def calculate_int_phase(self):
@@ -827,7 +851,11 @@ class IMRPhenomD(Waveform):
         
         psi_ins, psi_ins_prime, psi_ins_f1, psi_ins_prime_f1 = IMRPhenomD.calculate_ins_phase(self)
 
-        # Coefficients for the intermediate phase
+        ################################################################################ 
+        # PN coefficients for the INTERMEDIATE PHASE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        ################################################################################ 
+        #beta0 and beta1 are fixed by the continuity conditions 
+        
         beta2 = -3.282701958759534 - 9.051384468245866*eta\
                 + (chi_PN - 1)*(-12.415449742258042 + 55.4716447709787*eta - 106.05109938966335*eta2)\
                 + (chi_PN - 1)**2*(-11.953044553690658 + 76.80704618365418*eta - 155.33172948098394*eta2)\
@@ -837,15 +865,17 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)**2*(7.157371250566708e-6 - 0.000055780000112270685*eta + 0.00019142082884072178*eta2)\
                 + (chi_PN - 1)**3*(5.447166261464217e-6 - 0.00003220610095021982*eta + 0.00007974016714984341*eta2)
 
+
+        ####################### INS-INT PHASE CONTINUITY CONDITIONS ###################
+        # Impose C1 conditions at the interface
+        
         f1 = 0.018
 
-        # Impose C1 conditions at the interface
         beta1 = eta*psi_ins_prime_f1 - beta2*f1**(-1.) - beta3*f1**(-4.)  # psi_ins_prime_f1 = psi_int_prime_f1
         beta0 = eta*psi_ins_f1 - beta1*f1 - beta2*np.log(f1) + beta3/3.*f1**(-3.) #psi_ins_f1 = psi_int_f1
       
         # Evaluate full psi intermediate and its analytical derivative
         psi_int = 1./eta*(beta0 + beta1*ff + beta2*np.log(ff) - 1./3.*beta3*ff**(-3.))
-        
         psi_int_prime = 1./eta*(beta1 + beta2*ff**(-1.) + beta3*ff**(-4.))
 
         # Frequency at the interface between intermediate and merger-ringdown phases
@@ -868,8 +898,11 @@ class IMRPhenomD(Waveform):
         ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
         f2 = 0.5*ff_RD
 
-
-        # Coefficients for the merger-ringdown phase
+        ################################################################################ 
+        # PN coefficients for the MERGER-RINGDOWN PHASE>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        ################################################################################ 
+        #alpha0 and alpha1 are fixed by the continuity conditions
+        
         alpha2 = -0.07020209449091723 - 0.16269798450687084*eta\
                 + (chi_PN - 1)*(-0.1872514685185499 + 1.138313650449945*eta - 2.8334196304430046*eta2)\
                 + (chi_PN - 1)**2*(-0.17137955686840617 + 1.7197549338119527*eta - 4.539717148261272*eta2)\
@@ -888,13 +921,14 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)**3*(-0.017945336522161195 + 0.5965097794825992*eta - 2.0608879367971804*eta2)
 
         
-        # Impose C1 conditions at the interface
+        ####################### IN-MERG PHASE CONTINUITY CONDITIONS ###################
+        
         alpha1 = psi_int_prime_f2 - alpha2*f2**(-2.) - alpha3*f2**(-1./4.) -\
                 (alpha4*ff_damp)/(ff_damp**2. + (f2 - alpha5*ff_RD)**2.) # psi_int_prime_f2 = psi_MR_prime_f2
         alpha0 = psi_int_f2 - alpha1*f2 + alpha2*f2**(-1.) -\
                 4./3.*alpha3*f2**(3./4.) - alpha4*np.arctan((f2 - alpha5*ff_RD)/ff_damp) #psi_int_f2 = psi_MR_f2
 
-        
+        # Evaluate full merger-ringdown phase and its analytical derivative
         psi_MR = 1./eta*(alpha0 + alpha1*ff - alpha2*ff**(-1.) + 4./3.*alpha3*ff**(3./4.) +\
                                 alpha4*np.arctan((ff - alpha5*ff_RD)/ff_damp))
         
@@ -925,7 +959,11 @@ class IMRPhenomD(Waveform):
         psi_ins, psi_ins_prime, psi_ins_f1, psi_ins_prime_f1 = IMRPhenomD.calculate_ins_phase(self)
         psi_int, psi_int_prime, psi_int_f2, psi_int_prime_f2 = IMRPhenomD.calculate_int_phase(self)
         psi_MR, psi_MR_prime = IMRPhenomD.calculate_MR_phase(self)
-      
+
+
+        ########################### PHASE COMPONENTS ############################
+        ###################### written continuosly in frequency #################
+
         psi_ins = psi_ins*theta_minus1
         psi_int = theta_plus1*psi_int*theta_minus2
         psi_MR = psi_MR*theta_plus2
@@ -945,7 +983,9 @@ class IMRPhenomD(Waveform):
         
         ones = np.ones((len(ff), 1))
     
-        # AMPLITUDE
+        ########################################################################
+        ############################# AMPLITUDE ################################
+        ########################################################################
     
         # PN coefficients:
         a_0 = 1.
@@ -961,8 +1001,12 @@ class IMRPhenomD(Waveform):
             (31./12.*np.pi - 7./3.*np.pi*eta)*chi_s + (1614569./64512. - 61391./1344.*eta + 57451./4032.*eta2)*chi_s**2. +\
             delta_mass*chi_a*(31./12.*np.pi + (1614569./32256. - 165961./2688.*eta)*chi_s)
         
-        amp_PN = (a_0 + a_2*(np.pi*ff)**(2./3.) + a_3*(np.pi*ff) + a_4*(np.pi*ff)**(4./3.) +\
-                a_5*(np.pi*ff)**(5./3.) + a_6*(np.pi*ff)**2.)
+        amp_PN = (a_0 +\
+                  a_2*(np.pi*ff)**(2./3.) +\
+                  a_3*(np.pi*ff) +\
+                  a_4*(np.pi*ff)**(4./3.) +\
+                  a_5*(np.pi*ff)**(5./3.) +\
+                  a_6*(np.pi*ff)**2.)
     
         # Late inspiral coefficients
         rho1 = 3931.8979897196696 - 17395.758706812805*eta\
@@ -994,7 +1038,7 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)**2*(-0.05296577374411866 - 0.9923793203111362*eta + 4.820681208409587*eta2)\
                 + (chi_PN - 1)**3*(-0.006134139870393713 - 0.38429253308696365*eta + 1.7561754421985984*eta2)
     
-        # Intermediate phase 
+        # Intermediate part 
         v2 = 0.8149838730507785 + 2.5747553517454658*eta\
                 + (chi_PN - 1)*(1.1610198035496786 - 2.3627771785551537*eta + 6.771038707057573*eta2)\
                 + (chi_PN - 1)**2*(0.7570782938606834 - 2.7256896890432474*eta + 7.1140380397149965*eta2)\
@@ -1048,7 +1092,10 @@ class IMRPhenomD(Waveform):
     
         # Overall (2,2) mode factor and its derivative
         A0 = 1./(np.pi**(2./3.))*(5./24.)**(0.5)*cst.c/r*Mc**(5./6.)*(ff * cst.c**3/(cst.G*M))**(-7./6.)
-        
+
+        ####################### AMPLITUDE COMPONENTS ###########################
+        ###################### written continuosly in frequency ################
+
         amp_ins = amp_ins*theta_minus1_amp*A0
         amp_int = theta_plus1_amp*amp_int*theta_minus2_amp*A0
         amp_MR = theta_plus2_amp*amp_MR*A0
@@ -1070,7 +1117,8 @@ class IMRPhenomD(Waveform):
 
         # Construct the phase
         phase = np.exp(1.j * psi)
-        
+
+        # Construct the strain
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
     
         self._frequency_domain_strain = polarizations
