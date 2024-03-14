@@ -505,9 +505,6 @@ class TaylorF2(Waveform):
         if self.name != 'TaylorF2':
             logging.warning('Different waveform name passed to TaylorF2: '+\
                              self.name)
-        if frequencyvector is not None:
-            self.frequencyvector = frequencyvector
-
     @property
     def maxn(self):
         if self._maxn is None:
@@ -520,13 +517,11 @@ class TaylorF2(Waveform):
         return self._maxn
     
     def calculate_frequency_domain_strain(self):
-
         frequencyvector = self.frequencyvector[:,np.newaxis]
-        r = self.gw_params['luminosity_distance'] * cst.Mpc
         phic = self.gw_params['phase']
         tc = self.gw_params['geocent_time']
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
+        z = self.gw_params['redshift']
+        r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
         M1 = self.gw_params['mass_1'] * cst.Msol
         M2 = self.gw_params['mass_2'] * cst.Msol
