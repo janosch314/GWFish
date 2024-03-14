@@ -576,10 +576,12 @@ class TaylorF2(Waveform):
                 phi_6*(np.pi*ff)**(1./3.) +\
                 phi_7*(np.pi*ff)**(2./3.))
         
-        return psi_TF2, ff
+        return psi_TF2
         
     def calculate_amplitude(self):
-
+        
+        frequencyvector = self.frequencyvector[:,np.newaxis]
+        
         z = self.gw_params['redshift']
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
@@ -597,11 +599,10 @@ class TaylorF2(Waveform):
         mu = M1 * M2 / M
         Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
         delta_mass = (M1 - M2)/M #always >0
-        
 
-        ff = TaylorF2.calculate_phase(self)
+        ff = frequencyvector*cst.G*M/cst.c**3 
         ones = np.ones((len(ff), 1))
-
+        
         hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
              Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
         hc = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
@@ -611,11 +612,18 @@ class TaylorF2(Waveform):
 
     
     def calculate_frequency_domain_strain(self):
+
+        frequencyvector = self.frequencyvector[:,np.newaxis]
+        M1 = self.gw_params['mass_1'] * cst.Msol
+        M2 = self.gw_params['mass_2'] * cst.Msol
+        M = M1 + M2
+        
+        ff = frequencyvector*cst.G*M/cst.c**3 
+        ones = np.ones((len(ff), 1))
         
         cut = self.gw_params['cut']
         f_isco = aux.fisco(self.gw_params)
 
-        ff = TaylorF2.calculate_phase(self)
         psi = TaylorF2.calculate_phase(self)      
         hp, hc = TaylorF2.calculate_amplitude(self)
         
