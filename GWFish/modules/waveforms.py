@@ -267,7 +267,7 @@ class Waveform:
         
         ff = frequencyvector*cst.G*M/cst.c**3 #adimensional frequency ----> ff = 4.93*10^{-6} (M/M_sol)(f/Hz)
 
-        return M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, phic, tc, z, r, iota, ff
+        return M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, phic, tc, z, r, iota, ff
 
 class LALFD_Waveform(Waveform):
     """
