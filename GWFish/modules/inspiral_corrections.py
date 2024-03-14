@@ -401,7 +401,7 @@ class IMRPhenomD_PPE(Waveform):
         hp, hc = wf.IMRPhenomD.calculate_amplitude(self)
         ########################### PHASE OUTPUT ###############################
          
-        phase = np.exp(1.j * psi_tot)
+        phase = np.exp(1.j * psi)
  
         ########################################################################
 
