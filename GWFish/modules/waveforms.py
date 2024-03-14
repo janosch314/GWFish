@@ -518,6 +518,7 @@ class TaylorF2(Waveform):
 
     
     def calculate_phase(self):
+        
         frequencyvector = self.frequencyvector[:,np.newaxis]
         phic = self.gw_params['phase']
         tc = self.gw_params['geocent_time']
@@ -537,6 +538,7 @@ class TaylorF2(Waveform):
         mu = M1 * M2 / M
         Mc = cst.G * mu ** 0.6 * M ** 0.4 / cst.c ** 3
         delta_mass = (M1 - M2)/M #always >0
+        
         C = 0.57721566  # Euler constant
         eta = mu / M
         eta2 = eta*eta
@@ -577,11 +579,12 @@ class TaylorF2(Waveform):
         return psi_TF2
         
     def calculate_amplitude(self):
-        frequencyvector = self.frequencyvector[:,np.newaxis]
         
+        frequencyvector = self.frequencyvector[:,np.newaxis]
         z = self.gw_params['redshift']
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
+        
         M1 = self.gw_params['mass_1'] * cst.Msol
         M2 = self.gw_params['mass_2'] * cst.Msol
         
@@ -599,6 +602,7 @@ class TaylorF2(Waveform):
 
         ff = frequencyvector*cst.G*M/cst.c**3 #dimensionless frequency = f[Hz] * 4.926*10^{-6} * M[M_sol] 
         ones = np.ones((len(ff), 1))
+        self.ff = ff
 
         hp = cst.c / (2. * r) * np.sqrt(5. * np.pi / 24.)*\
              Mc ** (5. / 6.)/(np.pi * ff * cst.c**3/(cst.G*M)) ** (7. / 6.) *(1. + np.cos(iota) ** 2.)
@@ -609,20 +613,14 @@ class TaylorF2(Waveform):
 
     
     def calculate_frequency_domain_strain(self):
-        frequencyvector = self.frequencyvector[:,np.newaxis]
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        M = M1 + M2
-        ff = frequencyvector*cst.G*M/cst.c**3
         
-        hp, hc = TaylorF2.calculate_amplitude(self)
-        psi = TaylorF2.calculate_phase(self)       
-
+        ff = self.ff
+        cut = self.gw_params['cut']
         f_isco = aux.fisco(self.gw_params)
         
-        #f_cut = cut_order * f_isco, default is 4*f_isco
-        cut = self.gw_params['cut']
-
+        hp, hc = TaylorF2.calculate_amplitude(self)
+        psi = TaylorF2.calculate_phase(self)      
+        
         phase = np.exp(1.j * psi)
         
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
