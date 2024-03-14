@@ -16,7 +16,7 @@ import GWFish as gw
 import GWFish.modules.constants as cst
 import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
-from GWFish.modules.waveforms import Waveform as wf
+import GWFish.modules.waveforms as wf
 
 
 ################################################################################
