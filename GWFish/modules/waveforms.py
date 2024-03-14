@@ -518,7 +518,7 @@ class TaylorF2(Waveform):
         return self._maxn
 
 
-    def calculate_amplitude(self)
+    def calculate_amplitude(self):
     
         frequencyvector = self.frequencyvector[:,np.newaxis]
         r = self.gw_params['luminosity_distance'] * cst.Mpc
@@ -547,7 +547,7 @@ class TaylorF2(Waveform):
         return hp, hc
 
     
-    def calculate_phase(self)
+    def calculate_phase(self):
     
         frequencyvector = self.frequencyvector[:,np.newaxis]
         phic = self.gw_params['phase']
