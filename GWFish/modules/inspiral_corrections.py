@@ -23,7 +23,7 @@ from GWFish.modules.waveforms import Waveform as wf
 ################################ TAYLORF2_PPE ##################################
 ########################## with spin corrections ###############################
 
-class TaylorF2_PPE(Waveform):
+class TaylorF2_PPE(wf):
 
     """ GWFish implementation of TaylorF2_PPE """
     def __init__(self, name, gw_params, data_params):
@@ -206,7 +206,7 @@ class TaylorF2_PPE(Waveform):
 ############################## IMRPhenomD_PPE ##################################
 ################################################################################
 
-class IMRPhenomD_PPE(Waveform):
+class IMRPhenomD_PPE(wf):
     
     """ GWFish implementation of IMRPhenomD_PPE """
     def __init__(self, name, gw_params, data_params):
