@@ -698,7 +698,7 @@ class TaylorF2(Waveform):
         plt.close()
 
         plt.figure()
-        plt.semilogx(self.frequencyvector, phase)
+        plt.semilogx(self.frequencyvector, psi)
         plt.xlabel('Frequency [Hz]')
         plt.ylabel('Phase [rad]')
         plt.grid(which='both', color='lightgray', alpha=0.5, linestyle='dashed', linewidth=0.5)
