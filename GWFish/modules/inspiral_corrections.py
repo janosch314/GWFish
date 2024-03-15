@@ -252,6 +252,23 @@ class IMRPhenomD_PPE(Waveform):
 
         ones = np.ones((len(ff), 1)) 
 
+        #PPE phase parameters
+
+        PN = self.gw_params['PN']
+        beta = self.gw_params['beta']
+        
+        #gIMR phase parameters
+        delta_phi_0 = self.gw_params['delta_phi_0']
+        delta_phi_1 = self.gw_params['delta_phi_1']
+        delta_phi_2 = self.gw_params['delta_phi_2']
+        delta_phi_3 = self.gw_params['delta_phi_3']
+        delta_phi_4 = self.gw_params['delta_phi_4']
+        delta_phi_5 = self.gw_params['delta_phi_5']
+        delta_phi_6 = self.gw_params['delta_phi_6']
+        delta_phi_7 = self.gw_params['delta_phi_7']
+        delta_phi_8 = self.gw_params['delta_phi_8']
+        delta_phi_9 = self.gw_params['delta_phi_9']
+
         psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2_PPE.calculate_phase(self)
         
         #LATE INSPIRAL Phase Coefficients >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
