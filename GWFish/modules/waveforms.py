@@ -680,6 +680,9 @@ class TaylorF2(Waveform):
 
     def plot(self, output_folder='./'):
 
+        psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2.calculate_phase(self)   
+        phase = np.exp(1.j * psi)
+
         plt.figure()
         plt.loglog(self.frequencyvector, \
                    np.abs(self.frequency_domain_strain[:, 0]), label=r'$h_+$')
@@ -695,7 +698,7 @@ class TaylorF2(Waveform):
         plt.close()
 
         plt.figure()
-        plt.semilogx(self.frequencyvector, TaylorF2.calculate_phase(self))
+        plt.semilogx(self.frequencyvector, phase)
         plt.xlabel('Frequency [Hz]')
         plt.ylabel('Phase [rad]')
         plt.grid(which='both', color='lightgray', alpha=0.5, linestyle='dashed', linewidth=0.5)
