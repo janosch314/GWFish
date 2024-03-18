@@ -262,7 +262,7 @@ class TaylorF2_PPE(Inspiral_corr):
 ############################## IMRPhenomD_PPE ##################################
 ################################################################################
 
-class IMRPhenomD_PPE(Waveform):
+class IMRPhenomD_PPE(Inspiral_corr):
     
     """ GWFish implementation of IMRPhenomD_PPE """
     def __init__(self, name, gw_params, data_params):
