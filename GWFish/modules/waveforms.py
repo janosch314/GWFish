@@ -1,3 +1,23 @@
+# I break the standard code waveforms.py into more functions and attributes inside the Waveform class:
+# - get_param_comb(self) returns a few quantities (related to masses, spins, frequency) which are present in TaylorF2 and IMRPhenomD
+
+# TaylorF2 >>>
+# - EI_phase_coeff(self) returns the early-inspiral phase coefficients phi_i
+# - calculate_phase(self) returns the early-inspiral phase and its analytical derivative as a function of f and at f = f1
+# - calculate_amplitude(self) returns the two amplitudes hp and hc as functions of f
+# - calculate_frequency_domain_strain(self) returns the strain which is zero if f > f_cut = cut * f_isco, and 'cut' belongs to gw_params
+
+# IMRPhenomD >>>
+# - LI_phase_coeff(self), INT_phase_coeff(self), MR_phase_coeff(self) return the phase coefficients
+# - INS_amp_coeff(self), INT_amp_coeff(self), MR_amp_coeff(self) return the amplitude coefficients
+# - RD_damping(self) returns the ff_RD and ff_damp
+# - calculate_ins_phase(self), calculate_int_phase(self), calculate_MR_phase(self) return the different parts of the phase and their analytical derivatives
+# - calculate_phase(self) returns the total phase as a function of f 
+# - calculate_amplitude(self) returns the total amplitudes hp and hc as functions of f 
+# - calculate_frequency_domain_strain(self) returns the strain
+
+# Some of these functions are used in the inspiral_corrections.py module
+
 import os
 import logging
 import matplotlib.pyplot as plt
@@ -159,20 +179,7 @@ class Waveform:
             'mass_1': 0., 'mass_2': 0., 'luminosity_distance': 0., 
             'redshift': 0., 'theta_jn': 0., 'phase': 0., 'geocent_time': 0., 
             'a_1': 0., 'tilt_1': 0., 'phi_12': 0., 'a_2': 0., 'tilt_2': 0., 
-            'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0., 'cut': 4.,
-            #ppE parameters
-            'beta':0., 'PN':0.,
-            #gIMR
-            'delta_phi_0':0.,
-            'delta_phi_1':0.,
-            'delta_phi_2':0.,
-            'delta_phi_3':0.,
-            'delta_phi_4':0.,
-            'delta_phi_5':0.,
-            'delta_phi_6':0.,
-            'delta_phi_7':0.,
-            'delta_phi_8':0.,
-            'delta_phi_9':0.
+            'phi_jl': 0., 'lambda_1': 0., 'lambda_2': 0., 'cut': 4.
         }
         
     def update_gw_params(self, new_gw_params):
@@ -235,6 +242,7 @@ class Waveform:
     def get_param_comb(self):
         
         frequencyvector = self.frequencyvector[:,np.newaxis]
+        z = self.gw_params['redshift']
         M1 = self.gw_params['mass_1'] * cst.Msol
         M2 = self.gw_params['mass_2'] * cst.Msol
         chi_1 = self.gw_params.get('a_1', 0.0)
