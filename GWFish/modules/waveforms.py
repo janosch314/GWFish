@@ -614,7 +614,7 @@ class TaylorF2(Waveform):
         # Evaluate PHASE and DERIVATIVE at the INTERFACE between ins and int >>>>>>>>>>>
         ################################################################################ 
         
-        f1 = 0.0166
+        f1 = 0.018
         
         psi_TF2_f1 = 2.*np.pi*f1*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
                 3./(128.*eta)*((np.pi*f1)**(-5./3.) +\
@@ -798,6 +798,8 @@ class IMRPhenomD(Waveform):
             logging.warning('Different waveform name passed to IMRPhenomD: '+\
                              self.name)    
 
+    # PHASE COEFFICIENTS
+
     def LI_phase_coeff(self):
     
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
@@ -864,6 +866,8 @@ class IMRPhenomD(Waveform):
     
         return alpha2, alpha3, alpha4, alpha5
 
+    # AMPLITUDE COEFFICIENTS
+
     def INS_amp_coeff(self):
 
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
@@ -904,25 +908,25 @@ class IMRPhenomD(Waveform):
 
         return rho1, rho2, rho3
 
-    def INT_amp_coeff(self):
+    def MR_amp_coeff(self):
 
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
 
-        # Late inspiral coefficients
-        rho1 = 3931.8979897196696 - 17395.758706812805*eta\
-                + (chi_PN - 1)*(3132.375545898835 + 343965.86092361377*eta - 1.2162565819981997e6*eta2)\
-                + (chi_PN - 1)**2*(-70698.00600428853 + 1.383907177859705e6*eta - 3.9662761890979446e6*eta2)\
-                + (chi_PN - 1)**3*(-60017.52423652596 + 803515.1181825735*eta - 2.091710365941658e6*eta2)
-        rho2 = -40105.47653771657 + 112253.0169706701*eta\
-                + (chi_PN - 1)*(23561.696065836168 - 3.476180699403351e6*eta + 1.137593670849482e7*eta2)\
-                + (chi_PN - 1)**2*(754313.1127166454 - 1.308476044625268e7*eta + 3.6444584853928134e7*eta2)\
-                + (chi_PN - 1)**3*(596226.612472288 - 7.4277901143564405e6*eta + 1.8928977514040343e7*eta2)
-        rho3 = 83208.35471266537 - 191237.7264145924*eta\
-                + (chi_PN - 1)*(-210916.2454782992 + 8.71797508352568e6*eta - 2.6914942420669552e7*eta2)\
-                + (chi_PN - 1)**2*(-1.9889806527362722e6 + 3.0888029960154563e7*eta - 8.390870279256162e7*eta2)\
-                + (chi_PN - 1)**3*(-1.4535031953446497e6 + 1.7063528990822166e7*eta - 4.2748659731120914e7*eta2)
+        # Merger-ringdown coefficients
+        gamma1 = 0.006927402739328343 + 0.03020474290328911*eta\
+                + (chi_PN - 1)*(0.006308024337706171 - 0.12074130661131138*eta + 0.26271598905781324*eta2)\
+                + (chi_PN - 1)**2*(0.0034151773647198794 - 0.10779338611188374*eta + 0.27098966966891747*eta2)\
+                + (chi_PN - 1)**3*(0.0007374185938559283 - 0.02749621038376281*eta + 0.0733150789135702*eta2)
+        gamma2 = 1.010344404799477 + 0.0008993122007234548*eta\
+                + (chi_PN - 1)*(0.283949116804459 - 4.049752962958005*eta + 13.207828172665366*eta2)\
+                + (chi_PN - 1)**2*(0.10396278486805426 - 7.025059158961947*eta + 24.784892370130475*eta2)\
+                + (chi_PN - 1)**3*(0.03093202475605892 - 2.6924023896851663*eta + 9.609374464684983*eta2)
+        gamma3 = 1.3081615607036106 - 0.005537729694807678*eta\
+                + (chi_PN - 1)*(-0.06782917938621007 - 0.6689834970767117*eta + 3.403147966134083*eta2)\
+                + (chi_PN - 1)**2*(-0.05296577374411866 - 0.9923793203111362*eta + 4.820681208409587*eta2)\
+                + (chi_PN - 1)**3*(-0.006134139870393713 - 0.38429253308696365*eta + 1.7561754421985984*eta2)
 
-        return rho1, rho2, rho3
+        return gamma1, gamma2, gamma3
 
     def RD_damping(self):
 
