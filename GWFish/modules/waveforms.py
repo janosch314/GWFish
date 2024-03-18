@@ -587,8 +587,8 @@ class TaylorF2(Waveform):
               (-(25150083775./3048192.) + 10566655595./762048.*eta - 1042165./3024.*eta2 + 5345./36.*eta3)*chi_s
     
         return phi_0, phi_1, phi_2, phi_3, phi_4, phi_5, phi_5_l, phi_6, phi_6_l, phi_7
-    
-   def calculate_phase(self):
+
+    def calculate_phase(self):
         
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
         ones = np.ones((len(ff), 1))
@@ -650,7 +650,8 @@ class TaylorF2(Waveform):
                 phi_7*(np.pi)**(2./3.)*(2./3.*f1**(-1./3.)))
         
         return psi_TF2, psi_TF2_prime, psi_TF2_f1, psi_TF2_prime_f1
-        
+    
+    
     def calculate_amplitude(self):
         
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
