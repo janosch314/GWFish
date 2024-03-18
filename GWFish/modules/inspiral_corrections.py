@@ -20,11 +20,67 @@ import GWFish.modules.waveforms as wf
 from GWFish.modules.waveforms import Waveform
 
 
+#class which inherits the Waveform class in waveforms.py
+class Inspiral_corr(Waveform):
+
+     def _set_default_gw_params(self):
+        self.gw_params = {
+            'mass_1': 0., 'mass_2': 0., 'luminosity_distance': 0., 
+            'redshift': 0., 'theta_jn': 0., 'phase': 0., 'geocent_time': 0., 
+            'a_1': 0., 'a_2': 0.,'cut': 4.,
+            #ppE parameters
+            'beta':0., 'PN':0.,
+            #gIMR
+            'delta_phi_0':0.,
+            'delta_phi_1':0.,
+            'delta_phi_2':0.,
+            'delta_phi_3':0.,
+            'delta_phi_4':0.,
+            'delta_phi_5':0.,
+            'delta_phi_6':0.,
+            'delta_phi_7':0.,
+            'delta_phi_8':0.,
+            'delta_phi_9':0.
+        }
+
+     def update_gw_params(self, new_gw_params):
+        self.gw_params.update(new_gw_params)
+        self._frequency_domain_strain = None
+        self._time_domain_strain = None
+          
+     def get_phase_corr(self):
+
+        # We have to add delta_phi_i as in gIMRPhenomD (arXiv:1603.08955)
+        # phi ---> phi*(1+delta_phi_i)
+        # phi is a combination of phi_i, i=0,....,7 and i=2PN
+        # We want to modify phi for each b one by one and b = i-5 
+        # beta is a function of delta_phi_i, phi_i and eta
+
+        #PPE phase deviations
+        PN = self.gw_params['PN']
+        beta = self.gw_params['beta']
+        
+        #gIMR phase deviations
+        delta_phi_0 = self.gw_params['delta_phi_0']
+        delta_phi_1 = self.gw_params['delta_phi_1']
+        delta_phi_2 = self.gw_params['delta_phi_2']
+        delta_phi_3 = self.gw_params['delta_phi_3']
+        delta_phi_4 = self.gw_params['delta_phi_4']
+        delta_phi_5 = self.gw_params['delta_phi_5']
+        delta_phi_6 = self.gw_params['delta_phi_6']
+        delta_phi_7 = self.gw_params['delta_phi_7']
+        delta_phi_8 = self.gw_params['delta_phi_8']
+        delta_phi_9 = self.gw_params['delta_phi_9']
+
+        return PN, beta, delta_phi_0, delta_phi_1, delta_phi_2, delta_phi_3, delta_phi_4,\
+        delta_phi_5, delta_phi_6, delta_phi_7, delta_phi_8, delta_phi_9
+
+
 ################################################################################
 ################################ TAYLORF2_PPE ##################################
 ########################## with spin corrections ###############################
 
-class TaylorF2_PPE(Waveform):
+class TaylorF2_PPE(Inspiral_corr):
 
     """ GWFish implementation of TaylorF2_PPE """
     def __init__(self, name, gw_params, data_params):
@@ -45,79 +101,37 @@ class TaylorF2_PPE(Waveform):
                 return ValueError('maxn must be integer')
         return self._maxn
 
-
     def calculate_phase(self): 
 
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = wf.Waveform.get_param_comb(self)
-
         f_isco = aux.fisco(self.gw_params)  #inner stable circular orbit 
-
         ones = np.ones((len(ff), 1)) 
-        
-        #PPE phase parameters
 
-        PN = self.gw_params['PN']
-        beta = self.gw_params['beta']
+        PN, beta, delta_phi_0, delta_phi_1, delta_phi_2, delta_phi_3, delta_phi_4,\
+        delta_phi_5, delta_phi_6, delta_phi_7, delta_phi_8, delta_phi_9 = Inspiral_corr.get_phase_corr(self)
         
-        #gIMR phase parameters
-        delta_phi_0 = self.gw_params['delta_phi_0']
-        delta_phi_1 = self.gw_params['delta_phi_1']
-        delta_phi_2 = self.gw_params['delta_phi_2']
-        delta_phi_3 = self.gw_params['delta_phi_3']
-        delta_phi_4 = self.gw_params['delta_phi_4']
-        delta_phi_5 = self.gw_params['delta_phi_5']
-        delta_phi_6 = self.gw_params['delta_phi_6']
-        delta_phi_7 = self.gw_params['delta_phi_7']
-        delta_phi_8 = self.gw_params['delta_phi_8']
-        delta_phi_9 = self.gw_params['delta_phi_9']
-
         #f_cut = cut_order * f_isco
         cut = self.gw_params['cut']
-
 
         ################################################################################ 
         ############################## PHASE CORRECTIONS ###############################
         ############################# PN expansion of phase ############################
 
-        # We have to add delta_phi_ppe as in gIMRPhenomD (arXiv:1603.08955)
-        # phi ---> phi*(1+delta_phi_i)
-        # phi is a combination of phi_i, i=0,....,7 and i=2PN
-        # We want to modify phi for each b one by one and b = i-5 
-
         psi_TF2, psi_TF2_prime, psi_TF2_f1, psi_TF2_prime_f1 = wf.TaylorF2.calculate_phase(self)
-
-        phi_0 = 1.
-        phi_1 = 0.
-        phi_2 = 3715./756. + 55./9.*eta
-        phi_3 = -16.*np.pi + 113./3.*delta_mass*chi_a + (113./3. - 76./3.*eta)*chi_s
-        phi_4 = 15293365./508032. + 27145./504.*eta + 3085./72.*eta2 + (-(405./8.) +\
-                200*eta)*chi_a**2 - 405./4.*delta_mass*chi_a*chi_s + (-(405./8.) + 5./2.*eta)*chi_s**2
-        phi_5 = 38645./756.*np.pi - 65./9.*np.pi*eta + delta_mass*(-(732985./2268.) -\
-                140./9.*eta)*chi_a + (-(732985./2268.) + 24260./81.*eta + 340./9.*eta2)*chi_s
-        phi_5_l = 3.*phi_5
-        phi_6 = 11583231236531./4694215680. - 6848./21.*C - (640.*np.pi**2)/3. +\
-                (-15737765635./3048192. + 2255.*np.pi**2/12.)*eta + 76055.*eta2/1728. - 127825.*eta3/1296. +\
-                2270./3.*np.pi*delta_mass*chi_a + (2270.*np.pi/3. - 520.*np.pi*eta)*chi_s -6848./63.*np.log(64.)
-        phi_6_l = - 6848./63.*3.
-        phi_7 = (77096675./254016. + 378515./1512.*eta - 74045./756.*eta2)*np.pi +\
-                delta_mass*(-(25150083775./3048192.) + 26804935./6048.*eta - 1985./48.*eta2)*chi_a +\
-                (-(25150083775./3048192.) + 10566655595./762048.*eta - 1042165./3024.*eta2 + 5345./36.*eta3)*chi_s
+        phi_0, phi_1, phi_2, phi_3, phi_4, phi_5, phi_5_l, phi_6, phi_6_l, phi_7 = wf.TaylorF2.EI_phase_coeff(self)
 
         psi_gIMR = 3./(128.*eta)*(delta_phi_0*(np.pi*ff)**(-5./3.) +\
                 delta_phi_1*(np.pi*ff)**(-4./3.)+\
                 phi_2*delta_phi_2*(np.pi*ff)**(-1.) +\
                 phi_3*delta_phi_3*(np.pi*ff)**(-2./3.) +\
                 phi_4*delta_phi_4*(np.pi*ff)**(-1./3.) +\
-                phi_5*delta_phi_5 +\
-                phi_6*delta_phi_6*(np.pi*ff)**(1./3.) +\
+                phi_5*delta_phi_5 + phi_5_l*delta_phi_8*np.log(np.pi*ff) +\
+                (phi_6*delta_phi_6 + phi_6_l*delta_phi_9*np.log(np.pi*ff))*((np.pi*ff)**(1./3.)) +\
                 phi_7*delta_phi_7*(np.pi*ff)**(2./3.)) 
         
-        psi_ppe = beta*((np.pi*(ff * cst.c**3/(cst.G*M))*Mc)**((2*PN-5.)/3.))  #ppe correction at every b order
+        psi_ppe = beta*(np.pi*ff*cst.c**3/(cst.G*M)*Mc)**((2*PN-5.)/3.)  #ppe correction at every b order
 
         psi_EI = psi_TF2 + psi_ppe + psi_gIMR
-
-        #Depending on the choice on gw_params you recover psi_tot = psi_TF2 + psi_ppe
-                                                         #psi_tot = psi_TF2 + psi_gIMR
 
         ################################################################################ 
         # Evaluate PHASE and DERIVATIVE at the INTERFACE between ins and int >>>>>>>>>>>
@@ -131,38 +145,40 @@ class TaylorF2_PPE(Waveform):
                     phi_3*delta_phi_3*(np.pi*f1)**(-2./3.) +\
                     phi_4*delta_phi_4*(np.pi*f1)**(-1./3.) +\
                     phi_5*delta_phi_5 + phi_5_l*delta_phi_8*np.log(np.pi*f1) +\
-                    (phi_6*delta_phi_6*+ phi_6_l*delta_phi_9*np.log(np.pi*f1))*((np.pi*f1)**(1./3.)) +\
+                    (phi_6*delta_phi_6 + phi_6_l*delta_phi_9*np.log(np.pi*f1))*((np.pi*f1)**(1./3.)) +\
                     phi_7*delta_phi_7*(np.pi*f1)**(2./3.))
                 
-        psi_ppe_f1 = beta*((np.pi*(f1/(cst.G*M/cst.c**3)*Mc))**((2*PN-5.)/3.))
+        psi_ppe_f1 = beta*((np.pi*f1*cst.c**3/(cst.G*M)*Mc))**((2*PN-5.)/3.)
 
         psi_EI_f1 = psi_TF2_f1 + psi_ppe_f1 + psi_gIMR_f1
         
 
+        # Analytical derivative 
         psi_gIMR_prime = 3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*ff**(-8./3.)) +\
                         delta_phi_1*(np.pi)**(-4./3.)*(-4./3.*ff**(-7./3.)) +\
                         phi_2*delta_phi_2*(np.pi)**(-1.)*(-1.*ff**(-2.)) +\
                         phi_3*delta_phi_3*(np.pi)**(-2./3.)*(-2./3.*ff**(-5./3.)) +\
                         phi_4*delta_phi_4*(np.pi)**(-1./3.)*(-1./3.*ff**(-4./3.)) +\
+                        phi_5_l*delta_phi_8*ff**(-1.) +\
                         phi_6*delta_phi_6*(np.pi)**(1./3.)*(1./3.*ff**(-2./3.)) +\
-                        phi_6_l*delta_phi_9*((np.pi*ff)**(1./3.)*(np.pi*ff**(-1.)) +\
-                                             np.log(np.pi*ff)*(np.pi)**(1./3.)*(1./3.*ff**(-2./3.)) +\
-                        phi_7*delta_phi_7*(np.pi)**(2./3.)*(2./3.*ff**(-1./3.))))
+                        phi_6_l*delta_phi_9*(((np.pi*ff)**(1./3.))*(ff**(-1.)) +\
+                                             np.log(np.pi*ff)*(np.pi)**(1./3.)*(1./3.*ff**(-2./3.))) +\
+                        phi_7*delta_phi_7*(np.pi)**(2./3.)*(2./3.*ff**(-1./3.)))
 
         psi_gIMR_prime_f1 = 3./(128.*eta)*((np.pi)**(-5./3.)*(-5./3.*f1**(-8./3.)) +\
                         delta_phi_1*(np.pi)**(-4./3.)*(-4./3.*f1**(-7./3.)) +\
                         phi_2*delta_phi_2*(np.pi)**(-1.)*(-1.*f1**(-2.)) +\
                         phi_3*delta_phi_3*(np.pi)**(-2./3.)*(-2./3.*f1**(-5./3.)) +\
                         phi_4*delta_phi_4*(np.pi)**(-1./3.)*(-1./3.*f1**(-4./3.)) +\
-                        phi_5_l*delta_phi_8*(np.pi)*f1**(-1.) +\
+                        phi_5_l*delta_phi_8*1./3.*f1**(-1.) +\
                         phi_6*delta_phi_6*(np.pi)**(1./3.)*(1./3.*f1**(-2./3.)) +\
-                        phi_6_l*delta_phi_9*((np.pi*f1)**(1./3.)*(np.pi*ff**(-1.)) +\
+                        phi_6_l*delta_phi_9*(((np.pi*f1)**(1./3.))*(f1**(-1.)) +\
                                              np.log(np.pi*f1)*(np.pi)**(1./3.)*(1./3.*f1**(-2./3.))) +\
                         phi_7*delta_phi_7*(np.pi)**(2./3.)*(2./3.*f1**(-1./3.)))
 
-        psi_ppe_prime = beta*(2*PN-5.)/3.*((np.pi*(ff/(cst.G*M/cst.c**3))*Mc)**((2*PN-8.)/3.))
-
-        psi_ppe_prime_f1 = beta*(2*PN-5.)/3.*((np.pi*(f1/(cst.G*M/cst.c**3))*Mc)**((2*PN-8.)/3.))
+        psi_ppe_prime = beta*(2*PN-5.)/3.*(np.pi*ff*cst.c**3/(cst.G*M)*Mc)**((2*PN-8.)/3.)
+                                           
+        psi_ppe_prime_f1 = beta*(2*PN-5.)/3.*(np.pi*f1*cst.c**3/(cst.G*M)*Mc)**((2*PN-8.)/3.)
         
         psi_EI_prime = psi_TF2_prime + psi_gIMR_prime + psi_ppe_prime
         psi_EI_prime_f1 = psi_TF2_prime_f1 + psi_gIMR_prime_f1 + psi_ppe_prime_f1
@@ -172,13 +188,12 @@ class TaylorF2_PPE(Waveform):
     def calculate_frequency_domain_strain(self):
 
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = wf.Waveform.get_param_comb(self)
-
         cut = self.gw_params['cut']
         f_isco = aux.fisco(self.gw_params)
 
         psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2_PPE.calculate_phase(self)
-
         hp, hc = wf.TaylorF2.calculate_amplitude(self)
+         
         ############################### PHASE OUTPUT ###############################
 
         phase = np.exp(1.j * psi)
@@ -193,6 +208,7 @@ class TaylorF2_PPE(Waveform):
         polarizations[np.where(ff[:,0] > f_cut), :] = 0.j
 
         self._frequency_domain_strain = polarizations
+
         
     ################################################################################
     ############################# Amplitude & phase plot ###########################
@@ -200,7 +216,12 @@ class TaylorF2_PPE(Waveform):
         
     def plot (self, output_folder='./'):
 
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = wf.Waveform.get_param_comb(self)
+        psi_TF2, psi_TF2_prime, psi_TF2_f1, psi_TF2_prime_f1 = wf.TaylorF2.calculate_phase(self)
         psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2_PPE.calculate_phase(self)
+        
+        phase = psi
+        delta_phase = psi - psi_TF2
         
         plt.figure()
         plt.loglog(self.frequencyvector, \
@@ -216,17 +237,26 @@ class TaylorF2_PPE(Waveform):
         plt.savefig(output_folder + 'amp_tot_TF2_PPE.png')
         plt.close()
 
+
         plt.figure()
-        plt.semilogx(self.frequencyvector, psi)
-        plt.xlabel('Frequency [Hz]')
+        plt.semilogx(ff, phase)
+        plt.xlabel('Dimensionless frequency')
         plt.ylabel('Phase [rad]')
         plt.grid(which='both', color='lightgray', alpha=0.5, linestyle='dashed', linewidth=0.5)
         plt.tight_layout()
         plt.savefig(output_folder + 'phase_tot_TF2_PPE.png')
         plt.close()
 
-
-################################################################################
+        
+        plt.figure()
+        plt.semilogx(ff, delta_phase)
+        plt.xlabel('Dimensionless frequency')
+        plt.ylabel('Phase difference [rad]')
+        plt.grid(which='both', color='lightgray', alpha=0.5, linestyle='dashed', linewidth=0.5)
+        plt.tight_layout()
+        plt.savefig(output_folder + 'delta_phase_tot_PPE.png')
+        plt.close()
+        
 
 ################################################################################
 ############################## IMRPhenomD_PPE ##################################
