@@ -403,7 +403,8 @@ class IMRPhenomD_PPE(Inspiral_corr):
 
         return psi_tot
 
-     def calculate_frequency_domain_strain(self): 
+
+    def calculate_frequency_domain_strain(self): 
 
         psi = IMRPhenomD_PPE.calculate_phase(self)
         hp, hc = wf.IMRPhenomD.calculate_amplitude(self)
@@ -421,4 +422,6 @@ class IMRPhenomD_PPE(Inspiral_corr):
         self._frequency_domain_strain = polarizations
 
         ########################################################################
+       
 
+     
