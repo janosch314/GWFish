@@ -536,6 +536,11 @@ class LALTD_Waveform(LALFD_Waveform):
 
         self._frequency_domain_strain = polarizations
 
+
+################################################################################
+################################ TAYLORF2 ######################################
+########################## with spin corrections ###############################
+
 class TaylorF2(Waveform):
     """ GWFish implementation of TaylorF2 """
     def __init__(self, name, gw_params, data_params):
@@ -555,21 +560,14 @@ class TaylorF2(Waveform):
             if type(self._maxn) is not int:
                 return ValueError('maxn must be integer')
         return self._maxn
-
-    
-    def calculate_phase(self):
         
+
+    def EI_phase_coeff(self):
+
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
-
-        ones = np.ones((len(ff), 1))
-
-        phic = self.gw_params['phase']
-        tc = self.gw_params['geocent_time']
-
-        ###############################################################################
+    
         # PN coefficients (up to 3.5 PN order) INSPIRAL phase coefficients >>>>>>>>>>>>
-        # including the spin corrections
-        ###############################################################################
+        # including the spin corrections and the logaritmic corrections (phi_5_l and phi_6_l)
         
         phi_0 = 1.
         phi_1 = 0.
@@ -579,14 +577,25 @@ class TaylorF2(Waveform):
                 200*eta)*chi_a**2 - 405./4.*delta_mass*chi_a*chi_s + (-(405./8.) + 5./2.*eta)*chi_s**2
         phi_5 = 38645./756.*np.pi - 65./9.*np.pi*eta + delta_mass*(-(732985./2268.) -\
                 140./9.*eta)*chi_a + (-(732985./2268.) + 24260./81.*eta + 340./9.*eta2)*chi_s
-        phi_5_l = 3.*phi_5
+        phi_5_l = phi_5
         phi_6 = 11583231236531./4694215680. - 6848./21.*C - (640.*np.pi**2)/3. +\
-                (-15737765635./3048192. + 2255.*np.pi**2/12.)*eta + 76055.*eta2/1728. - 127825.*eta3/1296. +\
-                2270./3.*np.pi*delta_mass*chi_a + (2270.*np.pi/3. - 520.*np.pi*eta)*chi_s -6848./63.*np.log(64.)
-        phi_6_l = - 6848./63.*3.
+              (-15737765635./3048192. + 2255.*np.pi**2/12.)*eta + 76055.*eta2/1728. - 127825.*eta3/1296. +\
+              2270./3.*np.pi*delta_mass*chi_a + (2270.*np.pi/3. - 520.*np.pi*eta)*chi_s -6848./63.*np.log(64.)
+        phi_6_l = -6848./63.
         phi_7 = (77096675./254016. + 378515./1512.*eta - 74045./756.*eta2)*np.pi +\
-                delta_mass*(-(25150083775./3048192.) + 26804935./6048.*eta - 1985./48.*eta2)*chi_a +\
-                (-(25150083775./3048192.) + 10566655595./762048.*eta - 1042165./3024.*eta2 + 5345./36.*eta3)*chi_s
+              delta_mass*(-(25150083775./3048192.) + 26804935./6048.*eta - 1985./48.*eta2)*chi_a +\
+              (-(25150083775./3048192.) + 10566655595./762048.*eta - 1042165./3024.*eta2 + 5345./36.*eta3)*chi_s
+    
+        return phi_0, phi_1, phi_2, phi_3, phi_4, phi_5, phi_5_l, phi_6, phi_6_l, phi_7
+    
+   def calculate_phase(self):
+        
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
+        ones = np.ones((len(ff), 1))
+        phic = self.gw_params['phase']
+        tc = self.gw_params['geocent_time']
+
+        phi_0, phi_1, phi_2, phi_3, phi_4, phi_5, phi_5_l, phi_6, phi_6_l, phi_7 = TaylorF2.EI_phase_coeff(self)
         
         #EARLY INSPIRAL PART OF THE PHASE phi_EI(f)>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         
@@ -601,12 +610,11 @@ class TaylorF2(Waveform):
                 phi_6_l*np.log(np.pi*ff)*(np.pi*ff)**(1./3.) +\
                 phi_7*(np.pi*ff)**(2./3.))
 
-
         ################################################################################ 
         # Evaluate PHASE and DERIVATIVE at the INTERFACE between ins and int >>>>>>>>>>>
         ################################################################################ 
         
-        f1 = 0.018
+        f1 = 0.0166
         
         psi_TF2_f1 = 2.*np.pi*f1*cst.c**3/(cst.G*M)*tc - phic*ones - np.pi/4.*ones +\
                 3./(128.*eta)*((np.pi*f1)**(-5./3.) +\
@@ -624,10 +632,10 @@ class TaylorF2(Waveform):
                 phi_2*(np.pi)**(-1.)*(-1.*ff**(-2.)) +\
                 phi_3*(np.pi)**(-2./3.)*(-2./3.*ff**(-5./3.)) +\
                 phi_4*(np.pi)**(-1./3.)*(-1./3.*ff**(-4./3.)) +\
-                phi_5_l*(np.pi)*ff**(-1.) +\
+                phi_5_l*ff**(-1.) +\
                 phi_6*(np.pi)**(1./3.)*(1./3.*ff**(-2./3.)) +\
-                phi_6_l*((np.pi)*ff**(-1.)*(np.pi*ff)**(1./3.) +\
-                        np.log(np.pi*ff)*(np.pi)**(1./3.)*(1./3.*ff**(-2./3.))) +\
+                phi_6_l*(ff**(-1.)*(np.pi*ff)**(1./3.) +\
+                         np.log(np.pi*ff)*(np.pi)**(1./3.)*(1./3.*ff**(-2./3.))) +\
                 phi_7*(np.pi)**(2./3.)*(2./3.*ff**(-1./3.)))
         
         psi_TF2_prime_f1 = 2.*np.pi*cst.c**3/(cst.G*M)*tc +\
@@ -635,10 +643,10 @@ class TaylorF2(Waveform):
                 phi_2*(np.pi)**(-1.)*(-1.*f1**(-2.)) +\
                 phi_3*(np.pi)**(-2./3.)*(-2./3.*f1**(-5./3.)) +\
                 phi_4*(np.pi)**(-1./3.)*(-1./3.*f1**(-4./3.)) +\
-                phi_5_l*(np.pi)*f1**(-1.) +\
+                phi_5_l*f1**(-1.) +\
                 phi_6*(np.pi)**(1./3.)*(1./3.*f1**(-2./3.)) +\
-                phi_6_l*((np.pi)*f1**(-1.)*(np.pi*f1)**(1./3.) +\
-                        np.log(np.pi*f1)*(np.pi)**(1./3.)*(1./3.*f1**(-2./3.))) +\
+                phi_6_l*(f1**(-1.)*(np.pi*f1)**(1./3.) +\
+                         np.log(np.pi*f1)*(np.pi)**(1./3.)*(1./3.*f1**(-2./3.))) +\
                 phi_7*(np.pi)**(2./3.)*(2./3.*f1**(-1./3.)))
         
         return psi_TF2, psi_TF2_prime, psi_TF2_f1, psi_TF2_prime_f1
@@ -646,7 +654,6 @@ class TaylorF2(Waveform):
     def calculate_amplitude(self):
         
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
-
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
 
@@ -664,7 +671,6 @@ class TaylorF2(Waveform):
     def calculate_frequency_domain_strain(self):
 
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
-        
         cut = self.gw_params['cut']
         f_isco = aux.fisco(self.gw_params)
 
@@ -685,6 +691,8 @@ class TaylorF2(Waveform):
         polarizations[np.where(ff[:,0] > f_cut), :] = 0.j
 
         self._frequency_domain_strain = polarizations
+
+    ################################# STRAIN & PHASE plot #########################
 
     def plot(self, output_folder='./'):
 
@@ -772,8 +780,9 @@ def phenomD_amp_MR(f, parameters, f_damp, f_RD, gamma1, gamma2, gamma3):
     #print('amp_MR_prime = ', sp.simplify(amp_MR_prime))
     amp_MR_prime_f = amp_MR_prime.evalf(subs={ff: f})
 
-    
     return amp_MR_f, amp_MR_prime_f
+
+
 
 class IMRPhenomD(Waveform):
     """ GWFish implementation of IMRPhenomD """
