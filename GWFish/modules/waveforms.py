@@ -783,6 +783,9 @@ def phenomD_amp_MR(f, parameters, f_damp, f_RD, gamma1, gamma2, gamma3):
     return amp_MR_f, amp_MR_prime_f
 
 
+################################################################################
+############################## IMRPhenomD ######################################
+################################################################################
 
 class IMRPhenomD(Waveform):
     """ GWFish implementation of IMRPhenomD """
@@ -794,13 +797,10 @@ class IMRPhenomD(Waveform):
             logging.warning('Different waveform name passed to IMRPhenomD: '+\
                              self.name)    
 
-
-    def calculate_ins_phase(self):
-
+    def LI_phase_coeff(self):
+    
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
-
-        psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2.calculate_phase(self)
-        
+    
         #LATE INSPIRAL Phase Coefficients >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         #(sigma0=sigma1=0 due to phase translation)
         
@@ -816,6 +816,145 @@ class IMRPhenomD(Waveform):
                 + (chi_PN - 1)*(-9608.682631509726 - 1.7108925257214056e6*eta + 4.332924601416521e6*eta2)\
                 + (chi_PN - 1)**2*(-22366.683262266528 - 2.5019716386377467e6*eta + 1.0274495902259542e7*eta2)\
                 + (chi_PN - 1)**3*(-85360.30079034246 - 570025.3441737515*eta + 4.396844346849777e6*eta2)
+
+        return sigma2, sigma3, sigma4
+
+    def INT_phase_coeff(self):
+
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
+
+        # PN coefficients for the INTERMEDIATE PHASE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        #beta0 and beta1 are fixed by the continuity conditions 
+        
+        beta2 = -3.282701958759534 - 9.051384468245866*eta\
+                + (chi_PN - 1)*(-12.415449742258042 + 55.4716447709787*eta - 106.05109938966335*eta2)\
+                + (chi_PN - 1)**2*(-11.953044553690658 + 76.80704618365418*eta - 155.33172948098394*eta2)\
+                + (chi_PN - 1)**3*(-3.4129261592393263 + 25.572377569952536*eta - 54.408036707740465*eta2)
+        beta3 = -0.000025156429818799565 + 0.000019750256942201327*eta\
+                + (chi_PN - 1)**2*(-0.000018370671469295915 + 0.000021886317041311973*eta + 0.00008250240316860033*eta2)\
+                + (chi_PN - 1)**2*(7.157371250566708e-6 - 0.000055780000112270685*eta + 0.00019142082884072178*eta2)\
+                + (chi_PN - 1)**3*(5.447166261464217e-6 - 0.00003220610095021982*eta + 0.00007974016714984341*eta2)
+    
+        return beta2, beta3
+
+    def MR_phase_coeff(self):
+
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
+
+        # PN coefficients for the MERGER-RINGDOWN PHASE>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        #alpha0 and alpha1 are fixed by the continuity conditions
+        
+        alpha2 = -0.07020209449091723 - 0.16269798450687084*eta\
+                + (chi_PN - 1)*(-0.1872514685185499 + 1.138313650449945*eta - 2.8334196304430046*eta2)\
+                + (chi_PN - 1)**2*(-0.17137955686840617 + 1.7197549338119527*eta - 4.539717148261272*eta2)\
+                + (chi_PN - 1)**3*(-0.049983437357548705 + 0.6062072055948309*eta - 1.682769616644546*eta2)
+        alpha3 = 9.5988072383479 - 397.05438595557433*eta\
+                + (chi_PN - 1)*(16.202126189517813 - 1574.8286986717037*eta + 3600.3410843831093*eta2)\
+                + (chi_PN - 1)**2*(27.092429659075467 - 1786.482357315139*eta + 5152.919378666511*eta2)\
+                + (chi_PN - 1)**3*(11.175710130033895 - 577.7999423177481*eta + 1808.730762932043*eta2)
+        alpha4 =  -0.02989487384493607 + 1.4022106448583738*eta\
+                + (chi_PN - 1)*(-0.07356049468633846 + 0.8337006542278661*eta + 0.2240008282397391*eta2)\
+                + (chi_PN - 1)**2*(-0.055202870001177226 + 0.5667186343606578*eta + 0.7186931973380503*eta2)\
+                + (chi_PN - 1)**3*(-0.015507437354325743 + 0.15750322779277187*eta + 0.21076815715176228*eta2)
+        alpha5 = 0.9974408278363099 - 0.007884449714907203*eta\
+                + (chi_PN - 1)*(-0.059046901195591035 + 1.3958712396764088*eta - 4.516631601676276*eta2)\
+                + (chi_PN - 1)**2*(-0.05585343136869692 + 1.7516580039343603*eta - 5.990208965347804*eta2)\
+                + (chi_PN - 1)**3*(-0.017945336522161195 + 0.5965097794825992*eta - 2.0608879367971804*eta2)
+    
+        return alpha2, alpha3, alpha4, alpha5
+
+    def INS_amp_coeff(self):
+
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
+
+        # PN coefficients:
+        a_0 = 1.
+        a_1 = 0.
+        a_2 = -323./224. + 451./168.*eta
+        a_3 = 27./8.*delta_mass*chi_a + (27./8. - 11./6.*eta)*chi_s
+        a_4 = 105271./24192.*eta2 - 1975055./338688.*eta - 27312085./8128512. + (-(81./32.) + 8.*eta)*chi_a**2. -\
+            81./16.*delta_mass*chi_a*chi_s + (-(81./32.) + 17./8.*eta)*chi_s**2.
+        a_5 = (85.*np.pi)/64.*(4*eta - 1.) + delta_mass*(285197./16128. - 1579./4032.*eta)*chi_a +\
+            (285197./16128. - 15317./672.*eta - 2227./1008.*eta2)*chi_s
+        a_6 = 34473079./6386688.*eta3 - 3248849057./178827264.*eta2 + 545384828789./5007163392.*eta - 205./48.*eta*np.pi**2. -\
+            177520268561./8583708672. + (1614569./64512. - 1873643./16128.*eta + 2167./42.*eta2)*chi_a**2. +\
+            (31./12.*np.pi - 7./3.*np.pi*eta)*chi_s + (1614569./64512. - 61391./1344.*eta + 57451./4032.*eta2)*chi_s**2. +\
+            delta_mass*chi_a*(31./12.*np.pi + (1614569./32256. - 165961./2688.*eta)*chi_s)
+
+        return a_0, a_1, a_2, a_2, a_3, a_4, a_5, a_6
+
+    def INT_amp_coeff(self):
+
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
+
+        # Late inspiral coefficients
+        rho1 = 3931.8979897196696 - 17395.758706812805*eta\
+                + (chi_PN - 1)*(3132.375545898835 + 343965.86092361377*eta - 1.2162565819981997e6*eta2)\
+                + (chi_PN - 1)**2*(-70698.00600428853 + 1.383907177859705e6*eta - 3.9662761890979446e6*eta2)\
+                + (chi_PN - 1)**3*(-60017.52423652596 + 803515.1181825735*eta - 2.091710365941658e6*eta2)
+        rho2 = -40105.47653771657 + 112253.0169706701*eta\
+                + (chi_PN - 1)*(23561.696065836168 - 3.476180699403351e6*eta + 1.137593670849482e7*eta2)\
+                + (chi_PN - 1)**2*(754313.1127166454 - 1.308476044625268e7*eta + 3.6444584853928134e7*eta2)\
+                + (chi_PN - 1)**3*(596226.612472288 - 7.4277901143564405e6*eta + 1.8928977514040343e7*eta2)
+        rho3 = 83208.35471266537 - 191237.7264145924*eta\
+                + (chi_PN - 1)*(-210916.2454782992 + 8.71797508352568e6*eta - 2.6914942420669552e7*eta2)\
+                + (chi_PN - 1)**2*(-1.9889806527362722e6 + 3.0888029960154563e7*eta - 8.390870279256162e7*eta2)\
+                + (chi_PN - 1)**3*(-1.4535031953446497e6 + 1.7063528990822166e7*eta - 4.2748659731120914e7*eta2)
+
+        return rho1, rho2, rho3
+
+    def INT_amp_coeff(self):
+
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
+
+        # Late inspiral coefficients
+        rho1 = 3931.8979897196696 - 17395.758706812805*eta\
+                + (chi_PN - 1)*(3132.375545898835 + 343965.86092361377*eta - 1.2162565819981997e6*eta2)\
+                + (chi_PN - 1)**2*(-70698.00600428853 + 1.383907177859705e6*eta - 3.9662761890979446e6*eta2)\
+                + (chi_PN - 1)**3*(-60017.52423652596 + 803515.1181825735*eta - 2.091710365941658e6*eta2)
+        rho2 = -40105.47653771657 + 112253.0169706701*eta\
+                + (chi_PN - 1)*(23561.696065836168 - 3.476180699403351e6*eta + 1.137593670849482e7*eta2)\
+                + (chi_PN - 1)**2*(754313.1127166454 - 1.308476044625268e7*eta + 3.6444584853928134e7*eta2)\
+                + (chi_PN - 1)**3*(596226.612472288 - 7.4277901143564405e6*eta + 1.8928977514040343e7*eta2)
+        rho3 = 83208.35471266537 - 191237.7264145924*eta\
+                + (chi_PN - 1)*(-210916.2454782992 + 8.71797508352568e6*eta - 2.6914942420669552e7*eta2)\
+                + (chi_PN - 1)**2*(-1.9889806527362722e6 + 3.0888029960154563e7*eta - 8.390870279256162e7*eta2)\
+                + (chi_PN - 1)**3*(-1.4535031953446497e6 + 1.7063528990822166e7*eta - 4.2748659731120914e7*eta2)
+
+        return rho1, rho2, rho3
+
+    def RD_damping(self):
+
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
+        z = self.gw_params['redshift']
+        M1 = self.gw_params['mass_1'] * (1 + z) * cst.Msol
+        M2 = self.gw_params['mass_2'] * (1 + z) * cst.Msol
+        chi_1 = self.gw_params.get('a_1', 0.0)
+        chi_2 = self.gw_params.get('a_2', 0.0)
+        
+        # Interpolate from dataset to evaluate damping and ringdown frequencies
+        chi_f, m_f = final_bh(M1, M2, chi_1, chi_2)
+    
+        data_ff = np.loadtxt(os.path.dirname(gw.__file__)+'/IMRPhenomD_n1l2m2.dat', unpack = True)
+        M_omega = interp1d(data_ff[0, :], data_ff[1, :])
+        tau_omega = interp1d(data_ff[0, :], data_ff[2, :])
+    
+        ff_RD = (M_omega(chi_f)/(2*np.pi)*M/m_f)[0]
+        ff_damp = (-tau_omega(chi_f)/(2*np.pi)*M/m_f)[0]
+
+        return ff_RD, ff_damp
+
+    ################################################################################ 
+    ################################### PHASE ######################################
+    ################################################################################
+
+    def calculate_ins_phase(self):
+
+        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
+
+        psi, psi_prime, psi_f1, psi_prime_f1 = TaylorF2.calculate_phase(self)
+        
+        sigma2, sigma3, sigma4 = IMRPhenomD.LI_phase_coeff(self)
 
         psi_late_ins = + 1./eta*(3./4.*sigma2*ff**(4./3.) +\
                             3./5.*sigma3*ff**(5./3.) +\
@@ -842,49 +981,14 @@ class IMRPhenomD(Waveform):
         psi_ins_prime_f1 = psi_prime_f1 + psi_late_ins_prime_f1
 
         return psi_ins, psi_ins_f1, psi_prime, psi_ins_prime_f1
-        
 
-    def RD_damping(self):
-
-        M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
-        
-        M1 = self.gw_params['mass_1'] * cst.Msol
-        M2 = self.gw_params['mass_2'] * cst.Msol
-        chi_1 = self.gw_params.get('a_1', 0.0)
-        chi_2 = self.gw_params.get('a_2', 0.0)
-        
-        # Interpolate from dataset to evaluate damping and ringdown frequencies
-        chi_f, m_f = final_bh(M1, M2, chi_1, chi_2)
-    
-        data_ff = np.loadtxt(os.path.dirname(gw.__file__)+'/IMRPhenomD_n1l2m2.dat', unpack = True)
-        M_omega = interp1d(data_ff[0, :], data_ff[1, :])
-        tau_omega = interp1d(data_ff[0, :], data_ff[2, :])
-    
-        ff_RD = (M_omega(chi_f)/(2*np.pi)*M/m_f)[0]
-        ff_damp = (-tau_omega(chi_f)/(2*np.pi)*M/m_f)[0]
-
-        return ff_RD, ff_damp
-        
     def calculate_int_phase(self):
 
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
         
         psi_ins, psi_ins_prime, psi_ins_f1, psi_ins_prime_f1 = IMRPhenomD.calculate_ins_phase(self)
 
-        ################################################################################ 
-        # PN coefficients for the INTERMEDIATE PHASE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        ################################################################################ 
-        #beta0 and beta1 are fixed by the continuity conditions 
-        
-        beta2 = -3.282701958759534 - 9.051384468245866*eta\
-                + (chi_PN - 1)*(-12.415449742258042 + 55.4716447709787*eta - 106.05109938966335*eta2)\
-                + (chi_PN - 1)**2*(-11.953044553690658 + 76.80704618365418*eta - 155.33172948098394*eta2)\
-                + (chi_PN - 1)**3*(-3.4129261592393263 + 25.572377569952536*eta - 54.408036707740465*eta2)
-        beta3 = -0.000025156429818799565 + 0.000019750256942201327*eta\
-                + (chi_PN - 1)**2*(-0.000018370671469295915 + 0.000021886317041311973*eta + 0.00008250240316860033*eta2)\
-                + (chi_PN - 1)**2*(7.157371250566708e-6 - 0.000055780000112270685*eta + 0.00019142082884072178*eta2)\
-                + (chi_PN - 1)**3*(5.447166261464217e-6 - 0.00003220610095021982*eta + 0.00007974016714984341*eta2)
-
+        beta2, beta3 = IMRPhenomD.INT_phase_coeff(self)
 
         ####################### INS-INT PHASE CONTINUITY CONDITIONS ###################
         # Impose C1 conditions at the interface
@@ -918,28 +1022,7 @@ class IMRPhenomD(Waveform):
         ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
         f2 = 0.5*ff_RD
 
-        ################################################################################ 
-        # PN coefficients for the MERGER-RINGDOWN PHASE>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        ################################################################################ 
-        #alpha0 and alpha1 are fixed by the continuity conditions
-        
-        alpha2 = -0.07020209449091723 - 0.16269798450687084*eta\
-                + (chi_PN - 1)*(-0.1872514685185499 + 1.138313650449945*eta - 2.8334196304430046*eta2)\
-                + (chi_PN - 1)**2*(-0.17137955686840617 + 1.7197549338119527*eta - 4.539717148261272*eta2)\
-                + (chi_PN - 1)**3*(-0.049983437357548705 + 0.6062072055948309*eta - 1.682769616644546*eta2)
-        alpha3 = 9.5988072383479 - 397.05438595557433*eta\
-                + (chi_PN - 1)*(16.202126189517813 - 1574.8286986717037*eta + 3600.3410843831093*eta2)\
-                + (chi_PN - 1)**2*(27.092429659075467 - 1786.482357315139*eta + 5152.919378666511*eta2)\
-                + (chi_PN - 1)**3*(11.175710130033895 - 577.7999423177481*eta + 1808.730762932043*eta2)
-        alpha4 =  -0.02989487384493607 + 1.4022106448583738*eta\
-                + (chi_PN - 1)*(-0.07356049468633846 + 0.8337006542278661*eta + 0.2240008282397391*eta2)\
-                + (chi_PN - 1)**2*(-0.055202870001177226 + 0.5667186343606578*eta + 0.7186931973380503*eta2)\
-                + (chi_PN - 1)**3*(-0.015507437354325743 + 0.15750322779277187*eta + 0.21076815715176228*eta2)
-        alpha5 = 0.9974408278363099 - 0.007884449714907203*eta\
-                + (chi_PN - 1)*(-0.059046901195591035 + 1.3958712396764088*eta - 4.516631601676276*eta2)\
-                + (chi_PN - 1)**2*(-0.05585343136869692 + 1.7516580039343603*eta - 5.990208965347804*eta2)\
-                + (chi_PN - 1)**3*(-0.017945336522161195 + 0.5965097794825992*eta - 2.0608879367971804*eta2)
-
+        alpha2, alpha3, alpha4, alpha5 = IMRPhenomD.MR_phase_coeff(self)
         
         ####################### IN-MERG PHASE CONTINUITY CONDITIONS ###################
         
@@ -957,13 +1040,10 @@ class IMRPhenomD(Waveform):
 
         return psi_MR, psi_MR_prime
 
-    
     def calculate_phase(self):
 
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
-
         ones = np.ones((len(ff), 1))
-
         ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
         
         # Conjunction functions
@@ -993,88 +1073,52 @@ class IMRPhenomD(Waveform):
         psi_prime_tot = psi_ins_prime*theta_minus1+theta_minus2*psi_int_prime*theta_plus1+theta_plus2*psi_MR_prime
 
         return psi_tot, psi_prime_tot
+        
+
+    ########################################################################
+    ############################# AMPLITUDE ################################
+    ########################################################################
 
     def calculate_amplitude(self):
         
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
-
         r = self.gw_params['luminosity_distance'] * cst.Mpc
         iota = self.gw_params['theta_jn']
-        
         ones = np.ones((len(ff), 1))
-    
-        ########################################################################
-        ############################# AMPLITUDE ################################
-        ########################################################################
-    
-        # PN coefficients:
-        a_0 = 1.
-        a_1 = 0.
-        a_2 = -323./224. + 451./168.*eta
-        a_3 = 27./8.*delta_mass*chi_a + (27./8. - 11./6.*eta)*chi_s
-        a_4 = 105271./24192.*eta2 - 1975055./338688.*eta - 27312085./8128512. + (-(81./32.) + 8.*eta)*chi_a**2. -\
-            81./16.*delta_mass*chi_a*chi_s + (-(81./32.) + 17./8.*eta)*chi_s**2.
-        a_5 = (85.*np.pi)/64.*(4*eta - 1.) + delta_mass*(285197./16128. - 1579./4032.*eta)*chi_a +\
-            (285197./16128. - 15317./672.*eta - 2227./1008.*eta2)*chi_s
-        a_6 = 34473079./6386688.*eta3 - 3248849057./178827264.*eta2 + 545384828789./5007163392.*eta - 205./48.*eta*np.pi**2. -\
-            177520268561./8583708672. + (1614569./64512. - 1873643./16128.*eta + 2167./42.*eta2)*chi_a**2. +\
-            (31./12.*np.pi - 7./3.*np.pi*eta)*chi_s + (1614569./64512. - 61391./1344.*eta + 57451./4032.*eta2)*chi_s**2. +\
-            delta_mass*chi_a*(31./12.*np.pi + (1614569./32256. - 165961./2688.*eta)*chi_s)
+        a_0, a_1, a_2, a_2, a_3, a_4, a_5, a_6 = IMRPhenomD.INS_amp_coeff(self)
         
-        amp_PN = (a_0 +\
-                  a_2*(np.pi*ff)**(2./3.) +\
-                  a_3*(np.pi*ff) +\
-                  a_4*(np.pi*ff)**(4./3.) +\
-                  a_5*(np.pi*ff)**(5./3.) +\
-                  a_6*(np.pi*ff)**2.)
+        amp_PN = a_0 +\
+                 a_2*(np.pi*ff)**(2./3.) +\
+                 a_3*(np.pi*ff) +\
+                 a_4*(np.pi*ff)**(4./3.) +\
+                 a_5*(np.pi*ff)**(5./3.) +\
+                 a_6*(np.pi*ff)**2.
     
-        # Late inspiral coefficients
-        rho1 = 3931.8979897196696 - 17395.758706812805*eta\
-                + (chi_PN - 1)*(3132.375545898835 + 343965.86092361377*eta - 1.2162565819981997e6*eta2)\
-                + (chi_PN - 1)**2*(-70698.00600428853 + 1.383907177859705e6*eta - 3.9662761890979446e6*eta2)\
-                + (chi_PN - 1)**3*(-60017.52423652596 + 803515.1181825735*eta - 2.091710365941658e6*eta2)
-        rho2 = -40105.47653771657 + 112253.0169706701*eta\
-                + (chi_PN - 1)*(23561.696065836168 - 3.476180699403351e6*eta + 1.137593670849482e7*eta2)\
-                + (chi_PN - 1)**2*(754313.1127166454 - 1.308476044625268e7*eta + 3.6444584853928134e7*eta2)\
-                + (chi_PN - 1)**3*(596226.612472288 - 7.4277901143564405e6*eta + 1.8928977514040343e7*eta2)
-        rho3 = 83208.35471266537 - 191237.7264145924*eta\
-                + (chi_PN - 1)*(-210916.2454782992 + 8.71797508352568e6*eta - 2.6914942420669552e7*eta2)\
-                + (chi_PN - 1)**2*(-1.9889806527362722e6 + 3.0888029960154563e7*eta - 8.390870279256162e7*eta2)\
-                + (chi_PN - 1)**3*(-1.4535031953446497e6 + 1.7063528990822166e7*eta - 4.2748659731120914e7*eta2)
+        rho1, rho2, rho3 = IMRPhenomD.INT_amp_coeff(self)
     
-        amp_ins = amp_PN + (rho1*(ff)**(7./3.) + rho2*(ff)**(8./3.) + rho3*(ff)**3.)
-    
-        # Merger-ringdown coefficients
-        gamma1 = 0.006927402739328343 + 0.03020474290328911*eta\
-                + (chi_PN - 1)*(0.006308024337706171 - 0.12074130661131138*eta + 0.26271598905781324*eta2)\
-                + (chi_PN - 1)**2*(0.0034151773647198794 - 0.10779338611188374*eta + 0.27098966966891747*eta2)\
-                + (chi_PN - 1)**3*(0.0007374185938559283 - 0.02749621038376281*eta + 0.0733150789135702*eta2)
-        gamma2 = 1.010344404799477 + 0.0008993122007234548*eta\
-                + (chi_PN - 1)*(0.283949116804459 - 4.049752962958005*eta + 13.207828172665366*eta2)\
-                + (chi_PN - 1)**2*(0.10396278486805426 - 7.025059158961947*eta + 24.784892370130475*eta2)\
-                + (chi_PN - 1)**3*(0.03093202475605892 - 2.6924023896851663*eta + 9.609374464684983*eta2)
-        gamma3 = 1.3081615607036106 - 0.005537729694807678*eta\
-                + (chi_PN - 1)*(-0.06782917938621007 - 0.6689834970767117*eta + 3.403147966134083*eta2)\
-                + (chi_PN - 1)**2*(-0.05296577374411866 - 0.9923793203111362*eta + 4.820681208409587*eta2)\
-                + (chi_PN - 1)**3*(-0.006134139870393713 - 0.38429253308696365*eta + 1.7561754421985984*eta2)
+        amp_ins = amp_PN +\
+                  rho1*(ff)**(7./3.) +\
+                  rho2*(ff)**(8./3.) +\
+                  rho3*(ff)**3.
     
         # Intermediate part 
         v2 = 0.8149838730507785 + 2.5747553517454658*eta\
                 + (chi_PN - 1)*(1.1610198035496786 - 2.3627771785551537*eta + 6.771038707057573*eta2)\
                 + (chi_PN - 1)**2*(0.7570782938606834 - 2.7256896890432474*eta + 7.1140380397149965*eta2)\
                 + (chi_PN - 1)**3*(0.1766934149293479 - 0.7978690983168183*eta + 2.1162391502005153*eta2)
-
         
         ff_RD, ff_damp = IMRPhenomD.RD_damping(self)
+
+        gamma1, gamma2, gamma3 = IMRPhenomD.MR_amp_coeff(self)
+
+        amp_MR = gamma1*(gamma3*ff_damp*ones)/((ff - ff_RD*ones)**2. +\
+                (gamma3*ff_damp*ones)**2)*np.exp(-gamma2*(ff - ff_RD*ones)/(gamma3*ff_damp*ones))
         
         # Conjunction frequencies
         f1_amp = 0.014
         f3_amp = (np.abs(ff_RD + (ff_damp*gamma3*(np.sqrt(1-gamma2**2.) - 1)/gamma2)))
         f2_amp = (f1_amp + f3_amp)/2.
     
-    
-        amp_MR = gamma1*(gamma3*ff_damp*ones)/((ff - ff_RD*ones)**2. +\
-                (gamma3*ff_damp*ones)**2)*np.exp(-gamma2*(ff - ff_RD*ones)/(gamma3*ff_damp*ones))
     
         amp_ins_f1 = a_0 + a_2*(np.pi*f1_amp)**(2./3.) + a_3*(np.pi*f1_amp) + a_4*(np.pi*f1_amp)**(4./3.) +\
                 a_5*(np.pi*f1_amp)**(5./3.) + a_6*(np.pi*f1_amp)**2. + rho1*f1_amp**(7./3.) +\
@@ -1090,10 +1134,11 @@ class IMRPhenomD(Waveform):
        
         # Solve for delta coefficients (intermediate phase)
         A = np.array([[1., f1_amp, f1_amp**2., f1_amp**3., f1_amp**4.],\
-                        [1., f2_amp, f2_amp**2., f2_amp**3., f2_amp**4.],\
-                        [1., f3_amp, f3_amp**2., f3_amp**3., f3_amp**4.],\
-                        [0., 1., 2.*f1_amp, 3.*f1_amp**2., 4.*f1_amp**3.],\
-                        [0., 1., 2.*f3_amp, 3.*f3_amp**2., 4.*f3_amp**3.]])
+                      [1., f2_amp, f2_amp**2., f2_amp**3., f2_amp**4.],\
+                      [1., f3_amp, f3_amp**2., f3_amp**3., f3_amp**4.],\
+                      [0., 1., 2.*f1_amp, 3.*f1_amp**2., 4.*f1_amp**3.],\
+                      [0., 1., 2.*f3_amp, 3.*f3_amp**2., 4.*f3_amp**3.]])
+        
         b = np. array([amp_ins_f1, v2, amp_MR_f3, amp_ins_prime_f1, amp_MR_prime_f3])
         delta = np.linalg.solve(A, b)
     
@@ -1111,7 +1156,7 @@ class IMRPhenomD(Waveform):
         theta_plus2_amp = 0.5*(1*ones + step_function(ff,ff3_amp))
     
         # Overall (2,2) mode factor and its derivative
-        A0 = 1./(np.pi**(2./3.))*(5./24.)**(0.5)*cst.c/r*Mc**(5./6.)*(ff * cst.c**3/(cst.G*M))**(-7./6.)
+        A0 = 1./(np.pi**(2./3.))*(5./24.)**(0.5)*cst.c/r*Mc**(5./6.)*(ff*cst.c**3/(cst.G*M))**(-7./6.)
 
         ####################### AMPLITUDE COMPONENTS ###########################
         ###################### written continuosly in frequency ################
@@ -1126,8 +1171,7 @@ class IMRPhenomD(Waveform):
         hc = amp_tot*np.cos(iota)
 
         return hp, hc
-        
-        
+
     def calculate_frequency_domain_strain(self):
         
         M, mu, Mc, delta_mass, eta, eta2, eta3, chi_eff, chi_PN, chi_s, chi_a, C, ff = Waveform.get_param_comb(self)
@@ -1135,13 +1179,18 @@ class IMRPhenomD(Waveform):
         psi, psi_prime = IMRPhenomD.calculate_phase(self)      
         hp, hc = IMRPhenomD.calculate_amplitude(self)
 
-        # Construct the phase
+        ############################### PHASE OUTPUT ###############################
+
         phase = np.exp(1.j * psi)
 
-        # Construct the strain
+        ############################## STRAIN OUTPUT ###############################
+        
         polarizations = np.hstack((hp * phase, hc * 1.j * phase))
     
         self._frequency_domain_strain = polarizations
+
+    
+    #################################### STRAIN & PHASE plot ###########################
 
     
     def plot(self, output_folder='./'):
