@@ -12,7 +12,7 @@ class EphemerisInterpolate:
     of a body in the Solar System, as a function of time, by caching the ephemeris.
     """
 
-    earliest_possible_time = 0. # gps time for ~1980
+    earliest_possible_time = -1000_000_000. # gps time for ~1980
     interp_kind = 1
     
     def __init__(self):
