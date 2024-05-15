@@ -1,9 +1,3 @@
-#    Copyright (c) 2024 Ulyana Dupletsa <ulyana.dupletsa@gssi.it>
-#
-#    All rights reserved. Use of this source code is governed by the
-#    license that can be found in the LICENSE file.
-
-
 import numpy as np
 import astropy
 from astropy.cosmology import Planck18 as cosmo
