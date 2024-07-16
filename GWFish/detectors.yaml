@@ -12,7 +12,7 @@ ET:
             spacing:          geometric
             df:               1./16.
             npoints:          1000
-            arm_length:       10000.
+            
             
 VOY:
             lat:              46.5 * np.pi / 180.
