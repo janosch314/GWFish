@@ -12,8 +12,7 @@ ET:
             spacing:          geometric
             df:               1./16.
             npoints:          1000
-            
-            
+            arm_length:       10000            
 VOY:
             lat:              46.5 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
@@ -28,6 +27,7 @@ VOY:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000           
+            arm_length:       4000
 CE1:
             lat:              46.5 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
@@ -42,6 +42,7 @@ CE1:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000 
+            arm_length:       40000
 CE2:
             lat:              46.5 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
@@ -56,6 +57,7 @@ CE2:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000 
+            arm_length:       40000
 LLO:
             lat:              30.56 * np.pi / 180.
             lon:              -90.77 * np.pi / 180.
@@ -70,6 +72,7 @@ LLO:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000    
+            arm_length:       4000
 LHO:
             lat:              46.46 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
@@ -84,6 +87,7 @@ LHO:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000 
+            arm_length:       4000
 VIR:
             lat:              43.6 * np.pi / 180.
             lon:              10.5 * np.pi / 180.
@@ -98,6 +102,7 @@ VIR:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000 
+            arm_length:       3000
 VIR_O2:
             lat:              43.6 * np.pi / 180.
             lon:              10.5 * np.pi / 180.
@@ -112,6 +117,7 @@ VIR_O2:
             spacing:          geometric 
             df:               1./4.
             npoints:          5000 
+            arm_length:       3000
 KAG:
             lat:              36.41 * np.pi / 180.
             lon:              137.3 * np.pi / 180.
@@ -126,6 +132,7 @@ KAG:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000 
+            arm_length:       3000
 LIN:
             lat:              19.61 * np.pi / 180.
             lon:              77.03 * np.pi / 180.
@@ -140,6 +147,7 @@ LIN:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000     
+            arm_length:       4000
 LISA:
 # the ACC and OMS Doppler-noise PSDs are taken from https://arxiv.org/abs/2108.01167
             arm_length:       2.5e9
