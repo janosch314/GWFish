@@ -318,7 +318,7 @@ def AET(polarizations, eij, theta, ra, psi, L, ff):
     return np.hstack((A[:, np.newaxis], E[:, np.newaxis], T[:, np.newaxis]))
 
 
-def projection(parameters, detector, polarizations, timevector, redefine_tf_vectors=False):
+def projection(parameters, detector, polarizations, timevector, redefine_tf_vectors=False, long_wavelength_approx = True):
 
     f_max = parameters.get('max_frequency_cutoff', None)
     detector_lifetime = getattr(detector, 'mission_lifetime', None)
@@ -352,7 +352,7 @@ def projection(parameters, detector, polarizations, timevector, redefine_tf_vect
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', AstropyWarning)
         if detector.location == 'earth':
-            proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice)
+            proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice, long_wavelength_approx = long_wavelength_approx)
         elif detector.location == 'moon':
             proj = projection_moon(parameters, detector, polarizations, new_timevector, in_band_slice)
         elif detector.location == 'solarorbit':
@@ -465,7 +465,7 @@ def Michelson_transfer_function(x, x_c, proj_arm):
     return 0.5 * (term1 + term2)
 
 
-def projection_earth(parameters, detector, polarizations, timevector, in_band_slice=slice(None)):
+def projection_earth(parameters, detector, polarizations, timevector, in_band_slice=slice(None), long_wavelength_approx = True):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame
@@ -491,10 +491,6 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
 
     # generally the long wavelenght approximation is True
     # when long_wl it is set to 1 inside the parmaeters passed, you automatically set long_wavelenght_approx = False
-    long_wavelenght_approx = True
-
-    if 'long_wl' in parameters.keys():
-        long_wavelenght_approx = False
 
     theta = np.pi / 2. - dec
     gmst = GreenwichMeanSiderealTime(timevector[in_band_slice])
@@ -552,7 +548,7 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
         
         phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector)[in_band_slice], np.squeeze(ff))
 
-        if long_wavelenght_approx:
+        if long_wavelength_approx:
             
             proj[in_band_slice, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
                         + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \

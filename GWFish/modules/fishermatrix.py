@@ -237,6 +237,7 @@ def compute_detector_fisher(
     waveform_class: type(wf.Waveform) = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
     redefine_tf_vectors: bool = False,
+    long_wavelength: bool = True,
 ) -> tuple[np.ndarray, float]:
     """Compute the Fisher matrix and SNR for a single detector.
     
@@ -283,9 +284,9 @@ def compute_detector_fisher(
     t_of_f = waveform_obj.t_of_f
 
     if redefine_tf_vectors:
-        signal, timevector, frequencyvector = det.projection(signal_parameter_values, detector, wave, t_of_f, redefine_tf_vectors=True)
+        signal, timevector, frequencyvector = det.projection(signal_parameter_values, detector, wave, t_of_f, redefine_tf_vectors=True, long_wavelength_approx = long_wavelength)
     else:
-        signal = det.projection(signal_parameter_values, detector, wave, t_of_f)
+        signal = det.projection(signal_parameter_values, detector, wave, t_of_f, long_wavelength_approx = long_wavelength)
         frequencyvector = detector.frequencyvector[:, 0]
 
     component_SNRs = det.SNR(detector, signal, use_duty_cycle, frequencyvector=frequencyvector)
@@ -310,6 +311,7 @@ def compute_network_errors(
     save_matrices: bool = False,
     save_matrices_path: Union[Path, str] = Path('.'),
     matrix_naming_postfix: str = '',
+    long_wavelength: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """
     Compute Fisher matrix errors for a network whose
@@ -381,7 +383,7 @@ def compute_network_errors(
 
         for detector in network.detectors:
             
-            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, waveform_model, waveform_class, use_duty_cycle)
+            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, waveform_model, waveform_class, use_duty_cycle, long_wavelength = long_wavelength)
             
             network_snr_square += detector_snr_square
         
