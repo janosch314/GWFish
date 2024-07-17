@@ -42,7 +42,7 @@ CE1:
             spacing:          geometric 
             df:               1./4.    
             npoints:          5000 
-            arm_length:       40000
+            arm_length:       20000
 CE2:
             lat:              46.5 * np.pi / 180.
             lon:              -119.4 * np.pi / 180.
