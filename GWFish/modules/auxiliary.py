@@ -17,10 +17,22 @@ def from_mChirp_q_to_m1_m2(mChirp, q):
     return m1, m2
 
 def check_and_convert_to_mass_1_mass_2(parameters):
+    """
+    GWFish accepts different combinations of mass inputs:
+    - chirp_mass, mass_ratio
+    - chirp_mass_source, mass_ratio, redshift
+    - mass_1_source, mass_2_source, redshift
+    - mass_1, mass_2
+
+    lalsim requires individual masses in detector frame, whenever required, convert to m1, m2
+    """
     if ('chirp_mass' in parameters.keys()) and ('mass_ratio' in parameters.keys()):
             parameters['mass_1'], parameters['mass_2'] = from_mChirp_q_to_m1_m2(parameters['chirp_mass'], parameters['mass_ratio'])
     if ('chirp_mass_source' in parameters.keys()) and ('mass_ratio' in parameters.keys()):
-            parameters['mass_1_source'], parameters['mass_2_source'] = from_mChirp_q_to_m1_m2(parameters['chirp_mass'], parameters['mass_ratio'])
+        if 'redshift' not in parameters.keys():
+            raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+        else:
+            parameters['mass_1'], parameters['mass_2'] = (1 + parameters['redshift']) * from_mChirp_q_to_m1_m2(parameters['chirp_mass'], parameters['mass_ratio'])
     if ('mass_1_source' in parameters.keys()) or ('mass_2_source' in parameters.keys()):
         if 'redshift' not in parameters.keys():
             raise ValueError('If using source-frame masses, one must specify the redshift parameter')
@@ -30,6 +42,9 @@ def check_and_convert_to_mass_1_mass_2(parameters):
 
 
 def fisco(parameters):
+    """
+    Compute the frequency of the innermost stable circular orbit
+    """
     local_params = parameters.copy()
     check_and_convert_to_mass_1_mass_2(local_params)
 
@@ -38,6 +53,7 @@ def fisco(parameters):
     return 1 / (np.pi) * cst.c ** 3 / (cst.G * M) / 6 ** 1.5  # frequency of innermost stable circular orbit
 
 def horizon(network, parameters, frequencyvector, detSNR, T, fmax):
+
     ff = frequencyvector
 
     def dSNR(z, detector, SNR0):
