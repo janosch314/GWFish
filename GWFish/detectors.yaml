@@ -11,7 +11,7 @@ ET:
         fmax:             2048.
         spacing:          geometric
         df:               1./16.
-        npoints:          1000
+        npoints:          1000   
 VOY:
         lat:              46.5 * np.pi / 180.
         lon:              -119.4 * np.pi / 180.
