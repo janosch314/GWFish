@@ -140,24 +140,29 @@ def get_snr(parameters, network, waveform_model):
         Signal-to-Noise Ratio in individual detectors and in the network
     """
     waveform_class = gw.waveforms.LALFD_Waveform
+
+    nsignals = len(parameters)
     
     # The SNR is then computed by taking the norm of the signal projected onto the detector
     # and dividing by the noise of the detector
-    snr = {}
-    for detector in network.detectors:
-        data_params = {
-            'frequencyvector': detector.frequencyvector,
-            'f_ref': 50.
-        }
-        waveform_obj = waveform_class(waveform_model, parameters.iloc[0], data_params)
-        wave = waveform_obj()
-        t_of_f = waveform_obj.t_of_f
-        signal = gw.detection.projection(parameters.iloc[0], detector, wave, t_of_f)
+    snrs = {}
+    for i in range(nsignals):
+        snr = {}
+        for detector in network.detectors:
+            data_params = {
+                'frequencyvector': detector.frequencyvector,
+                'f_ref': 50.
+            }
+            waveform_obj = waveform_class(waveform_model, parameters.iloc[i], data_params)
+            wave = waveform_obj()
+            t_of_f = waveform_obj.t_of_f
+            signal = gw.detection.projection(parameters.iloc[i], detector, wave, t_of_f)
 
-        snr[detector.name] = np.sqrt(np.sum(gw.detection.SNR(detector, signal)**2))
+            snr[detector.name] = np.sqrt(np.sum(gw.detection.SNR(detector, signal)**2))
 
-    snr['network'] = np.sqrt(np.sum([snr[detector.name]**2 for detector in network.detectors]))
+        snr['network'] = np.sqrt(np.sum([snr[detector.name]**2 for detector in network.detectors]))
+        snrs['event_' + str(i)] = snr
 
-    return snr
+    return pd.DataFrame.from_dict(snrs, orient='index')
 
  
