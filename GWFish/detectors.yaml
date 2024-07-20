@@ -41,8 +41,8 @@ CE1:
         df:               1./4.    
         npoints:          5000 
 CE2:
-        lat:              (-25. + 30./60.) * np.pi / 180.
-        lon:              (152. + 4./60.) * np.pi / 180.
+        lat:              46.5 * np.pi / 180.
+        lon:              -119.4 * np.pi / 180.
         opening_angle:    np.pi / 2.
         azimuth:          126. * np.pi / 180.
         psd_data:         CE2_psd.txt
