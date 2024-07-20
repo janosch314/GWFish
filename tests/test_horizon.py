@@ -18,7 +18,7 @@ from GWFish.modules.horizon import (MIN_REDSHIFT, compute_SNR,
 @pytest.fixture
 def network():
     # return Network(detector_ids=['ET'])
-    return Network(detector_ids=['ET', 'CE20'])
+    return Network(detector_ids=['ET', 'CE1'])
 
 @st.composite
 def extrinsic(draw):
