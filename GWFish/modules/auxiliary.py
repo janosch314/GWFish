@@ -32,7 +32,9 @@ def check_and_convert_to_mass_1_mass_2(parameters):
         if 'redshift' not in parameters.keys():
             raise ValueError('If using source-frame masses, one must specify the redshift parameter')
         else:
-            parameters['mass_1'], parameters['mass_2'] = (1 + parameters['redshift']) * from_mChirp_q_to_m1_m2(parameters['chirp_mass'], parameters['mass_ratio'])
+            parameters['mass_1_source'], parameters['mass_2_source'] = from_mChirp_q_to_m1_m2(parameters['chirp_mass_source'], parameters['mass_ratio'])
+            parameters['mass_1'] = parameters['mass_1_source'] * (1 + parameters['redshift'])
+            parameters['mass_2'] = parameters['mass_2_source'] * (1 + parameters['redshift'])
     if ('mass_1_source' in parameters.keys()) or ('mass_2_source' in parameters.keys()):
         if 'redshift' not in parameters.keys():
             raise ValueError('If using source-frame masses, one must specify the redshift parameter')
