@@ -136,7 +136,7 @@ def get_snr(parameters, network, waveform_model):
 
     Returns
     -------
-    dict
+    pandas.DataFrame
         Signal-to-Noise Ratio in individual detectors and in the network
     """
     waveform_class = gw.waveforms.LALFD_Waveform
