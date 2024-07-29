@@ -143,7 +143,7 @@ class Detector:
         fmax = eval(str(detector_def['fmax']))
         spacing = str(detector_def['spacing'])
 
-        self.L = eval(str(detector_def['arm_length']))
+       
         
 
         if spacing == 'linear':
@@ -159,6 +159,7 @@ class Detector:
             self.location = 'moon'
             self.mission_lifetime = eval(str(detector_def['mission_lifetime']))
         elif (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'earthL'):
+            self.L = eval(str(detector_def['arm_length']))
             self.location = 'earth'
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             self.location = 'solarorbit'
