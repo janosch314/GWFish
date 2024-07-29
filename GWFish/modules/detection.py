@@ -561,6 +561,9 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
             proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
         
         else:
+            # the detailed calculation can be found at this link
+            # https://thesis.unipd.it/handle/20.500.12608/1/browse?filter_type=authority&authority=ist48184&filter_value=ist48184&filter_value_display=Amalberti%2C+Loris&type=author&sort_by=ASC&order=&rpp=20
+            # in section 2.2
             
             proj_arm1 = kx*e1[0] + ky*e1[1] + kz*e1[2]
             proj_arm2 = kx*e2[0] + ky*e2[1] + kz*e2[2]
