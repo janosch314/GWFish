@@ -62,6 +62,8 @@ class DetectorComponent:
                 self.arm_azimuth + self.opening_angle) * self.e_lat
 
             self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
+            
+            
 
         elif detector_def['detector_class'] == 'lunararray':
 
@@ -141,6 +143,9 @@ class Detector:
         fmax = eval(str(detector_def['fmax']))
         spacing = str(detector_def['spacing'])
 
+       
+        
+
         if spacing == 'linear':
             df = eval(str(detector_def['df']))
             self.frequencyvector = np.linspace(fmin, fmax, int((fmax - fmin) / df) + 1)
@@ -154,6 +159,7 @@ class Detector:
             self.location = 'moon'
             self.mission_lifetime = eval(str(detector_def['mission_lifetime']))
         elif (detector_def['detector_class'] == 'earthDelta') or (detector_def['detector_class'] == 'earthL'):
+            self.L = eval(str(detector_def['arm_length']))
             self.location = 'earth'
         elif detector_def['detector_class'] == 'satellitesolarorbit':
             self.location = 'solarorbit'
@@ -313,7 +319,7 @@ def AET(polarizations, eij, theta, ra, psi, L, ff):
     return np.hstack((A[:, np.newaxis], E[:, np.newaxis], T[:, np.newaxis]))
 
 
-def projection(parameters, detector, polarizations, timevector, redefine_tf_vectors=False):
+def projection(parameters, detector, polarizations, timevector, redefine_tf_vectors=False, long_wavelength_approx = True):
 
     f_max = parameters.get('max_frequency_cutoff', None)
     detector_lifetime = getattr(detector, 'mission_lifetime', None)
@@ -347,7 +353,7 @@ def projection(parameters, detector, polarizations, timevector, redefine_tf_vect
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', AstropyWarning)
         if detector.location == 'earth':
-            proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice)
+            proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice, long_wavelength_approx = long_wavelength_approx)
         elif detector.location == 'moon':
             proj = projection_moon(parameters, detector, polarizations, new_timevector, in_band_slice)
         elif detector.location == 'solarorbit':
@@ -447,8 +453,20 @@ def projection_solarorbit(parameters, detector, polarizations, timevector, in_ba
 
     return proj
 
+def sinc(x):
+    return np.sin(x)/x
 
-def projection_earth(parameters, detector, polarizations, timevector, in_band_slice=slice(None)):
+def Michelson_transfer_function(x, x_c, proj_arm):
+
+    norm_f = x/(2*x_c)
+
+    term1 = sinc(norm_f*(1-proj_arm)) * np.exp(-1.j * norm_f *(3+proj_arm))
+    term2 = sinc(norm_f*(1+proj_arm)) * np.exp(-1.j * norm_f *(1+proj_arm))
+
+    return 0.5 * (term1 + term2)
+
+
+def projection_earth(parameters, detector, polarizations, timevector, in_band_slice=slice(None), long_wavelength_approx = True):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame
@@ -471,6 +489,9 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
     ra = parameters['ra']
     dec = parameters['dec']
     psi = parameters['psi']
+
+    # generally the long wavelenght approximation is True
+    # when long_wl it is set to 1 inside the parmaeters passed, you automatically set long_wavelenght_approx = False
 
     theta = np.pi / 2. - dec
     gmst = GreenwichMeanSiderealTime(timevector[in_band_slice])
@@ -528,17 +549,40 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
         
         phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector)[in_band_slice], np.squeeze(ff))
 
+        if long_wavelength_approx:
+            
+            proj[in_band_slice, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
+                        + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
+                        + 0.5 * (e1[2] ** 2 - e2[2] ** 2) * hzz \
+                        + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
+                        + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
+                        + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
 
-        # proj[:, k] = 0.5*(np.einsum('i,jik,k->j', e1, hij, e1) - np.einsum('i,jik,k->j', e2, hij, e2))
-        proj[in_band_slice, k] = 0.5 * (e1[0] ** 2 - e2[0] ** 2) * hxx \
-                     + 0.5 * (e1[1] ** 2 - e2[1] ** 2) * hyy \
-                     + 0.5 * (e1[2] ** 2 - e2[2] ** 2) * hzz \
-                     + (e1[0] * e1[1] - e2[0] * e2[1]) * hxy \
-                     + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
-                     + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
+            proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
+        
+        else:
+            # the detailed calculation can be found at this link
+            # https://thesis.unipd.it/handle/20.500.12608/1/browse?filter_type=authority&authority=ist48184&filter_value=ist48184&filter_value_display=Amalberti%2C+Loris&type=author&sort_by=ASC&order=&rpp=20
+            # in section 2.2
+            
+            proj_arm1 = kx*e1[0] + ky*e1[1] + kz*e1[2]
+            proj_arm2 = kx*e2[0] + ky*e2[1] + kz*e2[2]
 
-        proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
-    # print("Calculation of projection: %s seconds" % (time.time() - start_time))
+            f_c = cst.c / (2*np.pi*detector.L)
+
+            T1 = Michelson_transfer_function(np.squeeze(ff), f_c, proj_arm1[:,0])
+            T2 = Michelson_transfer_function(np.squeeze(ff), f_c, proj_arm2[:,0])
+                        
+            proj[in_band_slice, k] = 0.5 * (T1 * e1[0] ** 2  - T2 * e2[0] ** 2) * hxx \
+            + 0.5 * (T1 * e1[1] ** 2 - T2 * e2[1] ** 2) * hyy \
+            + 0.5 * (T1 * e1[2] ** 2 - T2 * e2[2] ** 2) * hzz \
+            + (T1 * e1[0] * e1[1] - T2 * e2[0] * e2[1]) * hxy \
+            + (T1 * e1[0] * e1[2] - T2 * e2[0] * e2[2]) * hxz \
+            + (T1 * e1[1] * e1[2] - T2 * e2[1] * e2[2]) * hyz
+
+            proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
+        
+    #print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     return proj
 
@@ -575,7 +619,7 @@ def projection_moon(parameters, detector, polarizations, timevector, in_band_sli
     # np.save('timevector.npy', timevector)
     # np.save('lmst.npy', lmst)
 
-    # start_time = time.time()
+    #start_time = time.time()
     # u = np.array([np.cos(theta) * np.cos(phi[:,0]), np.cos(theta) * np.sin(phi[:,0]), -np.sin(theta)*np.ones_like(phi[:,0])])
     ux = np.cos(theta) * np.cos(phi[:, 0])
     uy = np.cos(theta) * np.sin(phi[:, 0])
@@ -607,7 +651,7 @@ def projection_moon(parameters, detector, polarizations, timevector, in_band_sli
     hyy = polarizations[in_band_slice, 0] * (my * my - ny * ny) + polarizations[in_band_slice, 1] * (my * ny + ny * my)
     hyz = polarizations[in_band_slice, 0] * (my * mz - ny * nz) + polarizations[in_band_slice, 1] * (my * nz + ny * mz)
     hzz = polarizations[in_band_slice, 0] * (mz * mz - nz * nz) + polarizations[in_band_slice, 1] * (mz * nz + nz * mz)
-    # print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
+    #print("Calculation GW tensor: %s seconds" % (time.time() - start_time))
 
     # start_time = time.time()
     for k in np.arange(len(components)):
@@ -626,7 +670,7 @@ def projection_moon(parameters, detector, polarizations, timevector, in_band_sli
                      
         proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
 
-    # print("Calculation of projection: %s seconds" % (time.time() - start_time))
+    #print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
     return proj
 
