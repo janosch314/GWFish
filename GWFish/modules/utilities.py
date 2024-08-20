@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import yaml
 from pathlib import Path
+from lal import CreateREAL8TimeSeries, CreateREAL8Vector, DimensionlessUnit
 
 DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
 PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
@@ -165,4 +166,129 @@ def get_snr(parameters, network, waveform_model):
 
     return pd.DataFrame.from_dict(snrs, orient='index')
 
- 
+def make_fft_from_time_series(time_series_input, df, dt, title="Ines_Ludo"):
+    '''
+    Returns the FFT done through the lal library given a time series. Also returns the frequency array.
+
+    Parameters
+    ----------
+    time_series_input : array
+        Time series data
+    df : float
+        Frequency step
+    dt : float
+        Time step
+    title : str, optional
+        Title of the time series
+
+    Returns
+    -------
+    tuple
+        FFT of the time series and the frequency array
+    '''
+    dims = len(time_series_input)
+    time_series = CreateREAL8Vector(dims)
+    time_series.data = time_series_input
+    ts = CreateREAL8TimeSeries(title, 1, 0, dt, DimensionlessUnit, dims)
+    ts.data = time_series
+    fft_dat = gw.fft.fft_lal_timeseries(ts, df).data.data
+    freq_range = np.linspace( 0, df * len(fft_dat), len(fft_dat) )
+    
+    return fft_dat, freq_range
+
+def _fd_phase_correction_and_output_format_from_stain_series(f_, hp, hc, geo_time = 1395964818):
+    '''
+    Prepares the polarizations for GWFish projection function. Combining 
+    the functions "_fd_phase_correction_geocent_time", "_fd_gwfish_output_format" as in LALFD_Waveform class from waveforms.py module.
+
+    Parameters
+    ----------
+    f_ : array
+        Frequency array
+    hp : array
+        Plus polarization
+    hc : array
+        Cross polarization
+    geo_time : int, optional
+        Geocentric time
+    
+    Returns
+    -------
+    array
+        Polarizations in form (hp, hc)
+    '''
+    phi_in = np.exp( 1.j * (2 * f_ * np.pi * geo_time) ).T[0]
+    fft_dat_plus  = phi_in*np.conjugate( hp )
+    fft_dat_cross = phi_in*np.conjugate( hc )
+
+    # GW Fish format for hfp and hfc
+    hfp = fft_dat_plus[:, np.newaxis]
+    hfc = fft_dat_cross[:, np.newaxis]
+    polarizations = np.hstack((hfp, hfc))
+
+    return polarizations
+
+def get_SNR_components(params, polarizations, detector, timevector, f_new, long_wavelength_approx = True):
+    '''
+    Given a set of parameters, polarizations, detector, timevector and frequency array, returns the SNR associated to the signal
+
+    Parameters
+    ----------
+    params : dict
+        Parameters of the event, needs to include ra, dec, psi
+    polarizations : array
+        Array containing the (hp, hc) polarizations
+    detector : gw.Detector
+        Detector object
+    timevector : array
+        Time vector 
+    f_new : array
+        Frequency array on which to evaluate the signal 
+    long_wavelength_approx : bool, optional
+        Whether to use the long wavelength approximation or not
+
+    Returns
+    -------
+    float
+        Total signal-to-Noise Ratio
+    '''
+    args = (params, detector, polarizations, timevector)
+    signal = gw.detection.projection(*args, long_wavelength_approx = long_wavelength_approx)
+    component_SNRs = gw.detection.SNR(detector, signal, frequencyvector=np.squeeze(f_new))
+    out_SNR = np.sqrt(np.sum(component_SNRs**2))
+    
+    return out_SNR
+
+def get_SNR_from_strains(f_in, hp, hc, detector, params, geo_time = 1395964818, long_wavelength_approx = True):
+    '''
+    Given a set of parameters, polarizations, detector, timevector and frequency array, returns the SNR associated to the signal
+
+    Parameters
+    ----------
+    f_in : array
+        Frequency array on which to evaluate the signal
+    hp : array
+        Plus polarization without geocentric time phase corrections
+    hc : array
+        Cross polarization without geocentric time phase corrections
+    detector : gw.Detector
+        Detector object
+    params : dict
+        Parameters of the event, needs to include ra, dec, psi
+    geo_time : int, optional
+        Geocentric time
+    long_wavelength_approx : bool, optional
+        Whether to use the long wavelength approximation or not
+
+    Returns
+    -------
+    float
+        Total signal-to-Noise Ratio 
+    '''
+    detector.frequencyvector = f_in
+    
+    polarizations = _fd_phase_correction_and_output_format_from_stain_series(f_in, hp, hc)   
+    timevector = np.ones( len(f_in) ) * geo_time
+    SNR = get_SNR_components(params, polarizations, detector, timevector, f_in, long_wavelength_approx)
+    
+    return SNR

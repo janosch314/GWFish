@@ -6,3 +6,4 @@ dist/
 .hypothesis/*
 docs/source/detectors_autogen.inc
 docs/source/figures/*
+23_gwstrain_trim.dat
