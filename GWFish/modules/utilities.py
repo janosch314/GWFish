@@ -228,40 +228,53 @@ def _fd_phase_correction_and_output_format_from_stain_series(f_, hp, hc, geo_tim
 
     return polarizations
 
-def get_SNR_components(params, polarizations, detector, timevector, f_new, long_wavelength_approx = True):
-    '''
-    Given a set of parameters, polarizations, detector, timevector and frequency array, returns the SNR associated to the signal
-
-    Parameters
-    ----------
-    params : dict
-        Parameters of the event, needs to include ra, dec, psi
-    polarizations : array
-        Array containing the (hp, hc) polarizations
-    detector : gw.Detector
-        Detector object
-    timevector : array
-        Time vector 
-    f_new : array
-        Frequency array on which to evaluate the signal 
-    long_wavelength_approx : bool, optional
-        Whether to use the long wavelength approximation or not
-
-    Returns
-    -------
-    float
-        Total signal-to-Noise Ratio
-    '''
-    args = (params, detector, polarizations, timevector)
-    signal = gw.detection.projection(*args, long_wavelength_approx = long_wavelength_approx)
-    component_SNRs = gw.detection.SNR(detector, signal, frequencyvector=np.squeeze(f_new))
-    out_SNR = np.sqrt(np.sum(component_SNRs**2))
+def get_snr(parameters, network, waveform_model = None, series_data = None, long_wavelength_approx = True):
     
-    return out_SNR
+    #a routine that only activates if the series_data is provided
+    if series_data:
+        polarizations, timevector, f_new = series_data
+        snrs_series = {}
+        for detector in network.detectors:
+            detector.frequencyvector = f_new
+            args = (parameters, detector, polarizations, timevector)
+            signal = gw.detection.projection(*args, long_wavelength_approx = long_wavelength_approx)
+            component_SNRs = gw.detection.SNR(detector, signal, frequencyvector=np.squeeze(f_new))
+            out_SNR = np.sqrt(np.sum(component_SNRs**2))
+            snrs_series[detector.name] = out_SNR
 
-def get_SNR_from_strains(f_in, hp, hc, detector, params, geo_time = 1395964818, long_wavelength_approx = True):
+        out_SNR = np.sqrt(np.sum([snrs_series[detector.name]**2 for detector in network.detectors]))
+        return out_SNR
+
+    waveform_class = gw.waveforms.LALFD_Waveform
+
+    nsignals = len(parameters)
+    
+    # The SNR is then computed by taking the norm of the signal projected onto the detector
+    # and dividing by the noise of the detector
+    snrs = {}
+    for i in range(nsignals):
+        snr = {}
+        for detector in network.detectors:
+            data_params = {
+                'frequencyvector': detector.frequencyvector,
+                'f_ref': 50.
+            }
+            waveform_obj = waveform_class(waveform_model, parameters.iloc[i], data_params)
+            wave = waveform_obj()
+            t_of_f = waveform_obj.t_of_f
+            signal = gw.detection.projection(parameters.iloc[i], detector, wave, t_of_f)
+
+            snr[detector.name] = np.sqrt(np.sum(gw.detection.SNR(detector, signal)**2))
+
+        snr['network'] = np.sqrt(np.sum([snr[detector.name]**2 for detector in network.detectors]))
+        snrs['event_' + str(i)] = snr
+
+    return pd.DataFrame.from_dict(snrs, orient='index')
+
+def get_SNR_from_strains(f_in, hp, hc, network, params, geo_time = 1395964818, long_wavelength_approx = True):
+
     '''
-    Given a set of parameters, polarizations, detector, timevector and frequency array, returns the SNR associated to the signal
+    Given a set of parameters, polarizations, network, timevector and frequency array, returns the SNR associated to the signal
 
     Parameters
     ----------
@@ -271,8 +284,8 @@ def get_SNR_from_strains(f_in, hp, hc, detector, params, geo_time = 1395964818, 
         Plus polarization without geocentric time phase corrections
     hc : array
         Cross polarization without geocentric time phase corrections
-    detector : gw.Detector
-        Detector object
+    network : gw.detection.DetectorNetwork
+        Detector Network object
     params : dict
         Parameters of the event, needs to include ra, dec, psi
     geo_time : int, optional
@@ -285,10 +298,13 @@ def get_SNR_from_strains(f_in, hp, hc, detector, params, geo_time = 1395964818, 
     float
         Total signal-to-Noise Ratio 
     '''
-    detector.frequencyvector = f_in
-    
+        
     polarizations = _fd_phase_correction_and_output_format_from_stain_series(f_in, hp, hc)   
     timevector = np.ones( len(f_in) ) * geo_time
-    SNR = get_SNR_components(params, polarizations, detector, timevector, f_in, long_wavelength_approx)
-    
+
+    series_data = (polarizations, timevector, f_in)
+
+    # SNR = get_snr(params, polarizations, detector, timevector, f_in, long_wavelength_approx)
+    SNR = get_snr(params, network, series_data = series_data, long_wavelength_approx = long_wavelength_approx)
+
     return SNR
