@@ -32,7 +32,8 @@ def compute_SNR(
     detector: Detector, 
     waveform_model: str = DEFAULT_WAVEFORM_MODEL,
     waveform_class: type(Waveform) = LALFD_Waveform,
-    redefine_tf_vectors: bool = False) -> float:
+    redefine_tf_vectors: bool = False,
+    center=None) -> float:
     """Compute the SNR for a single signal, and a single detector.
     
     :param params: parameters for the signal
@@ -52,7 +53,11 @@ def compute_SNR(
     polarizations = waveform_obj()
     timevector = waveform_obj.t_of_f
     
-    args = (params, detector, polarizations, timevector)
+    if center is None:
+        network = Network([detector.name])
+        center = network.coordinate_center(params)
+    
+    args = (params, detector, polarizations, timevector, center)
     
     if redefine_tf_vectors:
         signal, timevector, frequencyvector = projection(*args, redefine_tf_vectors=True)

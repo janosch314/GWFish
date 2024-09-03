@@ -34,7 +34,7 @@ def test_max_f_cutoff_170817():
     hphc = waveform_obj()
     t_of_f = waveform_obj.t_of_f
     
-    proj_with_cutoff = projection(params, detector, hphc, t_of_f)
+    proj_with_cutoff = projection(params, detector, hphc, t_of_f, (0, 0, 0))
     
     # the signal should be cut off at high frequency, therefore 
     # the last element should be zero, while at low frequency it should
@@ -95,6 +95,7 @@ def test_max_f_cutoff_signal_duration(redefine_tf_vectors):
             detector,
             polarizations,
             timevector,
+            center=(0, 0, 0),
             redefine_tf_vectors=True
         )
     
@@ -104,6 +105,7 @@ def test_max_f_cutoff_signal_duration(redefine_tf_vectors):
             detector,
             polarizations,
             timevector,
+            center=(0, 0, 0),
         )
     
     # if the signal is all zero that's a problem

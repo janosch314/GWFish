@@ -55,7 +55,7 @@ class Derivative:
 
     eps: 1e-5, this follows the simple "cube root of numerical precision" recommendation, which is 1e-16 for double
     """
-    def __init__(self, waveform, parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
+    def __init__(self, waveform, parameters, detector, center, eps=1e-5, waveform_class=wf.Waveform):
         self.waveform = waveform
         self.detector = detector
         self.eps = eps
@@ -64,6 +64,7 @@ class Derivative:
         self.waveform_object = waveform_class(waveform, parameters, self.data_params)
         self.waveform_at_parameters = None
         self.projection_at_parameters = None
+        self.center = center
 
         # For central parameters and their epsilon-neighbourhood
         self.local_params = parameters.copy()
@@ -94,7 +95,7 @@ class Derivative:
         if self._projection_at_parameters is None:
             self._projection_at_parameters = det.projection(self.local_params, self.detector,
                                                             self.waveform_at_parameters[0], # wave
-                                                            self.waveform_at_parameters[1]) # t(f)
+                                                            self.waveform_at_parameters[1], self.center) # t(f)
         return self._projection_at_parameters
 
     @projection_at_parameters.setter
@@ -108,8 +109,8 @@ class Derivative:
         """
         if target_parameter == 'luminosity_distance':
             derivative = -1. / self.local_params[target_parameter] * self.projection_at_parameters
-        elif target_parameter == 'geocent_time':
-            derivative = 2j * np.pi * self.detector.frequencyvector * self.projection_at_parameters
+        # elif target_parameter == 'geocent_time':
+        #     derivative = 2j * np.pi * self.detector.frequencyvector * self.projection_at_parameters
         elif target_parameter == 'phase':
             derivative = -1j * self.projection_at_parameters
         else:
@@ -129,10 +130,10 @@ class Derivative:
     
                 signal1 = det.projection(self.pv_set1, self.detector, 
                                          self.waveform_at_parameters[0], 
-                                         self.waveform_at_parameters[1])
+                                         self.waveform_at_parameters[1], self.center)
                 signal2 = det.projection(self.pv_set2, self.detector, 
                                          self.waveform_at_parameters[0], 
-                                         self.waveform_at_parameters[1])
+                                         self.waveform_at_parameters[1], self.center)
     
                 derivative = (signal2 - signal1) / dp
             else:
@@ -150,8 +151,8 @@ class Derivative:
 
                 self.pv_set1['geocent_time'] = self.tc
                 self.pv_set2['geocent_time'] = self.tc
-                signal1 = det.projection(self.pv_set1, self.detector, wave1, t_of_f1 + self.tc)
-                signal2 = det.projection(self.pv_set2, self.detector, wave2, t_of_f2 + self.tc)
+                signal1 = det.projection(self.pv_set1, self.detector, wave1, t_of_f1 + self.tc, self.center)
+                signal2 = det.projection(self.pv_set2, self.detector, wave2, t_of_f2 + self.tc, self.center)
     
 
                 derivative = np.exp(2j * np.pi * self.detector.frequencyvector \
@@ -165,12 +166,14 @@ class Derivative:
         return self.with_respect_to(target_parameter)
 
 class FisherMatrix:
-    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
+    def __init__(self, waveform, parameters, fisher_parameters, detector, center, eps=1e-5, waveform_class=wf.Waveform):
         self.fisher_parameters = fisher_parameters
         self.detector = detector
-        self.derivative = Derivative(waveform, parameters, detector, eps=eps, waveform_class=waveform_class)
+        self.derivative = Derivative(waveform, parameters, detector, center, eps=eps, waveform_class=waveform_class)
         self.nd = len(fisher_parameters)
         self.fm = None
+        self.center = center
+
 
     def update_fm(self):
         self._fm = np.zeros((self.nd, self.nd))
@@ -241,6 +244,7 @@ def compute_detector_fisher(
     use_duty_cycle: bool = False,
     redefine_tf_vectors: bool = False,
     long_wavelength: bool = True,
+    network = None,
 ) -> tuple[np.ndarray, float]:
     """Compute the Fisher matrix and SNR for a single detector.
     
@@ -285,11 +289,15 @@ def compute_detector_fisher(
     waveform_obj = waveform_class(waveform_model, signal_parameter_values, data_params)
     wave = waveform_obj()
     t_of_f = waveform_obj.t_of_f
+    
+    if network is None:
+        network = det.Network([detector.name])
+    center = network.coordinate_center(signal_parameter_values)
 
     if redefine_tf_vectors:
-        signal, timevector, frequencyvector = det.projection(signal_parameter_values, detector, wave, t_of_f, redefine_tf_vectors=True, long_wavelength_approx = long_wavelength)
+        signal, timevector, frequencyvector = det.projection(signal_parameter_values, detector, wave, t_of_f, center, redefine_tf_vectors=True, long_wavelength_approx = long_wavelength)
     else:
-        signal = det.projection(signal_parameter_values, detector, wave, t_of_f, long_wavelength_approx = long_wavelength)
+        signal = det.projection(signal_parameter_values, detector, wave, t_of_f, center, long_wavelength_approx = long_wavelength)
         frequencyvector = detector.frequencyvector[:, 0]
 
     component_SNRs = det.SNR(detector, signal, use_duty_cycle, frequencyvector=frequencyvector)
@@ -301,7 +309,7 @@ def compute_detector_fisher(
         else:
             fisher_parameters = signal_parameter_values.columns
 
-    return FisherMatrix(waveform_model, signal_parameter_values, fisher_parameters, detector, waveform_class=waveform_class).fm, detector_SNR_square
+    return FisherMatrix(waveform_model, signal_parameter_values, fisher_parameters, detector, center, waveform_class=waveform_class).fm, detector_SNR_square
 
 def compute_network_errors(
     network: det.Network,
