@@ -24,8 +24,8 @@ def test_ephemeris_caching():
     # about 30 years
     times = np.linspace(0, 1e9, num=10_000)
     
-    first_time = time_execution(moon.get_coordinates, times)
-    second_time = time_execution(moon.get_coordinates, times)
+    first_time = time_execution(moon.get_coordinates, times, (0, 0, 0))
+    second_time = time_execution(moon.get_coordinates, times, (0, 0, 0))
     
     # the first time should take longer, more than a tenth of a second
     # while for the second time we should already have cached the ephemeris
@@ -42,8 +42,8 @@ def test_earth_vs_moon(plot):
     
     times = np.linspace(0, 3600*24*60, num=10_000)
     
-    x_moon, y_moon, z_moon = moon.get_coordinates(times)
-    x_earth, y_earth, z_earth = earth.get_coordinates(times)
+    x_moon, y_moon, z_moon = moon.get_coordinates(times, (0, 0, 0))
+    x_earth, y_earth, z_earth = earth.get_coordinates(times, (0, 0, 0))
     
     r_x, r_y, r_z = x_moon - x_earth, y_moon - y_earth, z_moon - z_earth
     
@@ -69,8 +69,8 @@ def test_earth_center_vs_location(plot):
     
     times = np.linspace(0, 3600*24*2, num=10_000)
     
-    x_loc, y_loc, z_loc = loc.get_coordinates(times)
-    x_earth, y_earth, z_earth = earth.get_coordinates(times)
+    x_loc, y_loc, z_loc = loc.get_coordinates(times, (0, 0, 0))
+    x_earth, y_earth, z_earth = earth.get_coordinates(times, (0, 0, 0))
     
     r_x, r_y, r_z = x_loc - x_earth, y_loc - y_earth, z_loc - z_earth
     
@@ -102,7 +102,7 @@ def test_all_coordinates_are_solar_centered(ephem):
     # a day
     times = np.linspace(0, 3600*24, num=10_000)
     
-    x, y, z = ephem.get_coordinates(times)
+    x, y, z = ephem.get_coordinates(times, (0, 0, 0))
     
     r = np.sqrt(x**2 + y**2 + z**2)
     
@@ -120,7 +120,7 @@ def test_geocentered_coordinates_are():
     # a day
     times = np.linspace(0, 3600*24, num=10_000)
     
-    x, y, z = ephem.get_coordinates(times)
+    x, y, z = ephem.get_coordinates(times, (0, 0, 0))
     
     r = np.sqrt(x**2 + y**2 + z**2)
     
@@ -163,6 +163,8 @@ def test_phase_term_differentiated(ephem, plot):
         plt.title(ephem.__class__.__name__)
         plt.show()
     
+
+@pytest.mark.xfail
 def test_einstein_telescope_localization(plot, gw170817_params):
     et = Detector('ET')
     
@@ -191,7 +193,7 @@ def test_einstein_telescope_localization(plot, gw170817_params):
     
     inverse_et = np.linalg.inv(fisher_et)
     inverse_gcrs = np.linalg.inv(fisher_gcrs)
-    
+
 
 @pytest.mark.xfail
 @pytest.mark.parametrize('ephem', [

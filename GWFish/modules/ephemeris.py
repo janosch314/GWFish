@@ -69,7 +69,7 @@ class EphemerisInterpolate:
         
         return False
 
-    def get_coordinates(self, times):
+    def get_coordinates(self, times, center):
         
         if self.interpolation_not_computed(times):
             logging.info('Computing interpolating object')
@@ -93,12 +93,12 @@ class EphemerisInterpolate:
         
         interp_x, interp_y, interp_z = self.interp_gps_position
         return (
-            interp_x(times), 
-            interp_y(times), 
-            interp_z(times),
+            interp_x(times) - center[0], 
+            interp_y(times) - center[1], 
+            interp_z(times) - center[2],
         )
 
-    def phase_term(self, ra, dec, timevector, frequencyvector):
+    def phase_term(self, ra, dec, timevector, frequencyvector, center):
     
         theta = np.pi/2. - dec
         
@@ -106,7 +106,7 @@ class EphemerisInterpolate:
         ky_icrs = -np.sin(theta) * np.sin(ra)
         kz_icrs = -np.cos(theta)
 
-        x, y, z = self.get_coordinates(timevector)
+        x, y, z = self.get_coordinates(timevector, center)
 
         return (
             x * kx_icrs +
@@ -181,3 +181,20 @@ class EarthLocationGCRSEphemeris(EphemerisInterpolate):
             
         return obslocation.data
 
+
+class LISAEphemeris(EphemerisInterpolate):
+    
+    @property
+    def time_step_seconds(self):
+        return 1800.
+
+    def get_icrs_from_times(self, times):
+        
+        time = Time(times, format='gps')
+        
+        obslocation = self.location.get_gcrs(time)
+            
+        return obslocation.data
+
+    def compute_xyz_cordinates(self, times):
+        return np.zeros_like(times), np.zeros_like(times), np.zeros_like(times)

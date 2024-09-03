@@ -86,6 +86,7 @@ class DetectorComponent:
             self.L = eval(str(detector_def['arm_length']))
             self.eps = self.L / cst.AU / (2 * np.sqrt(3))
 
+            self.ephem = ephem.LISAEphemeris()
             
             # psd_data contains proof-mass (PM) and optical-metrology-subsystem (OMS) noise as Doppler noise (y)
             raw_data = np.loadtxt(PSD_PATH / detector_def['psd_data'])
@@ -228,6 +229,27 @@ class Network:
         ]
         
         return new_network
+    
+    def coordinate_center(self, parameters):
+        """This function will return the coordinates of the center of the
+        optimal coordinate system for a signal with the given parameters,
+        as observed by this network.
+        """
+        
+        gps_time = parameters['geocent_time']
+        
+        x_list = []
+        y_list = []
+        z_list = []
+        
+        for detector in self.detectors:
+            for component in detector.components:
+                x_arr, y_arr, z_arr = component.ephem.get_coordinates([gps_time], center=[0, 0, 0])
+                x_list.append(x_arr[0])
+                y_list.append(y_arr[0])
+                z_list.append(z_arr[0])
+        
+        return np.average(x_list), np.average(y_list), np.average(z_list)
 
 def GreenwichMeanSiderealTime(gps):
     # calculate the Greenwhich mean sidereal time
@@ -319,7 +341,7 @@ def AET(polarizations, eij, theta, ra, psi, L, ff):
     return np.hstack((A[:, np.newaxis], E[:, np.newaxis], T[:, np.newaxis]))
 
 
-def projection(parameters, detector, polarizations, timevector, redefine_tf_vectors=False, long_wavelength_approx = True):
+def projection(parameters, detector, polarizations, timevector, center, redefine_tf_vectors=False, long_wavelength_approx = True):
 
     f_max = parameters.get('max_frequency_cutoff', None)
     detector_lifetime = getattr(detector, 'mission_lifetime', None)
@@ -353,11 +375,11 @@ def projection(parameters, detector, polarizations, timevector, redefine_tf_vect
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', AstropyWarning)
         if detector.location == 'earth':
-            proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice, long_wavelength_approx = long_wavelength_approx)
+            proj = projection_earth(parameters, detector, polarizations, new_timevector, center, in_band_slice, long_wavelength_approx = long_wavelength_approx)
         elif detector.location == 'moon':
-            proj = projection_moon(parameters, detector, polarizations, new_timevector, in_band_slice)
+            proj = projection_moon(parameters, detector, polarizations, new_timevector, center, in_band_slice)
         elif detector.location == 'solarorbit':
-            proj = projection_solarorbit(parameters, detector, polarizations, new_timevector, in_band_slice)
+            proj = projection_solarorbit(parameters, detector, polarizations, new_timevector, center, in_band_slice)
         else:
             print('Unknown detector location')
             exit(0)
@@ -426,7 +448,7 @@ def in_band_window(
 
     return slice(i_initial, i_final), new_timevector
 
-def projection_solarorbit(parameters, detector, polarizations, timevector, in_band_slice=slice(None)):
+def projection_solarorbit(parameters, detector, polarizations, timevector, center, in_band_slice=slice(None)):
     ff = detector.frequencyvector[in_band_slice]
     components = detector.components
 
@@ -466,7 +488,7 @@ def Michelson_transfer_function(x, x_c, proj_arm):
     return 0.5 * (term1 + term2)
 
 
-def projection_earth(parameters, detector, polarizations, timevector, in_band_slice=slice(None), long_wavelength_approx = True):
+def projection_earth(parameters, detector, polarizations, timevector, center, in_band_slice=slice(None), long_wavelength_approx = True):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame
@@ -547,7 +569,7 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
         # z_det = components[k].position[2] * cst.R_earth
         # phase_shift = np.squeeze(x_det * kx + y_det * ky + z_det * kz) * 2 * np.pi / cst.c * np.squeeze(ff)
         
-        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector)[in_band_slice], np.squeeze(ff))
+        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector)[in_band_slice], np.squeeze(ff), center)
 
         if long_wavelength_approx:
             
@@ -587,7 +609,7 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
     return proj
 
 
-def projection_moon(parameters, detector, polarizations, timevector, in_band_slice=slice(None)):
+def projection_moon(parameters, detector, polarizations, timevector, center, in_band_slice=slice(None)):
     """
     See Nishizawa et al. (2009) arXiv:0903.0528 for definitions of the polarisation tensors.
     [u, v, w] represent the Earth-frame
@@ -658,7 +680,7 @@ def projection_moon(parameters, detector, polarizations, timevector, in_band_sli
         e1 = components[k].e1
         e2 = components[k].e2
         
-        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector)[in_band_slice], np.squeeze(detector.frequencyvector)[in_band_slice])
+        phase_shift = components[k].ephem.phase_term(ra, dec, np.squeeze(timevector)[in_band_slice], np.squeeze(detector.frequencyvector)[in_band_slice], center)
 
         # proj[:, k] = np.einsum('i,jik,k->j', e1, hij, e2)
         proj[in_band_slice, k] = e1[0] * e2[0] * hxx \

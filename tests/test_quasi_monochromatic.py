@@ -57,6 +57,7 @@ def test_quasi_monochromatic_horizon(low_frequency_detector, extrinsic):
         low_frequency_detector,
         polarizations,
         timevector,
+        center=(0, 0, 0),
         redefine_tf_vectors=True
     )
     
