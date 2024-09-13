@@ -228,23 +228,8 @@ def _fd_phase_correction_and_output_format_from_stain_series(f_, hp, hc, geo_tim
 
     return polarizations
 
-def get_snr(parameters, network, waveform_model = None, series_data = None, long_wavelength_approx = True):
+def get_snr(parameters, network, waveform_model = None):
     
-    #a routine that only activates if the series_data is provided
-    if series_data:
-        polarizations, timevector, f_new = series_data
-        snrs_series = {}
-        for detector in network.detectors:
-            detector.frequencyvector = f_new
-            args = (parameters, detector, polarizations, timevector)
-            signal = gw.detection.projection(*args, long_wavelength_approx = long_wavelength_approx)
-            component_SNRs = gw.detection.SNR(detector, signal, frequencyvector=np.squeeze(f_new))
-            out_SNR = np.sqrt(np.sum(component_SNRs**2))
-            snrs_series[detector.name] = out_SNR
-
-        out_SNR = np.sqrt(np.sum([snrs_series[detector.name]**2 for detector in network.detectors]))
-        return out_SNR
-
     waveform_class = gw.waveforms.LALFD_Waveform
 
     nsignals = len(parameters)
@@ -271,7 +256,7 @@ def get_snr(parameters, network, waveform_model = None, series_data = None, long
 
     return pd.DataFrame.from_dict(snrs, orient='index')
 
-def get_SNR_from_strains(f_in, hp, hc, network, params, geo_time = 1395964818, long_wavelength_approx = True):
+def get_SNR_from_series(f_in, hp, hc, network, parameters, geo_time = 1395964818, long_wavelength_approx = True):
 
     '''
     Given a set of parameters, polarizations, network, timevector and frequency array, returns the SNR associated to the signal
@@ -305,6 +290,17 @@ def get_SNR_from_strains(f_in, hp, hc, network, params, geo_time = 1395964818, l
     series_data = (polarizations, timevector, f_in)
 
     # SNR = get_snr(params, polarizations, detector, timevector, f_in, long_wavelength_approx)
-    SNR = get_snr(params, network, series_data = series_data, long_wavelength_approx = long_wavelength_approx)
+    
+    polarizations, timevector, f_new = series_data
 
-    return SNR
+    snrs_series = {}
+    for detector in network.detectors:
+        detector.frequencyvector = f_new
+        args = (parameters, detector, polarizations, timevector)
+        signal = gw.detection.projection(*args, long_wavelength_approx = long_wavelength_approx)
+        component_SNRs = gw.detection.SNR(detector, signal, frequencyvector=np.squeeze(f_new))
+        out_SNR = np.sqrt(np.sum(component_SNRs**2))
+        snrs_series[detector.name] = out_SNR
+
+    out_SNR = np.sqrt(np.sum([snrs_series[detector.name]**2 for detector in network.detectors]))
+    return out_SNR

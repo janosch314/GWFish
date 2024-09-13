@@ -6,4 +6,8 @@ dist/
 .hypothesis/*
 docs/source/detectors_autogen.inc
 docs/source/figures/*
-23_gwstrain_trim.dat
+*_gwstrain_trim.dat
+Merger_data.ipynb
+spectrum_data.hdf5
+*eatmap*
+
