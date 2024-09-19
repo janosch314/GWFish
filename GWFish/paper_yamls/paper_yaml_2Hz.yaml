@@ -1,0 +1,221 @@
+myET:
+        lat:              43.6 * np.pi / 180.
+        lon:              10.5 * np.pi / 180.
+        opening_angle:    np.pi / 3.
+        azimuth:          70.5674 * np.pi / 180.
+        psd_data:         /Users/ulyana/Documents/GWFish/GWFish/detector_psd/ET_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthDelta
+        plotrange:        3, 1000, 1e-25, 1e-20
+        fmin:             2.
+        fmax:             1024.
+        spacing:          linear
+        df:               1./153.
+        npoints:          1000   
+        arm_length:       10000           
+
+ET:
+        lat:              (40 + 31. / 60 ) * np.pi / 180.
+        lon:              (9 + 25. / 60) * np.pi / 180.
+        opening_angle:    np.pi / 3.
+        azimuth:          70.5674 * np.pi / 180.
+        psd_data:         ET_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthDelta
+        plotrange:        3, 1000, 1e-25, 1e-20
+        fmin:             2.
+        fmax:             2048.
+        spacing:          geometric
+        df:               1./16.
+        npoints:          1000   
+        arm_length:       10000           
+VOY:
+        lat:              46.5 * np.pi / 180.
+        lon:              -119.4 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          126. * np.pi / 180.
+        psd_data:         Voyager_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.    
+        npoints:          5000           
+        arm_length:       4000      
+CE1:
+        lat:              46.5 * np.pi / 180.
+        lon:              -119.4 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          126. * np.pi / 180.
+        psd_data:         CE1_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.    
+        npoints:          5000 
+        arm_length:       20000
+CE2:
+        lat:              46.5 * np.pi / 180.
+        lon:              -119.4 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          126. * np.pi / 180.
+        psd_data:         CE2_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.    
+        npoints:          5000 
+        arm_length:       40000
+LLO:
+        lat:              30.56 * np.pi / 180.
+        lon:              -90.77 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          197.7 * np.pi / 180.
+        psd_data:         LIGO_O5_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.    
+        npoints:          5000    
+        arm_length:       4000
+LHO:
+        lat:              46.46 * np.pi / 180.
+        lon:              -119.4 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          126. * np.pi / 180.
+        psd_data:         LIGO_O5_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.    
+        npoints:          5000 
+        arm_length:       4000
+VIR:
+        lat:              43.6 * np.pi / 180.
+        lon:              10.5 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          71. * np.pi / 180.
+        psd_data:         Virgo_O5_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.    
+        npoints:          5000 
+        arm_length:       3000
+VIR_O2:
+        lat:              43.6 * np.pi / 180.
+        lon:              10.5 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          71. * np.pi / 180.
+        psd_data:         AdV_O2_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.
+        npoints:          5000 
+        arm_length:       3000
+KAG:
+        lat:              36.41 * np.pi / 180.
+        lon:              137.3 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          29.6 * np.pi / 180.
+        psd_data:         Kagra_128Mpc_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.    
+        npoints:          5000 
+        arm_length:       3000
+LIN:
+        lat:              19.61 * np.pi / 180.
+        lon:              77.03 * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          100. * np.pi / 180.
+        psd_data:         LIGO_O5_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        10, 1000, 1e-25, 1e-20
+        fmin:             8
+        fmax:             1024
+        spacing:          geometric 
+        df:               1./4.    
+        npoints:          5000     
+        arm_length:       4000
+LISA:
+# the ACC and OMS Doppler-noise PSDs are taken from https://arxiv.org/abs/2108.01167
+        arm_length:       2.5e9
+        psd_data:         LISA_psd.txt
+        duty_factor:      1
+        detector_class:   satellitesolarorbit
+        mission_lifetime: 4 * 3.16e7
+        plotrange:        1e-3, 0.3, 1e-22, 1e-19
+        fmin:             1e-4
+        fmax:             0.3
+        spacing:          linear
+        df:               1e-4
+LGWA:
+        lat:              -85 * np.pi / 180.
+        lon:              0
+        azimuth:
+        psd_data:         LGWA_Si_psd.txt
+        duty_factor:      1
+        detector_class:   lunararray
+        number_stations:  4
+        mission_lifetime: 10 * 3.16e7
+        plotrange:        1e-3, 4, 1e-23, 1e-19
+        fmin:             1e-3
+        fmax:             4
+        spacing:          geometric
+        npoints:          2000
+LGWA_Nb:
+        lat:              -85 * np.pi / 180.
+        lon:              0
+        azimuth:
+        psd_data:         LGWA_Nb_psd.txt
+        duty_factor:      1
+        detector_class:   lunararray
+        number_stations:  4
+        mission_lifetime: 10 * 3.16e7
+        plotrange:        1e-3, 4, 1e-23, 1e-19
+        fmin:             1e-3
+        fmax:             4
+        spacing:          linear
+        df:               1./4096.
+LGWA_Soundcheck:
+        lat:              -85 * np.pi / 180.
+        lon:              0
+        azimuth:
+        psd_data:         LGWA_Soundcheck_psd.txt
+        duty_factor:      1
+        detector_class:   lunararray
+        number_stations:  1
+        mission_lifetime: 2 * 2.7e6
+        plotrange:        1e-3, 4, 1e-23, 1e-19
+        fmin:             1e-3
+        fmax:             4
+        spacing:          linear
+        df:               1./4096.
+
