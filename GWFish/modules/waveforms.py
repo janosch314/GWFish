@@ -232,11 +232,12 @@ class LALFD_Waveform(Waveform):
         self._init_lambda()
         self._init_lal_gw_parameters()
         self._setup_lal_caller_args()
-
+    '''
     @property
     def _gw_params_for_spin_conversion(self):
         return ['theta_jn', 'phi_jl', 'tilt_1', 'tilt_2',
                 'phi_12', 'a_1', 'a_2', 'mass_1', 'mass_2', 'phase']
+    '''
 
     def update_gw_params(self, new_gw_params):
         self.gw_params.update(new_gw_params)
