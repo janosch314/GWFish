@@ -256,7 +256,18 @@ class LALFD_Waveform(Waveform):
             SimInspiralWaveformParamsInsertTidalLambda2(self._params_lal, float(self.gw_params['lambda_2']))
 
     def _init_lal_gw_parameters(self):
-        gwfish_input_params = {kk: self.gw_params[kk] for kk in self._gw_params_for_spin_conversion}
+        #gwfish_input_params = {kk: self.gw_params[kk] for kk in self._gw_params_for_spin_conversion}
+        gwfish_input_params = {
+            'theta_jn':self.gw_params['theta_jn'], 
+            'phi_jl':self.gw_params['phi_jl'],
+            'tilt_1':self.gw_params['tilt_1'], 
+            'tilt_2':self.gw_params['tilt_2'],
+            'phi_12':self.gw_params['phi_12'], 
+            'a_1':self.gw_params['a_1'],
+            'a_2':self.gw_params['a_2'], 
+            'mass_1':self.gw_params['mass_1'] * lal.MSUN_SI,#the masses need to be in kg!
+            'mass_2':self.gw_params['mass_2'] * lal.MSUN_SI, 
+            'phase':self.gw_params['phase']}
         self.gw_params['iota'], self.gw_params['spin_1x'], \
             self.gw_params['spin_1y'], self.gw_params['spin_1z'], \
             self.gw_params['spin_2x'], self.gw_params['spin_2y'], \
