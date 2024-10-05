@@ -15,7 +15,7 @@ DEFAULT_CONFIG = Path(__file__).parent.parent / 'detectors.yaml'
 PSD_PATH = Path(__file__).parent.parent / 'detector_psd'
 
 # used when redefining the time and frequency vectors
-N_FREQUENCY_POINTS = 1000
+N_FREQUENCY_POINTS = 2000
 
 class DetectorComponent:
 
@@ -142,9 +142,6 @@ class Detector:
         fmin = eval(str(detector_def['fmin']))
         fmax = eval(str(detector_def['fmax']))
         spacing = str(detector_def['spacing'])
-
-       
-        
 
         if spacing == 'linear':
             df = eval(str(detector_def['df']))
@@ -324,55 +321,58 @@ def projection(parameters, detector, polarizations, timevector, redefine_tf_vect
     f_max = parameters.get('max_frequency_cutoff', None)
     detector_lifetime = getattr(detector, 'mission_lifetime', None)
 
-    in_band_slice, new_timevector = in_band_window(
+    in_band_slice = in_band_window(
         np.squeeze(timevector), 
         np.squeeze(detector.frequencyvector), 
         detector_lifetime, 
-        f_max, 
-        redefine_timevector=redefine_tf_vectors
+        f_max
     )
     
-    if redefine_tf_vectors:
-        new_fmin = detector.frequencyvector[in_band_slice.start - 1, 0]
-        new_fmax = detector.frequencyvector[in_band_slice.stop + 1, 0]
-        new_frequencyvector = np.geomspace(new_fmin, new_fmax, num=N_FREQUENCY_POINTS)[:, None]
-        temp_timevector = t_of_f_PN(parameters, new_frequencyvector)
-        in_band_slice, new_timevector = in_band_window(
-            np.squeeze(temp_timevector), 
-            np.squeeze(new_frequencyvector), 
-            detector_lifetime, 
-            f_max,
-            redefine_timevector=True,
-            final_time=parameters['geocent_time']
-        )
-    
-    proj = np.zeros_like(new_timevector)
+    proj = np.zeros_like(timevector)
     if is_null_slice(in_band_slice):
         return proj
     
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', AstropyWarning)
         if detector.location == 'earth':
-            proj = projection_earth(parameters, detector, polarizations, new_timevector, in_band_slice, long_wavelength_approx = long_wavelength_approx)
+            proj = projection_earth(parameters, detector, polarizations, timevector, in_band_slice, long_wavelength_approx = long_wavelength_approx)
         elif detector.location == 'moon':
-            proj = projection_moon(parameters, detector, polarizations, new_timevector, in_band_slice)
+            proj = projection_moon(parameters, detector, polarizations, timevector, in_band_slice)
         elif detector.location == 'solarorbit':
-            proj = projection_solarorbit(parameters, detector, polarizations, new_timevector, in_band_slice)
+            proj = projection_solarorbit(parameters, detector, polarizations, timevector, in_band_slice)
         else:
             print('Unknown detector location')
             exit(0)
 
-    if redefine_tf_vectors:
-        return proj, new_timevector, new_frequencyvector
     return proj
 
+def new_tf_vectors(parameters, detector, timevector, time_reset=True):
+    f_max = parameters.get('max_frequency_cutoff', None)
+    detector_lifetime = getattr(detector, 'mission_lifetime', None)
+
+    in_band_slice = in_band_window(
+        np.squeeze(timevector),
+        np.squeeze(detector.frequencyvector),
+        detector_lifetime,
+        f_max
+    )
+
+    new_fmin = detector.frequencyvector[np.maximum(in_band_slice.start-2,0), 0]
+    new_fmax = detector.frequencyvector[np.minimum(in_band_slice.stop+2, len(detector.frequencyvector)-1), 0]
+    new_frequencyvector = np.geomspace(new_fmin, new_fmax, num=N_FREQUENCY_POINTS)[:, None]
+    new_timevector = t_of_f_PN(parameters, new_frequencyvector)
+    if time_reset:
+        time_shift = new_timevector[0, 0]
+        new_timevector -= time_shift
+        parameters['geocent_time'] = parameters['geocent_time']-time_shift
+
+    return new_timevector, new_frequencyvector, parameters
 
 def in_band_window(
     timevector, 
     frequencyvector, 
     detector_lifetime, 
     max_frequency_cutoff,
-    redefine_timevector=False,
     final_time=None
     ):
     """Truncate the evolution of the source to the detector lifetime.
@@ -394,12 +394,11 @@ def in_band_window(
     if max_frequency_cutoff is None:
         i_final = len(timevector)
         fmax_time = final_time
-        new_timevector = timevector
     else:
         if max_frequency_cutoff <= frequencyvector[0]:
             warnings.warn("The max_frequency given is lower than the lowest frequency for the detector."
                           "Returning a zero projection.")
-            return slice(0, 0), timevector
+            return slice(0, 0)
         elif max_frequency_cutoff >= frequencyvector[-1]:
             i_final = -1
         else:
@@ -407,24 +406,14 @@ def in_band_window(
 
         fmax_time = timevector[i_final]
 
-    if redefine_timevector:
-        # potentially dangerous loss of precision here...
-        # shift the timevector so that the cutoff is placed at the given gps time
-        new_timevector = timevector + final_time - fmax_time
-    else:
-        new_timevector = timevector
-
     if detector_lifetime is None:
         i_initial = 0
-    elif final_time - detector_lifetime < new_timevector[0]:
+    elif final_time - detector_lifetime < timevector[0]:
         i_initial = 0
     else:
-        if redefine_timevector:
-            i_initial = np.searchsorted(new_timevector, final_time - detector_lifetime)
-        else:
-            i_initial = np.searchsorted(new_timevector, fmax_time - detector_lifetime)
+        i_initial = np.searchsorted(timevector, fmax_time - detector_lifetime)
 
-    return slice(i_initial, i_final), new_timevector
+    return slice(i_initial, i_final)
 
 def projection_solarorbit(parameters, detector, polarizations, timevector, in_band_slice=slice(None)):
     ff = detector.frequencyvector[in_band_slice]
@@ -477,7 +466,7 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
 
     # timevector = parameters['geocent_time'] * np.ones_like(timevector)  # switch off Earth's rotation
 
-    nf = len(polarizations[:, 0])
+    nf = len(timevector)
     ff = detector.frequencyvector[in_band_slice, :]
 
     components = detector.components
@@ -598,7 +587,7 @@ def projection_moon(parameters, detector, polarizations, timevector, in_band_sli
 
     # timevector = parameters['geocent_time'] * np.ones_like(timevector)  # switch off Earth's rotation
 
-    nt = len(polarizations[:, 0])
+    nt = len(timevector)
 
     components = detector.components
     proj = np.zeros((nt, len(components)), dtype=complex)
