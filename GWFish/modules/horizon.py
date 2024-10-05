@@ -54,7 +54,7 @@ def compute_SNR(
     timevector = waveform_obj.t_of_f
     
     if redefine_tf_vectors:
-        timevector, frequencyvector, params = new_tf_vectors(params, detector, timevector, time_restart=True)
+        timevector, frequencyvector, params = new_tf_vectors(params, detector, timevector, time_reset=True)
         detector.frequencyvector = frequencyvector
         data_params['frequencyvector'] = frequencyvector
 

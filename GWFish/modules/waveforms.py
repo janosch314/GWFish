@@ -992,7 +992,7 @@ class IMRPhenomD(Waveform):
         plt.legend(fontsize = 8)
         plt.grid(which = 'both', color = 'lightgray', alpha = 0.5, linestyle = 'dashed', linewidth = 0.5)
         plt.xlabel('Frequency [Hz]')
-        plt.ylabel('$\phi$_prime')
+        plt.ylabel(r'$\phi$_prime')
         plt.savefig(output_folder + 'psi_prime_phenomD.png')
         plt.close()
 
@@ -1012,7 +1012,7 @@ class IMRPhenomD(Waveform):
         plt.legend(fontsize = 8)
         plt.grid(which = 'both', color = 'lightgray', alpha = 0.5, linestyle = 'dashed', linewidth = 0.5)
         plt.xlabel('Frequency [Hz]')
-        plt.ylabel('$\phi$')
+        plt.ylabel(r'$\phi$')
         plt.savefig(output_folder + 'psi_phenomD_zoomed.png')
         plt.close()
 
