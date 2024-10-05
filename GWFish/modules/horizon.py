@@ -136,7 +136,7 @@ def horizon(
         warnings.warn('The source is completely out of band')
         return 0., 0.
     
-    redshift, r = brentq(SNR_error, MIN_REDSHIFT, MAX_REDSHIFT, full_output=True)
+    redshift, r = opt.brentq(SNR_error, MIN_REDSHIFT, MAX_REDSHIFT, full_output=True)
     if not r.converged:
         raise ValueError('Horizon computation did not converge!')
         
@@ -216,7 +216,7 @@ def find_optimal_location(
     if 'maxiter' not in minimizer_kwargs:
         minimizer_kwargs['maxiter'] = 100
     
-    res = dual_annealing(
+    res = opt.dual_annealing(
         func=to_minimize, 
         bounds=[
             (0, 2*np.pi), 
