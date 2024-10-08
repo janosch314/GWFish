@@ -39,7 +39,8 @@ class DetectorComponent:
             self.lat = eval(str(detector_def['lat']))
             self.lon = eval(str(detector_def['lon']))
             
-            self.ephem = ephem.EarthLocationGCRSEphemeris(
+            self.ephem = ephem.EarthLocationEphemeris(
+            # self.ephem = ephem.EarthLocationGCRSEphemeris(
                 EarthLocation.from_geodetic(
                     np.rad2deg(self.lon), 
                     np.rad2deg(self.lat)
@@ -63,8 +64,6 @@ class DetectorComponent:
 
             self.psd_data = np.loadtxt(self.psd_path / detector_def['psd_data'])
             
-            
-
         elif detector_def['detector_class'] == 'lunararray':
 
             self.lat = eval(str(detector_def['lat']))
