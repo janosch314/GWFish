@@ -154,9 +154,10 @@ def get_snr(parameters, network, waveform_model):
                 'f_ref': 50.
             }
             waveform_obj = waveform_class(waveform_model, parameters.iloc[i], data_params)
+            center = network.coordinate_center(parameters.iloc[i])
             wave = waveform_obj()
             t_of_f = waveform_obj.t_of_f
-            signal = gw.detection.projection(parameters.iloc[i], detector, wave, t_of_f)
+            signal = gw.detection.projection(parameters.iloc[i], detector, wave, t_of_f, center)
 
             snr[detector.name] = np.sqrt(np.sum(gw.detection.SNR(detector, signal)**2))
 
