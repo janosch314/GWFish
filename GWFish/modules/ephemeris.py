@@ -38,7 +38,7 @@ class EphemerisInterpolate:
         body_y = body.y.si.value
         body_z = body.z.si.value
         return body_x, body_y, body_z
-
+    
     def create_position_interp(self, times):
         
         x, y, z = self.compute_xyz_cordinates(times)
@@ -47,6 +47,20 @@ class EphemerisInterpolate:
             interp1d(times, x, bounds_error=False, fill_value=np.nan, kind=self.interp_kind),
             interp1d(times, y, bounds_error=False, fill_value=np.nan, kind=self.interp_kind),
             interp1d(times, z, bounds_error=False, fill_value=np.nan, kind=self.interp_kind),
+        )
+
+    def create_velocity_interp(self, times):
+
+        x, y, z = self.compute_xyz_cordinates(times)
+        
+        v_x = np.gradient(x, times, edge_order=2)
+        v_y = np.gradient(y, times, edge_order=2)
+        v_z = np.gradient(z, times, edge_order=2)
+        
+        return (
+            interp1d(times, v_x, bounds_error=False, fill_value=0, kind=self.interp_kind),
+            interp1d(times, v_y, bounds_error=False, fill_value=0, kind=self.interp_kind),
+            interp1d(times, v_z, bounds_error=False, fill_value=0, kind=self.interp_kind),
         )
 
     def interpolation_not_computed(self, times):
@@ -80,14 +94,15 @@ class EphemerisInterpolate:
             time_interval = t1 - t0
             if time_interval < self.time_step_seconds:
                 time_interval = self.time_step_seconds
-            self.interp_gps_time_range = t0 - time_interval / 10, t1 + time_interval / 10
+            self.interp_gps_time_range = t0 - time_interval, t1 + time_interval
             
-            # ensure at least two points for linear interpolation, four for cubic
-            n_points = int(np.ceil(time_interval / self.time_step_seconds)) + self.interp_kind
-
+            # ensure at least three points for linear interpolation, five for cubic
+            n_points = int(np.ceil(time_interval / self.time_step_seconds)) + self.interp_kind + 1
+            # breakpoint()
             new_times = np.linspace(*self.interp_gps_time_range, num=n_points)
 
             self.interp_gps_position = self.create_position_interp(new_times)
+            self.interp_gps_velocity = self.create_velocity_interp(new_times)
 
             logging.info('Finished computing interpolating object')
         
@@ -97,7 +112,29 @@ class EphemerisInterpolate:
             interp_y(times) - center[1], 
             interp_z(times) - center[2],
         )
-
+        
+    
+    def get_velocity(self, times):
+        
+        self.get_coordinates([times[0], times[-1]], (0,0,0))
+        
+        interp_v_x, interp_v_y, interp_v_z = self.interp_gps_velocity
+        return (
+            interp_v_x(times),
+            interp_v_y(times),
+            interp_v_z(times),
+        )
+    
+    def get_velocity_along_direction(self, times, direction):
+        
+        v_x, v_y, v_z = self.get_velocity(times)
+        
+        return (
+            v_x * direction[0] / 299_792_458 +
+            v_y * direction[1] / 299_792_458 +
+            v_z * direction[2] / 299_792_458
+        )
+    
     def phase_term(self, ra, dec, timevector, frequencyvector, center):
     
         theta = np.pi/2. - dec
@@ -127,7 +164,7 @@ class EarthEphemeris(EphemerisInterpolate):
     
     @property
     def time_step_seconds(self):
-        return 3600.
+        return 1800.
 
     def get_icrs_from_times(self, times):
         return get_body_barycentric(
