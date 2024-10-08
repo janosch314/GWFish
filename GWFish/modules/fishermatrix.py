@@ -109,8 +109,19 @@ class Derivative:
         """
         if target_parameter == 'luminosity_distance':
             derivative = -1. / self.local_params[target_parameter] * self.projection_at_parameters
-        # elif target_parameter == 'geocent_time':
-        #     derivative = 2j * np.pi * self.detector.frequencyvector * self.projection_at_parameters
+        elif target_parameter == 'geocent_time':
+            
+            times = self.waveform_class(self.waveform, self.local_params, self.data_params).t_of_f
+            
+            ra, dec = self.local_params['ra'], self.local_params['dec']
+            
+            n_x = -np.cos(dec) * np.cos(ra)
+            n_y = -np.cos(dec) * np.sin(ra)
+            n_z = -np.sin(dec)
+            
+            velocity_along_direction = self.detector.components[0].ephem.get_velocity_along_direction(times, (n_x, n_y, n_z))
+            derivative = 2j * np.pi * self.detector.frequencyvector * self.projection_at_parameters * (1 - velocity_along_direction[:, np.newaxis])
+
         elif target_parameter == 'phase':
             derivative = -1j * self.projection_at_parameters
         else:
@@ -147,7 +158,7 @@ class Derivative:
 
                 waveform_obj2 = self.waveform_class(self.waveform, self.pv_set2, self.data_params)
                 wave2 = waveform_obj2()
-                t_of_f2 = waveform_obj2.t_of_f                
+                t_of_f2 = waveform_obj2.t_of_f
 
                 self.pv_set1['geocent_time'] = self.tc
                 self.pv_set2['geocent_time'] = self.tc
@@ -160,6 +171,7 @@ class Derivative:
                                     
         self.waveform_object.update_gw_params(self.local_params)
 
+        
         return derivative
 
     def __call__(self, target_parameter):
@@ -394,7 +406,7 @@ def compute_network_errors(
 
         for detector in network.detectors:
             
-            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, waveform_model, waveform_class, use_duty_cycle, long_wavelength = long_wavelength)
+            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, waveform_model, waveform_class, use_duty_cycle, long_wavelength = long_wavelength, network=network)
             
             network_snr_square += detector_snr_square
         
