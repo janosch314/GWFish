@@ -109,10 +109,10 @@ def t_of_f_PN(parameters, frequencyvector):
 
 class Waveform:
     def __init__(self, name, gw_params, data_params):
-        gw_params = aux.check_and_convert_to_mass_1_mass_2(gw_params)
+        params = aux.check_and_convert_to_mass_1_mass_2(gw_params)
         self.name = name
         self._set_default_gw_params()
-        self.gw_params.update(gw_params)
+        self.gw_params.update(params)
         self.data_params = data_params
         self._frequency_domain_strain = None
         self._time_domain_strain = None
