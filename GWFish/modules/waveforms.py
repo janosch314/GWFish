@@ -91,8 +91,7 @@ def t_of_f_PN(parameters, frequencyvector):
     Marsat/Baker arXiv:1806.10734v1; equation (22) neglecting the phase 
     term, which does not matter for SNR calculations.
     """
-    local_params = parameters.copy()
-    local_params = aux.check_and_convert_to_mass_1_mass_2(local_params)
+    local_params = aux.check_and_convert_to_mass_1_mass_2(parameters)
 
     M1 = local_params['mass_1'] * cst.Msol
     M2 = local_params['mass_2'] * cst.Msol
