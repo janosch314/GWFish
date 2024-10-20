@@ -16,7 +16,7 @@ def from_mChirp_q_to_m1_m2(mChirp, q):
     
     return m1, m2
 
-def check_and_convert_to_mass_1_mass_2(parameters):
+def check_and_convert_to_mass_1_mass_2(input_parameters):
     """
     GWFish accepts different combinations of mass inputs:
     - chirp_mass, mass_ratio
@@ -26,6 +26,9 @@ def check_and_convert_to_mass_1_mass_2(parameters):
 
     lalsim requires individual masses in detector frame, whenever required, convert to m1, m2
     """
+    
+    parameters = input_parameters.copy()
+    
     if ('chirp_mass' in parameters.keys()) and ('mass_ratio' in parameters.keys()):
             parameters['mass_1'], parameters['mass_2'] = from_mChirp_q_to_m1_m2(parameters['chirp_mass'], parameters['mass_ratio'])
     if ('chirp_mass_source' in parameters.keys()) and ('mass_ratio' in parameters.keys()):
@@ -41,7 +44,7 @@ def check_and_convert_to_mass_1_mass_2(parameters):
         else:
             parameters['mass_1'] = parameters['mass_1_source'] * (1 + parameters['redshift'])
             parameters['mass_2'] = parameters['mass_2_source'] * (1 + parameters['redshift'])
-
+    return parameters
 
 def fisco(parameters):
     """
