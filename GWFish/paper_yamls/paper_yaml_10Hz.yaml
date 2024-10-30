@@ -1,0 +1,15 @@
+myET:
+        lat:              43.6 * np.pi / 180.
+        lon:              10.5 * np.pi / 180.
+        opening_angle:    np.pi / 3.
+        azimuth:          70.5674 * np.pi / 180.
+        psd_data:         ET_psd.txt
+        duty_factor:      0.85
+        detector_class:   earthDelta
+        plotrange:        3, 1000, 1e-25, 1e-20
+        fmin:             10.
+        fmax:             1024.
+        spacing:          linear
+        df:               1./153.
+        npoints:          1000   
+        arm_length:       10000           
