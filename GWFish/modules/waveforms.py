@@ -92,7 +92,7 @@ def t_of_f_PN(parameters, frequencyvector):
     term, which does not matter for SNR calculations.
     """
     local_params = parameters.copy()
-    aux.check_and_convert_to_mass_1_mass_2(local_params)
+    local_params = aux.check_and_convert_to_mass_1_mass_2(local_params)
 
     M1 = local_params['mass_1'] * cst.Msol
     M2 = local_params['mass_2'] * cst.Msol
@@ -109,7 +109,7 @@ def t_of_f_PN(parameters, frequencyvector):
 
 class Waveform:
     def __init__(self, name, gw_params, data_params):
-        aux.check_and_convert_to_mass_1_mass_2(gw_params)
+        gw_params = aux.check_and_convert_to_mass_1_mass_2(gw_params)
         self.name = name
         self._set_default_gw_params()
         self.gw_params.update(gw_params)

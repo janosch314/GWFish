@@ -26,22 +26,23 @@ def check_and_convert_to_mass_1_mass_2(parameters):
 
     lalsim requires individual masses in detector frame, whenever required, convert to m1, m2
     """
-    if ('chirp_mass' in parameters.keys()) and ('mass_ratio' in parameters.keys()):
-            parameters['mass_1'], parameters['mass_2'] = from_mChirp_q_to_m1_m2(parameters['chirp_mass'], parameters['mass_ratio'])
-    if ('chirp_mass_source' in parameters.keys()) and ('mass_ratio' in parameters.keys()):
+    local_params = parameters.copy() 
+    if ('chirp_mass' in local_params.keys()) and ('mass_ratio' in local_params.keys()):
+            local_params['mass_1'], local_params['mass_2'] = from_mChirp_q_to_m1_m2(local_params['chirp_mass'], local_params['mass_ratio'])
+    if ('chirp_mass_source' in local_params.keys()) and ('mass_ratio' in local_params.keys()):
         if 'redshift' not in parameters.keys():
+                raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+        else:
+            local_params['mass_1_source'], local_params['mass_2_source'] = from_mChirp_q_to_m1_m2(local_params['chirp_mass_source'], local_params['mass_ratio'])
+            local_params['mass_1'] = local_params['mass_1_source'] * (1 + local_params['redshift'])
+            local_params['mass_2'] = local_params['mass_2_source'] * (1 + local_params['redshift'])
+    if ('mass_1_source' in local_params.keys()) or ('mass_2_source' in local_params.keys()):
+        if 'redshift' not in local_params.keys():
             raise ValueError('If using source-frame masses, one must specify the redshift parameter')
         else:
-            parameters['mass_1_source'], parameters['mass_2_source'] = from_mChirp_q_to_m1_m2(parameters['chirp_mass_source'], parameters['mass_ratio'])
-            parameters['mass_1'] = parameters['mass_1_source'] * (1 + parameters['redshift'])
-            parameters['mass_2'] = parameters['mass_2_source'] * (1 + parameters['redshift'])
-    if ('mass_1_source' in parameters.keys()) or ('mass_2_source' in parameters.keys()):
-        if 'redshift' not in parameters.keys():
-            raise ValueError('If using source-frame masses, one must specify the redshift parameter')
-        else:
-            parameters['mass_1'] = parameters['mass_1_source'] * (1 + parameters['redshift'])
-            parameters['mass_2'] = parameters['mass_2_source'] * (1 + parameters['redshift'])
-
+            local_params['mass_1'] = local_params['mass_1_source'] * (1 + local_params['redshift'])
+            local_params['mass_2'] = local_params['mass_2_source'] * (1 + local_params['redshift'])
+    return local_params
 
 def fisco(parameters):
     """
