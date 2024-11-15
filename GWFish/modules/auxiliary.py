@@ -16,11 +16,24 @@ def from_mChirp_q_to_m1_m2(mChirp, q):
     
     return m1, m2
 
+
+def from_mChirp_eta_to_m1_m2(mChirp, eta):
+    """
+    Compute the transformation from mChirp, eta to m1, m2
+    """
+    m1 = mChirp * (1 + np.sqrt(1 - 4 * eta)) / 2 * eta**(-3/5)
+    m2 = mChirp * (1 - np.sqrt(1 - 4 * eta)) / 2 * eta**(-3/5)
+    
+    return m1, m2
+
+
 def check_and_convert_to_mass_1_mass_2(parameters):
     """
     GWFish accepts different combinations of mass inputs:
     - chirp_mass, mass_ratio
+    - chirp_mass, eta
     - chirp_mass_source, mass_ratio, redshift
+    - chirp_mass_source, eta, redshift
     - mass_1_source, mass_2_source, redshift
     - mass_1, mass_2
 
@@ -29,11 +42,20 @@ def check_and_convert_to_mass_1_mass_2(parameters):
     local_params = parameters.copy() 
     if ('chirp_mass' in local_params.keys()) and ('mass_ratio' in local_params.keys()):
             local_params['mass_1'], local_params['mass_2'] = from_mChirp_q_to_m1_m2(local_params['chirp_mass'], local_params['mass_ratio'])
+    if ('chirp_mass' in local_params.keys()) and ('eta' in local_params.keys()):
+            local_params['mass_1'], local_params['mass_2'] = from_mChirp_eta_to_m1_m2(local_params['chirp_mass'], local_params['eta'])
     if ('chirp_mass_source' in local_params.keys()) and ('mass_ratio' in local_params.keys()):
         if 'redshift' not in parameters.keys():
                 raise ValueError('If using source-frame masses, one must specify the redshift parameter')
         else:
             local_params['mass_1_source'], local_params['mass_2_source'] = from_mChirp_q_to_m1_m2(local_params['chirp_mass_source'], local_params['mass_ratio'])
+            local_params['mass_1'] = local_params['mass_1_source'] * (1 + local_params['redshift'])
+            local_params['mass_2'] = local_params['mass_2_source'] * (1 + local_params['redshift'])
+    if ('chirp_mass_source' in local_params.keys()) and ('eta' in local_params.keys()):
+        if 'redshift' not in parameters.keys():
+                raise ValueError('If using source-frame masses, one must specify the redshift parameter')
+        else:
+            local_params['mass_1_source'], local_params['mass_2_source'] = from_mChirp_eta_to_m1_m2(local_params['chirp_mass_source'], local_params['eta'])
             local_params['mass_1'] = local_params['mass_1_source'] * (1 + local_params['redshift'])
             local_params['mass_2'] = local_params['mass_2_source'] * (1 + local_params['redshift'])
     if ('mass_1_source' in local_params.keys()) or ('mass_2_source' in local_params.keys()):
