@@ -146,3 +146,57 @@ def test_max_f_cutoff_signal_duration(redefine_tf_vectors):
         atol = delta_t,
         rtol = 0
     )
+    
+def compute_match(h1, h2, f, psd):
+    
+    return (
+        np.trapz(h1* np.conj(h2) / psd, x=f) 
+        / np.sqrt(
+            np.trapz(abs(h1)**2 / psd, x=f) *
+            np.trapz(abs(h2)**2 / psd, x=f)
+        )
+    )
+
+def test_mismatch_with_param_variation():
+    
+    params = {
+        'mass_ratio': 0.99, 
+        'luminosity_distance': 40,
+        'theta_jn': 5/6 * np.pi,
+        'ra': 3.45,
+        'dec': -0.41,
+        'psi': 1.6,
+        'phase': 0,
+        'geocent_time': 1187008882, 
+        'chirp_mass_detector': 2.8/2**(6/5), 
+    }
+    
+    detector = Detector('ET')
+
+    data_params = {
+        'frequencyvector': detector.frequencyvector,
+        'f_ref': 50.
+    }
+    waveform_obj = TaylorF2('TaylorF2', params, data_params)
+    hphc = waveform_obj()
+    t_of_f = waveform_obj.t_of_f
+    proj = projection(params, detector, hphc, t_of_f, (0, 0, 0))
+
+    for name in params.keys():
+        new_params = params.copy()
+        if name == 'chirp_mass_detector':
+            new_params[name] = params[name] + 1e-8
+        else:
+            new_params[name] = params[name] + 1e-5
+        waveform_obj_2 = TaylorF2('TaylorF2', new_params, data_params)
+        hphc_2 = waveform_obj_2()
+        t_of_f_2 = waveform_obj_2.t_of_f
+        proj_2 = projection(new_params, detector, hphc_2, t_of_f_2, (0, 0, 0))
+
+        f = np.squeeze(detector.frequencyvector)
+        assert compute_match(
+            proj[:, 0], 
+            proj_2[:, 0], 
+            f, 
+            detector.components[0].Sn(f)
+        ).real > 0.999
