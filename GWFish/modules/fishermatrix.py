@@ -115,7 +115,10 @@ class Derivative:
         else:
             pv = self.local_params[target_parameter]
 
-            dp = np.maximum(self.eps, self.eps * pv)
+            if target_parameter in ['chirp_mass', 'chirp_mass_source', 'mass_1', 'mass_2', 'mass_1_source', 'mass_2_source']:
+                dp = 1e-8 * pv
+            else:
+                dp = np.maximum(self.eps, self.eps * pv)
 
             self.pv_set1 = self.local_params.copy()
             self.pv_set2 = self.local_params.copy()

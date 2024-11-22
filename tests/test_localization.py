@@ -44,5 +44,5 @@ def test_gw170817_localization(gw170817_params):
 
     skyloc_arcmin_square = sky_localization * sky_localization_percentile_factor(90.) * 60**2
     
-    assert np.isclose(skyloc_arcmin_square, 3, rtol=0.2)
+    assert np.isclose(skyloc_arcmin_square, 3.8, rtol=0.2)
     
