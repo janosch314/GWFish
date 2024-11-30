@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+- #99: fix in the `check_and_convert_to_mass_1_mass_2` function
+- #95: bugfix in spin conversions
+- #94: GWFish paper reproducibility files
+- #92: minor fixes
+- #91: new `utilities` module and updated tutorial
+- #90: add a more precise treatment of the high frequency response of ground-based detectors
+- #82 and #83: new possibilities for mass input (detector frame and chirp mass-q)
+- #76: new GWFish tutorial notebook
+- #75: bugfixes related to `max_frequency_cutoff`
+- #73: fix: ensure that the time step is small enough in ephemeris caching
+- #70: fix: make it possible to import the module with partial functionality when LAL is not present
+- #68: correct the definition of `theta_jn` in the documentation
+- #67: changed the signature of `compute_fisher_errors` to also return the indices of detected sources
+
+### [1.0.0]
+
+Changes in PRs up to #65.
+
 - Add Solar-Centered ephemeris computed through astropy/jplephem for Earth and Moon-based detectors: `modules.ephemeris`
     - Phase shift is now computed from there during the projection
 - Refactor temporal truncation with detector lifetime, now shared across detector classes
@@ -43,4 +61,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Use dual annealing in the computation of the optimum sky position (max SNR)
 - Many new tests and improvements to the test suite
 
-[unreleased]: https://github.com/janosch314/GWFish/compare/main...io-refactor
+[unreleased]: https://github.com/janosch314/GWFish/compare/main...9c8b9e7873
+
+[1.0.0]: https://github.com/janosch314/GWFish/compare/9c8b9e787...934a9a90fa
