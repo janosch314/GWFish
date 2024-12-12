@@ -191,9 +191,11 @@ def get_available_prior_functions():
     return ['uniform', 'uniform_in_cosine', 'uniform_in_sine', 'uniform_in_comoving_volume_and_source_frame', 'uniform_in_comoving_volume', 
             'uniform_in_distance_squared', 'uniform_in_component_masses_chirp_mass', 'uniform_in_component_masses_mass_ratio']
 
-def get_default_priors_dict(params, print_default = False):
+def get_default_priors_dict(params):
     """
-    Get the dictionary of priors for the given parameters.
+    Get the dictionary of priors for the given parameters. 
+    The format of the dictionary is 
+    {\'param_name\': {\'prior_type\': \'prior_function\', \'lower_prior_bound\': lower_bound, \'upper_prior_bound\': upper_bound}}
 
     Parameters:
     params (list): The list of parameters.
@@ -242,15 +244,6 @@ def get_default_priors_dict(params, print_default = False):
             priors_dict[var] = {'prior_type': 'uniform', 'lower_prior_bound': 0, 'upper_prior_bound': 5000}
         elif var == 'lambda_2':
             priors_dict[var] = {'prior_type': 'uniform', 'lower_prior_bound': 0, 'upper_prior_bound': 5000}
-    if print_default:
-        print('#############################################')
-        print('You are using the default priors dictionary!')
-        print('#############################################')
-        print('#############################################')
-        print('Provide a custom prior dictionary to change the priors in the format {\'param_name\': {\'prior_type\': \'prior_function\', \'lower_prior_bound\': lower_bound, \'upper_prior_bound\': upper_bound}}')
-        print('###################################################################################')
-        print('To get a list of implemented prior functions, use get_available_prior_functions()')
-        print('To get the default priors dictionary, use print_default_priors_dict(params)')
     return priors_dict
 
 def print_default_priors_dict(params):
@@ -261,7 +254,7 @@ def print_default_priors_dict(params):
     params (list): The list of parameters.
 
     """
-    priors_dict = get_default_priors_dict(params, print_default = False)
+    priors_dict = get_default_priors_dict(params)
     for var in params:
         print('{}: {} in the interval [{}, {}]'.format(var, priors_dict[var]['prior_type'], priors_dict[var]['lower_prior_bound'], priors_dict[var]['upper_prior_bound']))
 
@@ -273,24 +266,24 @@ def get_truncated_likelihood_samples(params, mean_values, cov_matrix, num_sample
 
     Parameters:
     params (list): The list of parameters.
-    min_array (array-like): The lower bounds for the parameters.
-    mx_array (array-like): The upper bounds for the parameters.
     mean_values (array-like): The mean values for the parameters.
     cov_matrix (array-like): The covariance matrix for the parameters.
     num_samples (int): The number of samples to generate.
+    min_array (array-like): The lower bounds for the parameters.
+    mx_array (array-like): The upper bounds for the parameters.
 
+    ! The default prior ranges are used if the min_array and max_array are not provided.
+    
     Returns:
     array-like: Dataframe of truncated likelihood samples for the params.
 
     """
     if min_array is None:
-        priors_dict = get_default_priors_dict(params, print_default = False)
+        priors_dict = get_default_priors_dict(params)
         min_array = np.array([priors_dict[key]['lower_prior_bound'] for key in params])
     if max_array is None:
-        priors_dict = get_default_priors_dict(params, print_default = False)
+        priors_dict = get_default_priors_dict(params)
         max_array = np.array([priors_dict[key]['upper_prior_bound'] for key in params])
-    print('You are using custom ranges for the parameters!')
-    print('You can pass a custom min_array and max_array to get_truncated_likelihood_samples()')
     tmvn = TruncatedMVN(mean_values, cov_matrix, min_array, max_array)
     samples = tmvn.sample(num_samples)
 
@@ -303,15 +296,15 @@ def get_posteriors_samples(params, likelihood_samples, num_posterior_samples, pr
     Parameters:
     params (list): The list of parameters.
     likelihood_samples (array-like): Dataframe of likelihood samples for the params.
-    priors_dict (dict): The dictionary of prior: should contain for each param, the type of prior and the bounds.
     num_posterior_samples (int): The number of posterior samples to generate.
-
+    priors_dict (dict): The dictionary of prior: should contain for each param, the type of prior and the bounds; if None is passed, the default priors are used.
+    
     Returns:
     array-like: Dataframe of posterior samples for params.
 
     """
     if priors_dict is None:
-        priors_dict = get_default_priors_dict(params, print_default = True)
+        priors_dict = get_default_priors_dict(params) 
 
     prior = np.ones(len(likelihood_samples))
     for var in params:
