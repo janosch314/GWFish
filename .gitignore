@@ -6,3 +6,5 @@ dist/
 .hypothesis/*
 docs/source/detectors_autogen.inc
 docs/source/figures/*
+*.ipynb_checkpoints
+*.npy
