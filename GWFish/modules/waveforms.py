@@ -1028,3 +1028,69 @@ class IMRPhenomD(Waveform):
         plt.savefig(output_folder + 'psi_phenomD_zoomed.png')
         plt.close()
 
+
+class Ludo_Waveform(LALFD_Waveform):
+    """
+    """
+
+    def __init__(self, f, hp_func, hc_func, parameters):
+        self.hf_plus_func = hp_func
+        self.hf_cross_func = hc_func
+
+        self.gw_params = parameters
+        self.frequencyvector = f
+    
+    def _update_frequency_range_indices(self):
+        self.idx_low = int(self.f_min / self.delta_f)
+        self.idx_high = int(self.f_max / self.delta_f)
+
+    def _lal_fd_strain_adjust_frequency_range(self):
+        """ Frequency array starts from zero, so we need to mask some frequencies """
+        self._update_frequency_range_indices()
+        self.hf_cross_out = self._lal_hf_cross.data.data[self.idx_low:self.idx_high+1]
+        self.hf_plus_out = self._lal_hf_plus.data.data[self.idx_low:self.idx_high+1]
+
+    def _lal_fd_phase_correction_by_epoch_and_df(self):
+        """ This correction is also done in Bilby after calling SimInspiralFD """
+        # BORIS: weird Bilby correction
+        dt = 1. / self.delta_f + (self._lal_hf_plus.epoch.gpsSeconds +
+                                  self._lal_hf_plus.epoch.gpsNanoSeconds * 1e-9)
+        self.hf_plus_out *= np.exp(
+            -1j * 2 * np.pi * dt * self.frequencyvector)
+        self.hf_cross_out *= np.exp(
+            -1j * 2 * np.pi * dt * self.frequencyvector)
+
+    def _hf_postproccessing_SimInspiralFD(self):
+        self._lal_fd_strain_adjust_frequency_range()
+        self._lal_fd_phase_correction_by_epoch_and_df()
+
+    def _hf_postproccessing_SimInspiralCFDWS(self):
+        self.hf_plus_out, self.hf_cross_out = self._lal_hf_plus.data.data, self._lal_hf_cross.data.data
+
+    def _fd_phase_correction_geocent_time(self):
+        """ Add initial 2pi*f*tc - phic - pi/4 to phase """
+        phi_in = np.exp(1.j*(2*self.frequencyvector*np.pi*self.gw_params['geocent_time']))
+
+        hfp = phi_in * np.conjugate(self.hf_plus_out)  # it's already multiplied by the phase
+        hfc = phi_in * np.conjugate(self.hf_cross_out)
+
+        return hfp, hfc
+
+    def _fd_gwfish_output_format(self, hfp, hfc):
+
+        hfp = hfp[:, np.newaxis]
+        hfc = hfc[:, np.newaxis]
+
+        polarizations = np.hstack((hfp, hfc))
+
+        return polarizations
+
+    def calculate_frequency_domain_strain(self):
+
+        self.hf_plus_out = self.hf_plus_func(self.frequencyvector)
+        self.hf_cross_out = self.hf_cross_func(self.frequencyvector)
+
+        hfp, hfc = self._fd_phase_correction_geocent_time()
+        polarizations = self._fd_gwfish_output_format(hfp, hfc)
+        
+        self._frequency_domain_strain = polarizations

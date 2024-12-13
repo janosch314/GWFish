@@ -3,7 +3,7 @@ ET:
         lon:              (9 + 25. / 60) * np.pi / 180.
         opening_angle:    np.pi / 3.
         azimuth:          70.5674 * np.pi / 180.
-        psd_data:         ET_psd.txt
+        psd_data:         ET_full.txt
         duty_factor:      0.85
         detector_class:   earthDelta
         plotrange:        3, 1000, 1e-25, 1e-20
@@ -33,7 +33,7 @@ CE1:
         lon:              -119.4 * np.pi / 180.
         opening_angle:    np.pi / 2.
         azimuth:          126. * np.pi / 180.
-        psd_data:         CE1_psd.txt
+        psd_data:         CE20km_full.txt
         duty_factor:      0.85
         detector_class:   earthL
         plotrange:        10, 1000, 1e-25, 1e-20
@@ -48,7 +48,7 @@ CE2:
         lon:              -119.4 * np.pi / 180.
         opening_angle:    np.pi / 2.
         azimuth:          126. * np.pi / 180.
-        psd_data:         CE2_psd.txt
+        psd_data:         CE40km_full.txt
         duty_factor:      0.85
         detector_class:   earthL
         plotrange:        10, 1000, 1e-25, 1e-20
