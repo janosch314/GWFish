@@ -7,7 +7,7 @@ dist/
 docs/source/detectors_autogen.inc
 docs/source/figures/*
 *_gwstrain_trim.dat
-Merger_data.ipynb
-spectrum_data.hdf5
+Merger_data*.ipynb
+*.hdf5
 *eatmap*
 
