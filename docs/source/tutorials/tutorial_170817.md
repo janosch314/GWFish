@@ -117,14 +117,14 @@ geocent_time: 2.88e-05
 
 ```
 
-So, for example, the error in distance is `64.1`, in the same units as the distance parameter: the estimated error is $\sigma_{d_L} \approx 64.1 \text{Mpc}$.
+So, for example, the error in distance is `64.4`, in the same units as the distance parameter: the estimated error is $\sigma_{d_L} \approx 64.4 \text{Mpc}$.
 
 The sky localization error is given separately: 
 
 ```python
 >>> from GWFish.modules.fishermatrix import sky_localization_percentile_factor
 >>> print(f'{sky_localization[0]:.2e}')
-6.56e-05
+6.66e-05
 >>> print(f'{sky_localization[0] * sky_localization_percentile_factor():.2e}')
 1.01e+00
 
