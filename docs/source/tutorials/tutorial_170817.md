@@ -105,6 +105,7 @@ The `errors` array contains the one-sigma errors for all the parameters included
 ```python
 >>> for name, error in zip(parameters.keys(), errors[0]):
 ...     print(f'{name}: {error:.2e}') 
+>>> print(1)
 mass_1: 2.32e-03
 mass_2: 2.13e-03
 luminosity_distance: 6.41e+01
