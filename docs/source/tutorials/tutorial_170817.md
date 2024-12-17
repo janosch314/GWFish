@@ -105,15 +105,15 @@ The `errors` array contains the one-sigma errors for all the parameters included
 ```python
 >>> for name, error in zip(parameters.keys(), errors[0]):
 ...     print(f'{name}: {error:.2e}') 
-mass_1: 2.32e-03
-mass_2: 2.13e-03
-luminosity_distance: 6.41e+01
-theta_jn: 2.79e-01
-ra: 9.76e-03
-dec: 4.73e-03
-psi: 7.15e-01
-phase: 1.44e+00
-geocent_time: 2.88e-05
+mass_1: 2.23e-03
+mass_2: 2.04e-03
+luminosity_distance: 6.19e+01
+theta_jn: 2.69e-01
+ra: 9.66e-03
+dec: 4.71e-03
+psi: 6.89e-01
+phase: 1.39e+00
+geocent_time: 2.87e-05
 
 ```
 
