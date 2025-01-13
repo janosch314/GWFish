@@ -55,12 +55,13 @@ class Derivative:
 
     eps: 1e-5, this follows the simple "cube root of numerical precision" recommendation, which is 1e-16 for double
     """
-    def __init__(self, waveform, parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
+    def __init__(self, waveform, parameters, detector, eps=1e-5, eps_mass=1e-8, waveform_class=wf.Waveform, f_ref=wf.DEFAULT_F_REF):
         self.waveform = waveform
         self.detector = detector
         self.eps = eps
+        self.eps_mass = eps_mass
         self.waveform_class = waveform_class
-        self.data_params = {'frequencyvector': detector.frequencyvector, 'f_ref': 50.}
+        self.data_params = {'frequencyvector': detector.frequencyvector, 'f_ref': f_ref}
         self.waveform_object = waveform_class(waveform, parameters, self.data_params)
         self.waveform_at_parameters = None
         self.projection_at_parameters = None
@@ -116,7 +117,7 @@ class Derivative:
             pv = self.local_params[target_parameter]
 
             if target_parameter in ['chirp_mass', 'chirp_mass_source', 'mass_1', 'mass_2', 'mass_1_source', 'mass_2_source']:
-                dp = 1e-8 * pv
+                dp = self.eps_mass * pv
             else:
                 dp = np.maximum(self.eps, self.eps * pv)
 
@@ -165,10 +166,10 @@ class Derivative:
         return self.with_respect_to(target_parameter)
 
 class FisherMatrix:
-    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, waveform_class=wf.Waveform):
+    def __init__(self, waveform, parameters, fisher_parameters, detector, eps=1e-5, eps_mass=1e-8, waveform_class=wf.Waveform, f_ref=wf.DEFAULT_F_REF):
         self.fisher_parameters = fisher_parameters
         self.detector = detector
-        self.derivative = Derivative(waveform, parameters, detector, eps=eps, waveform_class=waveform_class)
+        self.derivative = Derivative(waveform, parameters, detector, eps=eps, eps_mass=eps_mass, waveform_class=waveform_class, f_ref=f_ref)
         self.nd = len(fisher_parameters)
         self.fm = None
 
@@ -236,11 +237,14 @@ def compute_detector_fisher(
     detector: det.Detector,
     signal_parameter_values: Union[pd.DataFrame, dict[str, float]],
     fisher_parameters: Optional[list[str]] = None,
+    f_ref = wf.DEFAULT_F_REF,
     waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
     waveform_class: type(wf.Waveform) = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
     redefine_tf_vectors: bool = False,
     long_wavelength: bool = True,
+    eps: float = 1e-5,
+    eps_mass: float = 1e-8,
 ) -> tuple[np.ndarray, float]:
     """Compute the Fisher matrix and SNR for a single detector.
     
@@ -280,7 +284,7 @@ def compute_detector_fisher(
     """
     data_params = {
         'frequencyvector': detector.frequencyvector,
-        'f_ref': 50.
+        'f_ref': f_ref
     }
     waveform_obj = waveform_class(waveform_model, signal_parameter_values, data_params)
     wave = waveform_obj()
@@ -301,12 +305,13 @@ def compute_detector_fisher(
         else:
             fisher_parameters = signal_parameter_values.columns
 
-    return FisherMatrix(waveform_model, signal_parameter_values, fisher_parameters, detector, waveform_class=waveform_class).fm, detector_SNR_square
+    return FisherMatrix(waveform_model, signal_parameter_values, fisher_parameters, detector, waveform_class=waveform_class, f_ref=f_ref, eps=eps, eps_mass=eps_mass).fm, detector_SNR_square
 
 def compute_network_errors(
     network: det.Network,
     parameter_values: pd.DataFrame,
     fisher_parameters: Optional[list[str]] = None,
+    f_ref = wf.DEFAULT_F_REF,
     waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
     waveform_class = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
@@ -315,6 +320,8 @@ def compute_network_errors(
     save_matrices_path: Union[Path, str] = Path('.'),
     matrix_naming_postfix: str = '',
     long_wavelength: bool = True,
+    eps: float = 1e-5,
+    eps_mass: float = 1e-8,
 ) -> tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """
     Compute Fisher matrix errors for a network whose
@@ -386,7 +393,9 @@ def compute_network_errors(
 
         for detector in network.detectors:
             
-            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, waveform_model, waveform_class, use_duty_cycle, long_wavelength = long_wavelength)
+            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, f_ref, waveform_model, 
+                                                                           waveform_class, use_duty_cycle, long_wavelength = long_wavelength,
+                                                                           eps=eps, eps_mass=eps_mass)
             
             network_snr_square += detector_snr_square
         

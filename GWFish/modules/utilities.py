@@ -83,7 +83,7 @@ def add_new_detector(detector_name, dictionary, config=DEFAULT_CONFIG):
         yaml.dump(new_detector, f, indent=8)
 
 
-def get_fd_signal(parameters, detector_name, waveform_model):
+def get_fd_signal(parameters, detector_name, waveform_model, f_ref=gw.waveforms.DEFAULT_F_REF):
     """
     Get the frequency domain signal projected onto the detector from a waveform model 
     and a set of parameters
@@ -108,7 +108,7 @@ def get_fd_signal(parameters, detector_name, waveform_model):
     waveform_class = gw.waveforms.LALFD_Waveform
     data_params = {
             'frequencyvector': detector.frequencyvector,
-            'f_ref': 50.
+            'f_ref': f_ref
         }
     waveform_obj = waveform_class(waveform_model, parameters.iloc[0], data_params)
     wave = waveform_obj()
@@ -121,7 +121,7 @@ def get_fd_signal(parameters, detector_name, waveform_model):
     return signal, t_of_f
 
 
-def get_snr(parameters, network, waveform_model):
+def get_snr(parameters, network, waveform_model, f_ref=gw.waveforms.DEFAULT_F_REF):
     """
     Get the Signal-to-Noise Ratio of single detectors and combined in a network
 
@@ -151,7 +151,7 @@ def get_snr(parameters, network, waveform_model):
         for detector in network.detectors:
             data_params = {
                 'frequencyvector': detector.frequencyvector,
-                'f_ref': 50.
+                'f_ref': f_ref
             }
             waveform_obj = waveform_class(waveform_model, parameters.iloc[i], data_params)
             wave = waveform_obj()

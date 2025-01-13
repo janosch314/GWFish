@@ -20,6 +20,7 @@ import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
 
 DEFAULT_WAVEFORM_MODEL = 'IMRPhenomD'
+DEFAULT_F_REF = 50.
 
 def convert_args_list_to_float(*args_list):
     """
@@ -186,13 +187,13 @@ class Waveform:
     @property
     def f_ref(self):
         """
-        Setting reference frequency to minimum frequency if not specified
+        Setting reference frequency to default if not specified
         """
         if self._f_ref is None:
             if 'f_ref' in self.data_params:
                 self._f_ref = self.data_params['f_ref']
             else:
-                self._f_ref = self.frequencyvector[0]
+                self._f_ref = DEFAULT_F_REF
         return self._f_ref
 
     @property
