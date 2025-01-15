@@ -28,7 +28,7 @@ def uniform(x, a, b):
     """
     return np.where(np.logical_and(x >= a, x <= b), 1 / (b - a), 0)
 
-def uniform_in_cosine(x, a = -np.pi/2, b = np.pi/2, norm = True):
+def uniform_in_cosine(x, a = -np.pi/2, b = np.pi/2):
     """
     Calculate the probability of a distribution uniform
     in the sine of x.
@@ -62,7 +62,7 @@ def uniform_in_sine(x, a = 0, b = np.pi):
     """
     return np.where(np.logical_and(x >= a, x <= b), np.sin(x), 0)
 
-def uniform_in_comoving_volume_and_source_frame(x, a = 10, b = 10000, norm = True):
+def uniform_in_comoving_volume_and_source_frame(x, a = 10, b = 10000):
     """
     Calculate the probability of a uniform distribution 
     in the differential comoving volume: 
@@ -93,7 +93,7 @@ def uniform_in_comoving_volume_and_source_frame(x, a = 10, b = 10000, norm = Tru
     return np.where(np.logical_and(z >= aa, z <= bb), 
             cosmo.differential_comoving_volume(z).value * (x / (1 + z) + (const.c.value / 1000) * (1 + z) / (cosmo.H(0).value * cosmo.efunc(z)))**(-1) / (1 + z), 0)
 
-def uniform_in_comoving_volume(x, a = 10, b = 10000, norm = True):
+def uniform_in_comoving_volume(x, a = 10, b = 10000):
     """
     Calculate the probability of a uniform distribution 
     in the differential comoving volume: 
