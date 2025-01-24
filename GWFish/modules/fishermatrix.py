@@ -401,8 +401,10 @@ def compute_network_errors(
         
             if np.sqrt(detector_snr_square) > detector_snr_thr:
                 network_fisher_matrix += detector_fisher
-
-        network_fisher_inverse, _ = invertSVD(network_fisher_matrix)
+        if network_snr_square == 0.:
+            continue
+        else:
+            network_fisher_inverse, _ = invertSVD(network_fisher_matrix)
         
         if save_matrices:
             fisher_matrices[k, :, :] = network_fisher_matrix
