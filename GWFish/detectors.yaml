@@ -203,3 +203,34 @@ LGWA_Soundcheck:
         spacing:          linear
         df:               1./4096.
 
+
+ETS_15:
+        lat:              (40 + 31. / 60 ) * np.pi / 180.
+        lon:              (9 + 25. / 60) * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          70.5674 * np.pi / 180.
+        psd_data:         ET15kmdata_freq_1_L.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        3, 1000, 1e-25, 1e-20
+        fmin:             2.
+        fmax:             2048.
+        spacing:          geometric
+        df:               1./16.
+        npoints:          1000
+        arm_length:       15000  
+ETN_15:
+        lat:              (50 + 43. / 60 ) * np.pi / 180.
+        lon:              (5 + 55. / 60) * np.pi / 180.
+        opening_angle:    np.pi / 2.
+        azimuth:          118.0774 * np.pi / 180.
+        psd_data:         ET15kmdata_freq_1_L.txt
+        duty_factor:      0.85
+        detector_class:   earthL
+        plotrange:        3, 1000, 1e-25, 1e-20
+        fmin:             2.
+        fmax:             2048.
+        spacing:          geometric
+        df:               1./16.
+        npoints:          1000
+        arm_length:       15000

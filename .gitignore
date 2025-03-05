@@ -11,3 +11,4 @@ Merger_data*.ipynb
 *.hdf5
 *eatmap*
 
+/temp
