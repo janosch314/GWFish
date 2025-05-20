@@ -39,6 +39,18 @@ Please cite [GWFish publication](https://doi.org/10.1016/j.ascom.2022.100671) if
 The tutorial notebook can be opend in Google Colab without the need to download locally any package. Here is the link: [notebook GWFish](<https://colab.research.google.com/github/janosch314/GWFish/blob/main/gwfish_tutorial.ipynb>)
 
 
+## A note about sensitivity curves 
+
+- A# sensitivity: data from [here](https://dcc.ligo.org/LIGO-T2300041/public)
+- Aplus: data from [here](https://dcc.ligo.org/LIGO-T2000012/public):
+    - LIGO: [AplusDesign.txt](https://dcc.ligo.org/public/0165/T2000012/002/AplusDesign.txt)
+    - Virgo: [avirgo_O5high_NEW.txt](https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5high_NEW.txt)
+    - KAGRA: kagra_Design.txt
+- CE 40km updated: [cosmic_explorer_strain.txt](https://dcc.cosmicexplorer.org/CE-T2000017/public)
+- ET: data from [here](https://apps.et-gw.eu/tds/?r=18213)
+    - 10 km cryogenic: [ET10kmcolumns.txt](https://apps.et-gw.eu/tds/?r=18213), third column
+    - 15 km cryogenic: [ET15kmcolumns.txt](https://apps.et-gw.eu/tds/?r=18213), third column
+
 This work is licensed under a [Creative Commons Attribution 4.0 International
 License][cc-by].
 
