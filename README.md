@@ -53,7 +53,7 @@ We provide the public links to sensitivity data for the following detector confi
     - LIGO: [AplusDesign.txt](https://dcc.ligo.org/public/0165/T2000012/002/AplusDesign.txt)
     - Virgo: [avirgo_O5high_NEW.txt](https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5high_NEW.txt)
     - KAGRA: [kagra_128Mpc.txt](https://dcc.ligo.org/public/0165/T2000012/002/kagra_128Mpc.txt)
-- A# sensitivity: data from [here](https://dcc.ligo.org/LIGO-T2300041/public)
+- A# sensitivity: data from [Asharp_strain.txt](https://dcc.ligo.org/LIGO-T2300041/public)
 
 
 This work is licensed under a [Creative Commons Attribution 4.0 International
