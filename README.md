@@ -41,15 +41,20 @@ The tutorial notebook can be opend in Google Colab without the need to download 
 
 ## A note about sensitivity curves 
 
-- A# sensitivity: data from [here](https://dcc.ligo.org/LIGO-T2300041/public)
+We provide the public links to sensitivity data for the following detector configurations:
+
+- ET: data from [here](https://apps.et-gw.eu/tds/?r=18213) as used in [Branchesi et al. 2023](https://iopscience.iop.org/article/10.1088/1475-7516/2023/07/068):
+    - ET_cryo_10km_psd: [ET10kmcolumns.txt](https://apps.et-gw.eu/tds/?r=18213), third column
+    - ET_cryo_15km_psd: [ET15kmcolumns.txt](https://apps.et-gw.eu/tds/?r=18213), third column
+- CE: data as from the [Horizon study](https://ui.adsabs.harvard.edu/abs/2021arXiv210909882E/abstract):
+    - 40km: [cosmic_explorer_strain.txt](https://dcc.cosmicexplorer.org/CE-T2000017/public)
+    - 20km: [cosmic_explorer_20km_strain.txt](https://dcc.cosmicexplorer.org/CE-T2000017/public)
 - Aplus: data from [here](https://dcc.ligo.org/LIGO-T2000012/public):
     - LIGO: [AplusDesign.txt](https://dcc.ligo.org/public/0165/T2000012/002/AplusDesign.txt)
     - Virgo: [avirgo_O5high_NEW.txt](https://dcc.ligo.org/public/0165/T2000012/002/avirgo_O5high_NEW.txt)
-    - KAGRA: kagra_Design.txt
-- CE 40km updated: [cosmic_explorer_strain.txt](https://dcc.cosmicexplorer.org/CE-T2000017/public)
-- ET: data from [here](https://apps.et-gw.eu/tds/?r=18213)
-    - 10 km cryogenic: [ET10kmcolumns.txt](https://apps.et-gw.eu/tds/?r=18213), third column
-    - 15 km cryogenic: [ET15kmcolumns.txt](https://apps.et-gw.eu/tds/?r=18213), third column
+    - KAGRA: [kagra_128Mpc.txt](https://dcc.ligo.org/public/0165/T2000012/002/kagra_128Mpc.txt)
+- A# sensitivity: data from [Asharp_strain.txt](https://dcc.ligo.org/LIGO-T2300041/public)
+
 
 This work is licensed under a [Creative Commons Attribution 4.0 International
 License][cc-by].
