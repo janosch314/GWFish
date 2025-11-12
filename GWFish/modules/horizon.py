@@ -15,17 +15,16 @@ from tqdm import tqdm
 
 from astropy.cosmology import Planck18
 import astropy.cosmology as cosmology
-import astropy.units as u
 
-from scipy.optimize import brentq, minimize, dual_annealing
+import scipy.optimize as opt
 
-from .detection import SNR, Detector, projection, Network
+from .detection import SNR, Detector, projection, Network, new_tf_vectors
 from .waveforms import LALFD_Waveform, DEFAULT_WAVEFORM_MODEL, Waveform
 
 DEFAULT_RNG = np.random.default_rng(seed=1)
 
-MIN_REDSHIFT = 1e-20
-MAX_REDSHIFT = 1e6
+MIN_REDSHIFT = 1e-30
+MAX_REDSHIFT = 5000
 
 def compute_SNR(
     params: "Union[dict[str, float], pd.DataFrame]", 
@@ -44,6 +43,8 @@ def compute_SNR(
     :return: the SNR
     """
 
+    detector_frequency_vector_keeper = detector.frequencyvector
+
     data_params = {
         'frequencyvector': detector.frequencyvector,
         'f_ref': 50.
@@ -52,15 +53,21 @@ def compute_SNR(
     polarizations = waveform_obj()
     timevector = waveform_obj.t_of_f
     
-    args = (params, detector, polarizations, timevector)
-    
     if redefine_tf_vectors:
-        signal, timevector, frequencyvector = projection(*args, redefine_tf_vectors=True)
-    else:
-        signal = projection(*args)
-        frequencyvector = detector.frequencyvector
+        timevector, frequencyvector, params = new_tf_vectors(params, detector, timevector, time_reset=True)
+        detector.frequencyvector = frequencyvector
+        data_params['frequencyvector'] = frequencyvector
 
-    component_SNRs = SNR(detector, signal, frequencyvector=np.squeeze(frequencyvector))
+        waveform_obj = waveform_class(waveform_model, params, data_params)
+        polarizations = waveform_obj()
+
+    args = (params, detector, polarizations, timevector)
+    signal = projection(*args)
+
+    component_SNRs = SNR(detector, signal, frequencyvector=np.squeeze(detector.frequencyvector))
+
+    detector.frequencyvector = detector_frequency_vector_keeper
+
     return np.sqrt(np.sum(component_SNRs**2))
 
 def compute_SNR_network(
@@ -129,7 +136,7 @@ def horizon(
         warnings.warn('The source is completely out of band')
         return 0., 0.
     
-    redshift, r = brentq(SNR_error, MIN_REDSHIFT, MAX_REDSHIFT, full_output=True)
+    redshift, r = opt.brentq(SNR_error, MIN_REDSHIFT, MAX_REDSHIFT, full_output=True)
     if not r.converged:
         raise ValueError('Horizon computation did not converge!')
         
@@ -209,11 +216,11 @@ def find_optimal_location(
     if 'maxiter' not in minimizer_kwargs:
         minimizer_kwargs['maxiter'] = 100
     
-    res = dual_annealing(
+    res = opt.dual_annealing(
         func=to_minimize, 
         bounds=[
             (0, 2*np.pi), 
-            (-np.pi, np.pi),
+            (-np.pi/2., np.pi/2.),
         ],
         x0=x0,
         **minimizer_kwargs
