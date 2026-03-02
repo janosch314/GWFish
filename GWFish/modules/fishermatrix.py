@@ -3,6 +3,7 @@ import GWFish.modules.waveforms as wf
 import GWFish.modules.detection as det
 import GWFish.modules.auxiliary as aux
 import GWFish.modules.fft as fft
+import GWFish.modules.fishermatrix_lgwa as lgwa
 
 import copy
 import pandas as pd
@@ -312,6 +313,8 @@ def compute_network_errors(
     parameter_values: pd.DataFrame,
     fisher_parameters: Optional[list[str]] = None,
     f_ref = wf.DEFAULT_F_REF,
+    f_lgwa = None,
+    lunarLikelihood = None,
     waveform_model: str = wf.DEFAULT_WAVEFORM_MODEL,
     waveform_class = wf.LALFD_Waveform,
     use_duty_cycle: bool = False,
@@ -392,13 +395,22 @@ def compute_network_errors(
         signal_parameter_values = parameter_values.iloc[k]
 
         for detector in network.detectors:
+
+            if (detector.name=='LGWA') or (detector.name=='LGWA_Nb') or (detector.name=='LGWA_Soundcheck'):
+
+                #print('I am finally on the moon')
+
+                signal_parameter_values_lgwa = lgwa.from_gwfish2lgwa_paramnames(signal_parameter_values)
+                
+                detector_fisher, detector_snr_square = lgwa.compute_detector_fisher(f_lgwa, lunarLikelihood, signal_parameter_values_lgwa, fisher_parameters, eps=eps, eps_mass=eps_mass)
             
-            detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, f_ref, waveform_model, 
+            else:
+                detector_fisher, detector_snr_square = compute_detector_fisher(detector, signal_parameter_values, fisher_parameters, f_ref, waveform_model, 
                                                                            waveform_class, use_duty_cycle, long_wavelength = long_wavelength,
                                                                            eps=eps, eps_mass=eps_mass)
-            
+
             network_snr_square += detector_snr_square
-        
+
             if np.sqrt(detector_snr_square) > detector_snr_thr:
                 network_fisher_matrix += detector_fisher
         if network_snr_square == 0.:
@@ -496,6 +508,8 @@ def analyze_and_save_to_txt(
     fisher_parameters: list[str],
     sub_network_ids_list: list[list[int]],
     population_name: str,
+    f_lgwa = None,
+    lunarLikelihood = None,
     save_path: Optional[Union[Path, str]] = None,
     save_matrices: bool = False,
     decimal_output_format: str = '%.3E',
@@ -521,6 +535,8 @@ def analyze_and_save_to_txt(
             network=partial_network,
             parameter_values=parameter_values,
             fisher_parameters=fisher_parameters,
+            f_lgwa = f_lgwa,
+            lunarLikelihood = lunarLikelihood,
             save_matrices=save_matrices,
             save_matrices_path=save_path,
             matrix_naming_postfix='_'.join(filename.split('_')[1:]),
