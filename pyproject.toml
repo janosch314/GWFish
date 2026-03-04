@@ -15,10 +15,10 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.12"
+python = ">=3.9"
 numpy = "^1.22.2"
 tables = "^3.7.0"
-pandas = "^1.4.1"
+pandas = ">=1.4.1"
 astropy = "^5.0.1"
 scipy = "^1.8.0"
 matplotlib = "^3.5.1"
