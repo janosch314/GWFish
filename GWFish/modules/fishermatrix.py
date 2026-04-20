@@ -13,24 +13,66 @@ from tqdm import tqdm
 import logging
 from pathlib import Path
 
+#def invertSVD(matrix):
+#    thresh = 1e-10
+#
+#    dm = np.sqrt(np.diag(matrix))
+#    normalizer = np.outer(dm, dm)
+#    matrix_norm = matrix / normalizer
+#
+#    [U, S, Vh] = np.linalg.svd(matrix_norm)
+#
+#    kVal = sum(S > thresh)
+#    
+#    logging.debug(f'Inverting a matrix keeping {kVal}/{len(S)} singular values')
+#    
+#    matrix_inverse_norm = U[:, 0:kVal] @ np.diag(1. / S[0:kVal]) @ Vh[0:kVal, :]
+#
+#    # print(matrix @ (matrix_inverse_norm / normalizer))
+#
+#    return matrix_inverse_norm / normalizer, S
+
 def invertSVD(matrix):
     thresh = 1e-10
 
-    dm = np.sqrt(np.diag(matrix))
+    # --- Protect against bad diagonals ---
+    diag = np.diag(matrix)
+
+    # If diagonal has non-positive entries, skip inversion
+    if np.any(diag <= 0) or np.any(~np.isfinite(diag)):
+        return None, None
+
+    dm = np.sqrt(diag)
     normalizer = np.outer(dm, dm)
+
+    # Avoid division problems
     matrix_norm = matrix / normalizer
 
-    [U, S, Vh] = np.linalg.svd(matrix_norm)
+    # Check matrix validity before SVD
+    if not np.all(np.isfinite(matrix_norm)):
+        return None, None
 
-    kVal = sum(S > thresh)
-    
-    logging.debug(f'Inverting a matrix keeping {kVal}/{len(S)} singular values')
-    
-    matrix_inverse_norm = U[:, 0:kVal] @ np.diag(1. / S[0:kVal]) @ Vh[0:kVal, :]
+    try:
+        U, S, Vh = np.linalg.svd(matrix_norm, full_matrices=False)
+    except np.linalg.LinAlgError:
+        return None, None
 
-    # print(matrix @ (matrix_inverse_norm / normalizer))
+    # Keep only significant singular values
+    kVal = np.sum(S > thresh)
+
+    if kVal == 0:
+        return None, None
+
+    S_inv = 1.0 / S[:kVal]
+
+    matrix_inverse_norm = (
+        U[:, :kVal] @ np.diag(S_inv) @ Vh[:kVal, :]
+    )
 
     return matrix_inverse_norm / normalizer, S
+
+
+
 
 def fft_derivs_at_detectors(deriv_list, frequency_vector):
     """
