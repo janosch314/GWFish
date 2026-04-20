@@ -13,25 +13,6 @@ from tqdm import tqdm
 import logging
 from pathlib import Path
 
-#def invertSVD(matrix):
-#    thresh = 1e-10
-#
-#    dm = np.sqrt(np.diag(matrix))
-#    normalizer = np.outer(dm, dm)
-#    matrix_norm = matrix / normalizer
-#
-#    [U, S, Vh] = np.linalg.svd(matrix_norm)
-#
-#    kVal = sum(S > thresh)
-#    
-#    logging.debug(f'Inverting a matrix keeping {kVal}/{len(S)} singular values')
-#    
-#    matrix_inverse_norm = U[:, 0:kVal] @ np.diag(1. / S[0:kVal]) @ Vh[0:kVal, :]
-#
-#    # print(matrix @ (matrix_inverse_norm / normalizer))
-#
-#    return matrix_inverse_norm / normalizer, S
-
 def invertSVD(matrix):
     thresh = 1e-10
 
