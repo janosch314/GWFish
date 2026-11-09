@@ -21,6 +21,18 @@ import GWFish.modules.fft as fft
 
 DEFAULT_WAVEFORM_MODEL = 'IMRPhenomD'
 DEFAULT_F_REF = 50.
+LAL_PURE_22_APPROXIMANTS = frozenset({'TaylorF2', 'IMRPhenomD', 'IMRPhenomXAS',
+                                      'IMRPhenomD_NRTidalv2', 'IMRPhenomXAS_NRTidalv2'})
+
+def analytic_phase_factor(waveform_class, waveform_model):
+    """k with d(h)/d(phase) = -1j * k * h exactly, or None to perform finite-differencing for 'phase'."""
+    if waveform_class is LALFD_Waveform and waveform_model in LAL_PURE_22_APPROXIMANTS:
+        return 2.
+    if waveform_class is TaylorF2:
+        return 1.
+    return None
+
+    
 
 def convert_args_list_to_float(*args_list):
     """
@@ -323,8 +335,8 @@ class LALFD_Waveform(Waveform):
                             "are set to zero.")
 
     def _update_frequency_range_indices(self):
-        self.idx_low = int(self.f_min / self.delta_f)
-        self.idx_high = int(self.f_max / self.delta_f)
+        self.idx_low = round(self.f_min / self.delta_f)
+        self.idx_high = round(self.f_max / self.delta_f)
 
     def _lal_fd_strain_adjust_frequency_range(self):
         """ Frequency array starts from zero, so we need to mask some frequencies """
