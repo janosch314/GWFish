@@ -134,8 +134,8 @@ class Derivative:
             derivative = -1. / self.local_params[target_parameter] * self.projection_at_parameters
         elif target_parameter == 'geocent_time':
             derivative = 2j * np.pi * self.detector.frequencyvector * self.projection_at_parameters
-        elif target_parameter == 'phase':
-            derivative = -1j * self.projection_at_parameters
+        elif target_parameter == 'phase' and wf.analytic_phase_factor(self.waveform_class, self.waveform) is not None:
+            derivative = -1j * wf.analytic_phase_factor(self.waveform_class, self.waveform) * self.projection_at_parameters
         else:
             pv = self.local_params[target_parameter]
 

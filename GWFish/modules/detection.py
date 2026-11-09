@@ -256,7 +256,7 @@ def solarorbit(tt, R, eps, a0, b0):
 
 
 def yGW(i, j, polarizations, eij, theta, ra, psi, L, ff):
-    ek = -np.array([np.sin(theta) * np.cos(ra), np.sin(theta) * np.sin(ra), np.cos(theta)])
+    ek = np.array([np.sin(theta) * np.cos(ra), np.sin(theta) * np.sin(ra), np.cos(theta)])
     u = np.array([np.cos(theta) * np.cos(ra), np.cos(theta) * np.sin(ra), -np.sin(theta)])
     v = np.array([-np.sin(ra), np.cos(ra), 0])
 
@@ -283,8 +283,8 @@ def yGW(i, j, polarizations, eij, theta, ra, psi, L, ff):
 
     proj = eij[:, i, :] @ ek
 
-    h_ifo = 0.5 * (eij[:, i, 0] ** 2 * hxx + eij[:, i, 1] ** 2 * hyy + eij[:, i, 2] ** 2 * hzz) \
-            + eij[:, i, 0] * eij[:, i, 1] * hxy + eij[:, i, 0] * eij[:, i, 2] * hxz + eij[:, i, 1] * eij[:, i, 2] * hyz
+    h_ifo = (eij[:, i, 0] ** 2 * hxx + eij[:, i, 1] ** 2 * hyy + eij[:, i, 2] ** 2 * hzz) \
+            + 2 * (eij[:, i, 0] * eij[:, i, 1] * hxy + eij[:, i, 0] * eij[:, i, 2] * hxz + eij[:, i, 1] * eij[:, i, 2] * hyz)
 
     y = 0.5 / (1 + sgn * proj[:, np.newaxis]) * (
             np.exp(2j * np.pi * ff * L / cst.c * (muk / 3. + 1.)) - np.exp(2j * np.pi * ff * L / cst.c * muj / 3.)) * h_ifo[:,np.newaxis]
@@ -558,7 +558,7 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
                         + (e1[0] * e1[2] - e2[0] * e2[2]) * hxz \
                         + (e1[1] * e1[2] - e2[1] * e2[2]) * hyz
 
-            proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
+            proj[in_band_slice, k] *= np.exp(1.j * phase_shift)
         
         else:
             # the detailed calculation can be found at this link
@@ -580,7 +580,7 @@ def projection_earth(parameters, detector, polarizations, timevector, in_band_sl
             + (T1 * e1[0] * e1[2] - T2 * e2[0] * e2[2]) * hxz \
             + (T1 * e1[1] * e1[2] - T2 * e2[1] * e2[2]) * hyz
 
-            proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
+            proj[in_band_slice, k] *= np.exp(1.j * phase_shift)
         
     #print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
@@ -668,7 +668,7 @@ def projection_moon(parameters, detector, polarizations, timevector, in_band_sli
                      + (e1[0] * e2[2] + e2[0] * e1[2]) * hxz \
                      + (e1[1] * e2[2] + e2[1] * e1[2]) * hyz
                      
-        proj[in_band_slice, k] *= np.exp(-1.j * phase_shift)
+        proj[in_band_slice, k] *= np.exp(1.j * phase_shift)
 
     #print("Calculation of projection: %s seconds" % (time.time() - start_time))
 
