@@ -396,7 +396,7 @@ def compute_network_errors(
 
         for detector in network.detectors:
 
-            if (detector.name=='LGWA') or (detector.name=='LGWA_Nb') or (detector.name=='LGWA_Soundcheck'):
+            if (detector.name=='LGWA') or (detector.name=='LGWA_Soundcheck'):
 
                 #print('I am finally on the moon')
 
